@@ -1156,7 +1156,8 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		      //
 		      if (B0rmu_1 != 0  &&  B0rmu_2 != 0  &&  B0rmu_1->track().id() == pvtracks.id()  &&  B0rmu_2->track().id() == pvtracks.id() 
 			  &&  Track1->track().id() == pvtracks.id()  &&  Track2->track().id() ==  pvtracks.id()) { 
-			TrackCollection B0Less;
+			//TrackCollection B0Less;
+			vector<TransientTrack> B0Less;
 			B0Less.reserve( pvtracks->size() );
 			Double_t removedTrksPtSq = 0. ;
 			for (size_t i = 0, n = pvtracks->size(); i < n; ++i) { 
@@ -1169,12 +1170,19 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 			  if (i == Track2->track().key()) { removedTrksPtSq += (Track2->track()->pt())*(Track2->track()->pt()) ;
 			    continue; } 
 			  //B0Less.push_back((*pvtracks)[i]);
-			  reco::TrackRef trk_now(pvtracks, i) ;
-			  B0Less.push_back( *trk_now );
+			  //reco::TrackRef trk_now(pvtracks, i) ;
+			  //B0Less.push_back( *trk_now );
+			  TransientTrack transientTrack = theTTBuilder->build((*pvtracks)[i]); 
+			  transientTrack.setBeamSpot(beamSpot);
+			  B0Less.push_back(transientTrack);
 			}
-			if ( removedTrksPtSq > 0. )
-			  B0_pvs = revertex.makeVertices(B0Less, *pvbeamspot, iSetup) ;
-			else
+			if ( removedTrksPtSq > 0. ) {
+			  //B0_pvs = revertex.makeVertices(B0Less, *pvbeamspot, iSetup) ;
+			  AdaptiveVertexFitter* theFitter = new AdaptiveVertexFitter();
+			  TransientVertex myVertex = theFitter->vertex(B0Less, beamSpot);
+			  // TransientVertex myVertex = theFitter->vertex(mytracks);
+			  B0_pvs.push_back( myVertex ) ;
+			} else
 			  cout <<"\n\\\\\\\\\\\\\\\\\\\\ excluded tracks pT^2 = 0 \\\\\\\\\\\\\\\\\\\\\n" <<endl ;
 			if ( !B0_pvs.empty() ) {
 			  Vertex B0LessPV = Vertex(B0_pvs.front());
