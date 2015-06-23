@@ -60,7 +60,8 @@ process.source.inputCommands = cms.untracked.vstring(
 	)
 
 process.maxEvents = cms.untracked.PSet(
-	input = cms.untracked.int32( -1 ) # = ?Kb # 
+	#input = cms.untracked.int32( 100000 ) # = ?Mb for MC_Bd2Psi2SKpi.root in ?' #
+	input = cms.untracked.int32( -1 ) # = 356Mb for 5M events MC_Bd2Psi2SKpi.root in 5h30' #
 	#input = cms.untracked.int32( 24000 ) # = 870Kb # timeout after 24500 for Run2012A/MuOnia
 	#input = cms.untracked.int32( -1 ) # = 5718Kb # timeout after 3700 for Run2012A/MuOnia
 	)

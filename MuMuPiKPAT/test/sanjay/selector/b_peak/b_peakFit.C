@@ -33,8 +33,9 @@ void b_peakFit() {
   TGaxis::SetMaxDigits(3) ;
 
   //TFile *f = TFile::Open("../26Jan_histos.root");
-  TFile *f = TFile::Open("../HLT5.root");
-  TH1F* hmyPsiPKPiMassSelAltZoom = (TH1F*) f->Get("myPsiPKPiMassSelAltZoom") ;
+  TFile *f = TFile::Open("../HLT5_full.root");
+  //TH1F* hmyPsiPKPiMassSelAltZoom = (TH1F*) f->Get("myPsiPKPiMassSelAltZoom") ;
+  TH1F* hmyPsiPKPiMassSelAltZoom = (TH1F*) f->Get("B0Mass_1B0") ;
   
   TCanvas *Bpeak_C = new TCanvas("Bpeak_C","Bpeak_C", 800, 600) ;  
 
@@ -50,7 +51,7 @@ void b_peakFit() {
 
   Double_t meanval[3], sigma1val[3] ;
   meanval[0] = 5.28 ;  meanval[1] = 5.25 ;   meanval[2] = 5.31 ;
-  sigma1val[0] = 0.01 ; sigma1val[1] = 0.001 ; sigma1val[2] = 0.02 ;
+  sigma1val[0] = 0.02 ; sigma1val[1] = 0.01 ; sigma1val[2] = 0.05 ;
   
   RooRealVar mean("m", "mean", meanval[0], meanval[1], meanval[2]) ;
   RooRealVar sigma1("#sigma_{1}", "sigma1", sigma1val[0], sigma1val[1], sigma1val[2]);
@@ -96,7 +97,8 @@ void b_peakFit() {
   
   totalPDF->fitTo(*MuMuPiKHist, Range(fitMin, fitMax), Extended(kTRUE));
   
-  xVar.setRange("signal", mean.getVal() -2*(0.012), mean.getVal() +2*0.012) ;
+  Float_t nSigma = 2; //nSigma = 3;
+  xVar.setRange("signal", mean.getVal() -nSigma*(0.012), mean.getVal() +nSigma*0.012) ;
   RooAbsReal* tot_sigRange = totalPDF->createIntegral(xVar, NormSet(xVar), Range("signal")) ;
   RooAbsReal* sig_sigRange = sigPDF.createIntegral(xVar, NormSet(xVar), Range("signal")) ;
 
@@ -138,12 +140,13 @@ void b_peakFit() {
   //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/fromKstar.png");
   //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/fromKstar_ex.png");
   //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/Bplus.png");
-  //Bpeak_C->SaveAs("plots/B0mass.png");
+  Bpeak_C->SaveAs("plots/B0mass_full.png");
 
   Double_t tot_sigRange_val = tot_sigRange->getVal() ; // compute integral
   cout <<"\nIntegral of total PDF in signal region = " << nEntries.getVal()*tot_sigRange_val << endl;
   cout <<"\nIntegral of signal PDF in signal region = " << nSig.getVal()*(sig_sigRange->getVal()) << endl;
   cout <<"\nBackground events in signal region = " << nEntries.getVal()*tot_sigRange_val << " - " << nSig.getVal()*(sig_sigRange->getVal()) << " = " << nEntries.getVal()*tot_sigRange_val - nSig.getVal()*(sig_sigRange->getVal()) << endl;
+  cout <<"Purity is = " << 100 * nSig.getVal()*(sig_sigRange->getVal()) / (nEntries.getVal()*tot_sigRange_val) <<"%" << endl;
 
   ////////// removing twins //////////
   /*

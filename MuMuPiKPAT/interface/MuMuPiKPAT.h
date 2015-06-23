@@ -79,6 +79,7 @@
 #include <string>
 #include "RecoVertex/VertexTools/interface/InvariantMassFromVertex.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexHigherPtSquared.h"
+//#include "DataFormats/PatCandidates/interface/GenericParticle.h" // for namespace pat
 
 //
 // class decleration
@@ -117,6 +118,9 @@ private:
   virtual double getLogdEdx(double bg);
   virtual double GetMass(const reco::TrackRef & track);
   
+  bool isSameMuon(const reco::Muon &mu1, const reco::Muon &mu2) const ;
+  template<typename T> bool isBetterMuon(const T &mu1, const T &mu2) const ;
+
   // ----------member data ---------------------------
   std::string proccessName_;
   HLTConfigProvider hltConfig_;
@@ -136,6 +140,7 @@ private:
   int MuMinPixHits, MuMinSiHits;
   double MuMaxNormChi;
   double MuMaxD0;
+  bool sharedFraction;
 
   int    TrMinSiHits;
   double TrMinPt;
@@ -168,6 +173,7 @@ private:
   unsigned int          nMu, nMuMu, nB0;
   unsigned int          nB0_pre0, nB0_pre1, nB0_pre2, nB0_pre3, nB0_pre4, nB0_pre5, nB0_pre6, nB0_pre7, nB0_pre8, nB0_pre9, nB0_pre10, nB0_pre11, nB0_pre12, nB0_pre13, nB0_pre14;
 
+  int                   priVtx_n;
   float                 priVtx_X, priVtx_Y, priVtx_Z, priVtx_XE, priVtx_YE, priVtx_ZE, priVtx_NormChi2, priVtx_Chi2, priVtx_CL;
   int                   priVtx_tracks;
   float                 priVtx_tracksPtSq;
@@ -177,8 +183,19 @@ private:
   vector<int>           *B0_MuMuIdx, *B0_piIdx, *B0_kIdx;
 
   //// MC Analysis
-  unsigned int        nMCAll, nMCB0;
+  // Gen Primary Vertex
+  unsigned int          n_genEvtVtx;
+  vector<float>         *genEvtVtx_X, *genEvtVtx_Y, *genEvtVtx_Z; 
+  vector<int>           *genEvtVtx_particles;
+  vector<int>           *n_B0Ancestors;
+
+  unsigned int        nMCAll, nMCB0, nMCB0Vtx;
   vector<int>         *MCPdgIdAll, *MCDanNumAll;
+  // Gen Primary Vertex 
+  vector<float>       *PriVtxGen_X, *PriVtxGen_Y, *PriVtxGen_Z ; 
+  vector<double>      *PriVtxGen_EX, *PriVtxGen_EY, *PriVtxGen_EZ ;
+  vector<float>	      *PriVtxGen_Chi2, *PriVtxGen_CL, *PriVtxGen_Ndof;
+  vector<int>         *PriVtxGen_tracks ;
   vector<float>       *MCpsi2SPx, *MCpsi2SPy, *MCpsi2SPz;
   vector<float>       *MCpionPx, *MCpionPy, *MCpionPz;
   vector<float>       *MCkaonPx, *MCkaonPy, *MCkaonPz;
@@ -186,7 +203,7 @@ private:
   vector<float>       *MCPx, *MCPy, *MCPz;
 
   //// Generic Muons
-  vector<float>         *muPx, *muPy, *muPz;
+  vector<float>         *muPx, *muPy, *muPz, *muCharge;
   vector<int>           *muPhits, *muShits, *muLayersTr, *muLayersPix;
   vector<float>	        *muD0, *muD0E, *muDz, *muChi2 ;
   vector<int>           *muNDF;
@@ -194,12 +211,13 @@ private:
   vector<bool>          *muFirstBarrel, *muFirstEndCap;
   vector<float>	        *muDzVtx, *muDxyVtx, *muDzVtxErr ;   
   vector<unsigned int>	*muKey;
+  vector<bool> 	        *muIsGlobal, *muIsPF ;
   vector<int>           *muGlMuHits;
   vector<float>         *muGlChi2;
   vector<int>           *muGlNDF, *muGlMatchedStation;
   vector<float>         *muGlDzVtx, *muGlDxyVtx;
-  vector<int>           *muType, *muQual, *muTrack;
-  vector<float>         *muCharge;
+  vector<int>           *nMatchedStations;
+  vector<int>           *muType, *muQual, *muTrack, *muNOverlap, *muNSharingSegWith;
 
   //// Generic tracks
   vector<float>         *trNotRef, *trRef;
@@ -231,6 +249,7 @@ private:
   vector<float>         *mu2_MuMu_Chi2 ;
   vector<int>           *mu2_MuMu_NDF ;
   // Primary Vertex with "MuMu correction"
+  vector<int>           *PriVtxMuMuCorr_n;
   vector<float>         *PriVtxMuMuCorr_X, *PriVtxMuMuCorr_Y, *PriVtxMuMuCorr_Z ; 
   vector<double>        *PriVtxMuMuCorr_EX, *PriVtxMuMuCorr_EY, *PriVtxMuMuCorr_EZ ;
   vector<float>	        *PriVtxMuMuCorr_Chi2, *PriVtxMuMuCorr_CL;
@@ -257,21 +276,47 @@ private:
   vector<int>           *kaon_saturMeas_byHits, *kaon_Meas_byHits ;
 
   // Primary Vertex with largest B0_cos(alpha)
-  vector<float>         *B0LessPV_tracksPtSq, *B0LessPV_4tracksPtSq ;
+  vector<int>           *PriVtx_B0CosAlpha_n;
   vector<float>         *PriVtx_B0CosAlpha_X, *PriVtx_B0CosAlpha_Y, *PriVtx_B0CosAlpha_Z ; 
   vector<double>        *PriVtx_B0CosAlpha_EX, *PriVtx_B0CosAlpha_EY, *PriVtx_B0CosAlpha_EZ ;
   vector<float>	        *PriVtx_B0CosAlpha_Chi2, *PriVtx_B0CosAlpha_CL;
   vector<int>           *PriVtx_B0CosAlpha_tracks ;
-  // Primary Vertex with "B0 correction"
+  vector<int>           *PriVtx_B0CosAlpha3D_n;
+  vector<float>         *PriVtx_B0CosAlpha3D_X, *PriVtx_B0CosAlpha3D_Y, *PriVtx_B0CosAlpha3D_Z ; 
+  vector<double>        *PriVtx_B0CosAlpha3D_EX, *PriVtx_B0CosAlpha3D_EY, *PriVtx_B0CosAlpha3D_EZ ;
+  vector<float>	        *PriVtx_B0CosAlpha3D_Chi2, *PriVtx_B0CosAlpha3D_CL;
+  vector<int>           *PriVtx_B0CosAlpha3D_tracks ;
+  vector<float>         *B0LessPV_tracksPtSq, *B0LessPV_4tracksPtSq ;
+  vector<int>           *PriVtxB0Less_n;
+  vector<float>         *PriVtxB0Less_X, *PriVtxB0Less_Y, *PriVtxB0Less_Z ; 
+  vector<double>        *PriVtxB0Less_EX, *PriVtxB0Less_EY, *PriVtxB0Less_EZ ;
+  vector<float>	        *PriVtxB0Less_Chi2, *PriVtxB0Less_CL;
+  vector<int>           *PriVtxB0Less_tracks ;
+  vector<int>           *PriVtxB0Less_B0CosAlpha_n;
+  vector<float>         *PriVtxB0Less_B0CosAlpha_X, *PriVtxB0Less_B0CosAlpha_Y, *PriVtxB0Less_B0CosAlpha_Z ; 
+  vector<double>        *PriVtxB0Less_B0CosAlpha_EX, *PriVtxB0Less_B0CosAlpha_EY, *PriVtxB0Less_B0CosAlpha_EZ ;
+  vector<float>	        *PriVtxB0Less_B0CosAlpha_Chi2, *PriVtxB0Less_B0CosAlpha_CL;
+  vector<int>           *PriVtxB0Less_B0CosAlpha_tracks ;
+  vector<int>           *PriVtxB0Less_B0CosAlpha3D_n;
+  vector<float>         *PriVtxB0Less_B0CosAlpha3D_X, *PriVtxB0Less_B0CosAlpha3D_Y, *PriVtxB0Less_B0CosAlpha3D_Z ; 
+  vector<double>        *PriVtxB0Less_B0CosAlpha3D_EX, *PriVtxB0Less_B0CosAlpha3D_EY, *PriVtxB0Less_B0CosAlpha3D_EZ ;
+  vector<float>	        *PriVtxB0Less_B0CosAlpha3D_Chi2, *PriVtxB0Less_B0CosAlpha3D_CL;
+  vector<int>           *PriVtxB0Less_B0CosAlpha3D_tracks ;
+  // Primary Vertex with "B0 correction" // check name
+  vector<int>           *PriVtxB0Corr_n;
   vector<float>         *PriVtxB0Corr_X, *PriVtxB0Corr_Y, *PriVtxB0Corr_Z;
   vector<double>        *PriVtxB0Corr_EX, *PriVtxB0Corr_EY, *PriVtxB0Corr_EZ;
   vector<float>	        *PriVtxB0Corr_Chi2, *PriVtxB0Corr_CL;
   vector<int>           *PriVtxB0Corr_tracks;
-
-  vector<double>        *b0LxyPV, *b0CosAlphaPV, *b0CTauPV, *b0CTauPVE ;
-  vector<double>        *b0LxyPVCosAlpha, *b0CosAlphaPVCosAlpha, *b0CTauPVCosAlpha, *b0CTauPVCosAlphaE ;
-  vector<double>        *b0LxyPVX, *b0CosAlphaPVX, *b0CTauPVX, *b0CTauPVXE ;
-  vector<double>        *b0LxyBS, *b0CosAlphaBS, *b0CTauBS, *b0CTauBSE ;
+  // Lifetimes
+  vector<double>        *b0CosAlphaBS, *b0CosAlpha3DBS, *b0CTauBS, *b0CTauBSE, *b0LxyBS, *b0LxyBSE, *b0LxyzBS, *b0LxyzBSE ;
+  vector<double>        *b0CosAlphaPV, *b0CosAlpha3DPV, *b0CTauPV, *b0CTauPVE, *b0LxyPV, *b0LxyPVE, *b0LxyzPV, *b0LxyzPVE ;
+  vector<double>        *b0CosAlphaPVCosAlpha, *b0CosAlpha3DPVCosAlpha, *b0CTauPVCosAlpha, *b0CTauPVCosAlphaE, *b0LxyPVCosAlpha, *b0LxyPVCosAlphaE, *b0LxyzPVCosAlpha, *b0LxyzPVCosAlphaE ;
+  vector<double>        *b0CosAlphaPVCosAlpha3D, *b0CosAlpha3DPVCosAlpha3D, *b0CTauPVCosAlpha3D, *b0CTauPVCosAlpha3DE, *b0LxyPVCosAlpha3D, *b0LxyPVCosAlpha3DE, *b0LxyzPVCosAlpha3D, *b0LxyzPVCosAlpha3DE ;
+  vector<double>        *b0CosAlphaB0LessPV, *b0CosAlpha3DB0LessPV, *b0CTauB0LessPV, *b0CTauB0LessPVE, *b0LxyB0LessPV, *b0LxyB0LessPVE, *b0LxyzB0LessPV, *b0LxyzB0LessPVE ;
+  vector<double>        *b0CosAlphaB0LessPVCosAlpha, *b0CosAlpha3DB0LessPVCosAlpha, *b0CTauB0LessPVCosAlpha, *b0CTauB0LessPVCosAlphaE, *b0LxyB0LessPVCosAlpha, *b0LxyB0LessPVCosAlphaE, *b0LxyzB0LessPVCosAlpha, *b0LxyzB0LessPVCosAlphaE ;
+  vector<double>        *b0CosAlphaB0LessPVCosAlpha3D, *b0CosAlpha3DB0LessPVCosAlpha3D, *b0CTauB0LessPVCosAlpha3D, *b0CTauB0LessPVCosAlpha3DE, *b0LxyB0LessPVCosAlpha3D, *b0LxyB0LessPVCosAlpha3DE, *b0LxyzB0LessPVCosAlpha3D, *b0LxyzB0LessPVCosAlpha3DE ;
+  vector<double>        *b0CosAlphaPVX, *b0CTauPVX, *b0CTauPVXE, *b0LxyPVX, *b0LxyPVXE, *b0LxyzPVX, *b0LxyzPVXE ;
   vector<float>	        *b0CTauPVX_3D, *b0CTauPVX_3D_err;
 
   vector<float>         *PiPiMass_err;
@@ -280,4 +325,4 @@ private:
 
 #endif
 
-// rsync -vut --existing interface/MuMuPiKPAT.h cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_7_patch5/src/UserCode/MuMuPiKPAT/interface/MuMuPiKPAT.h
+// rsync -vut --existing interface/MuMuPiKPAT.h cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/interface/MuMuPiKPAT.h

@@ -14,16 +14,35 @@
     // 2011
     //
     // 2012
-    Bool_t MC = kFALSE; //MC = kTRUE;
+    Bool_t MC = kFALSE; MC = kTRUE;
+    Bool_t official = kFALSE; official = kTRUE; 
     if ( MC ) {
       dataset->SetDirectory("/mkcands");
-      dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/MuOniaRun2012D_13Jul_MuMuPiPiPAT_ntpl_all.root");
+      if ( !official ) {
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/MuOniaRun2012D_13Jul_MuMuPiPiPAT_ntpl_all.root");
+	dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/MuOniaRun2012D_13Jul_MuMuPiPiPAT_ntpl.root");
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/MC_bkg/BsToPsiMuMu_23Mar_MuMuPiKPAT_ntpl.root");
+      } else {
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/officialBdToPsiKpi_18Mar_MuMuPiKPAT_10k.root");
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/officialBdToPsiKpi_18Mar_MuMuPiKPAT_1M.root");
+	//dataset->SetDirectory("");
+	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC/150425_161612/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withGenPart/150429_142204/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	//
+	//dataset->Add("../officialBdToPsiKpi_18Mar_MuMuPiKPAT_150k.root");
+	// without tree
+	dataset->SetDirectory("");
+	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withGenVert/150511_225852/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withCosAlpha3D/150616_232452/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	// with tree
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/officialBdToPsiKpi_18Mar_MuMuPiKPAT_ntpl.root");
+      }
     } else {
       Bool_t dsA = kFALSE, dsB = kFALSE, dsC = kFALSE, dsD = kFALSE ;
-      //dsA = kTRUE ;
+      dsA = kTRUE ;
       dsB = kTRUE ;
-      //dsC = kTRUE ;
-      //dsD = kTRUE ;
+      dsC = kTRUE ;
+      dsD = kTRUE ;
       //
       // dataset A (288886 events)
       if (dsA) {
@@ -108,6 +127,7 @@
     gEnv->SetValue("Proof.StatsHist",1);
     gEnv->SetValue("Proof.StatsTrace",1);
     gEnv->SetValue("Proof.SlaveStatsTrace",1);
+    //gEnv->SetValue("ProofServ.Sandbox", "/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/officialMC/"); 
     //
     TString selector = "psiPrimePiK_MC";
     //
@@ -118,9 +138,12 @@
     TString selectorcplus = selector;
     selectorcplus+= ".C+";
     //selectorcplus+= ".C"; // not working
-    if ( MC ) 
-      p->Process(dataset, selectorcplus, "MC");  
-    else
+    if ( MC ) {
+      if ( !official ) 
+	p->Process(dataset, selectorcplus, "MC");
+      else  
+	p->Process(dataset, selectorcplus, "officialMC");
+    } else
       p->Process(dataset, selectorcplus);  
     
     //  gSystem->Exec("/opt/exp_soft/cms/slc5_amd64_gcc434/lcg/root/5.27.06b-cms16/test/ProofBench/SavePerfInfo.C("")");

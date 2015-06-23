@@ -23,11 +23,20 @@ process.source = cms.Source("PoolSource",
         # CRAB 
         #'file:/lustre/cms/store/group/cristella/Bd2Psi2SKpi-PHSP/MC_generation/141028_153606/merge/MC_Bd2Psi2SKpi_first111.root'
         #'file:/lustre/cms/store/group/cristella/Bd2Psi2SKpi-PHSP/MC_generation/141028_153606/merge/MC_Bd2Psi2SKpi_1of2.root'
-        'file:/lustre/cms/store/group/cristella/Bd2Psi2SKpi-PHSP/MC_generation/141028_153606/merge/MC_Bd2Psi2SKpi.root'
+        #'file:/lustre/cms/store/group/cristella/Bd2Psi2SKpi-PHSP/MC_generation/141028_153606/merge/MC_Bd2Psi2SKpi.root'
         # Bs
-        #'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/005DE3B0-FDDC-E111-9812-00266CFFC198.root'
-        ) 
-)
+        '/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/005DE3B0-FDDC-E111-9812-00266CFFC198.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/0090EB21-15DD-E111-9BE2-0017A4770800.root',       
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00A0B7F6-98DF-E111-866D-00266CFFC13C.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00A0B7F6-98DF-E111-866D-00266CFFC13C.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00A0B7F6-98DF-E111-866D-00266CFFC13C.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00A0B7F6-98DF-E111-866D-00266CFFC13C.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00A0B7F6-98DF-E111-866D-00266CFFC13C.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00A0B7F6-98DF-E111-866D-00266CFFC13C.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/0213D14A-4CE0-E111-AC17-1CC1DE056080.root',
+	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/0239D053-E7DF-E111-96FB-00266CFFBF90.root'
+	) 	
+)	
 
 process.source.inputCommands = cms.untracked.vstring(
         "keep *",
@@ -321,7 +330,8 @@ process.mkcands = cms.EDAnalyzer("MuMuPiKPAT",
 
 
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('BsToPsiMuMu_03Mar_MuMuPiKPAT_ntpl.root')
+    fileName = cms.string('BdToPsiKpi_18Mar_MuMuPiKPAT_ntpl.root')
+    #fileName = cms.string('BsToPsiMuMu_03Mar_MuMuPiKPAT_ntpl.root')
 )
 
 

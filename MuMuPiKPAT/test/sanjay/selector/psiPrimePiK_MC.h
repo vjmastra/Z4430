@@ -81,6 +81,22 @@ public :
    UInt_t          nMCAll ;
    vector<int>     *MCPdgIdAll;
    UInt_t          nMCB0 ;
+   vector<float>   *PriVtxGen_X ;
+   vector<float>   *PriVtxGen_Y ;
+   vector<float>   *PriVtxGen_Z ;
+   vector<float>   *PriVtxGen_EX ;
+   vector<float>   *PriVtxGen_EY ;
+   vector<float>   *PriVtxGen_EZ ;
+   vector<float>   *PriVtxGen_Chi2 ;
+   vector<float>   *PriVtxGen_CL ;
+   vector<int>     *PriVtxGen_Ndof ;
+   vector<int>     *PriVtxGen_tracks ;
+   //
+   vector<float>   *genEvtVtx_X ;
+   vector<float>   *genEvtVtx_Y ;
+   vector<float>   *genEvtVtx_Z ;
+   vector<int>     *genEvtVtx_particlesOut ;
+   //
    vector<float>   *MCpsi2SPx ;
    vector<float>   *MCpsi2SPy ;
    vector<float>   *MCpsi2SPz ;
@@ -208,80 +224,58 @@ public :
    vector<double>  *B0DecayVtx_XE;
    vector<double>  *B0DecayVtx_YE;
    vector<double>  *B0DecayVtx_ZE;
-   vector<float>   *PriVtx_B0CosAlpha_X;
-   vector<float>   *PriVtx_B0CosAlpha_Y;
-   vector<float>   *PriVtx_B0CosAlpha_Z;
-   vector<double>  *PriVtx_B0CosAlpha_EX;
-   vector<double>  *PriVtx_B0CosAlpha_EY;
-   vector<double>  *PriVtx_B0CosAlpha_EZ;
-   vector<float>   *PriVtx_B0CosAlpha_Chi2;
-   vector<float>   *PriVtx_B0CosAlpha_CL;
-   vector<int>     *PriVtx_B0CosAlpha_tracks;
-   vector<float>   *PriVtxB0Corr_X;
-   vector<float>   *PriVtxB0Corr_Y;
-   vector<float>   *PriVtxB0Corr_Z;
-   vector<double>  *PriVtxB0Corr_EX;
-   vector<double>  *PriVtxB0Corr_EY;
-   vector<double>  *PriVtxB0Corr_EZ;
-   vector<float>   *PriVtxB0Corr_Chi2;
-   vector<float>   *PriVtxB0Corr_CL;
+   // Primary Vertex with largest B0_cos(alpha)
+   vector<float>   *PriVtx_B0CosAlpha_X, *PriVtx_B0CosAlpha_Y, *PriVtx_B0CosAlpha_Z ; 
+   vector<double>  *PriVtx_B0CosAlpha_EX, *PriVtx_B0CosAlpha_EY, *PriVtx_B0CosAlpha_EZ ;
+   vector<float>   *PriVtx_B0CosAlpha_Chi2, *PriVtx_B0CosAlpha_CL;
+   vector<int>     *PriVtx_B0CosAlpha_tracks ;
+   vector<float>   *B0LessPV_tracksPtSq, *B0LessPV_4tracksPtSq ;
+   vector<float>   *PriVtxB0Less_X, *PriVtxB0Less_Y, *PriVtxB0Less_Z ; 
+   vector<double>  *PriVtxB0Less_EX, *PriVtxB0Less_EY, *PriVtxB0Less_EZ ;
+   vector<float>   *PriVtxB0Less_Chi2, *PriVtxB0Less_CL;
+   vector<int>     *PriVtxB0Less_tracks ;
+   vector<float>   *PriVtxB0Less_B0CosAlpha_X, *PriVtxB0Less_B0CosAlpha_Y, *PriVtxB0Less_B0CosAlpha_Z ; 
+   vector<double>  *PriVtxB0Less_B0CosAlpha_EX, *PriVtxB0Less_B0CosAlpha_EY, *PriVtxB0Less_B0CosAlpha_EZ ;
+   vector<float>   *PriVtxB0Less_B0CosAlpha_Chi2, *PriVtxB0Less_B0CosAlpha_CL;
+   vector<int>     *PriVtxB0Less_B0CosAlpha_tracks ;
+   // Primary Vertex with largest B0_cos(alpha) 3D
+   vector<float>   *PriVtx_B0CosAlpha3D_X, *PriVtx_B0CosAlpha3D_Y, *PriVtx_B0CosAlpha3D_Z ; 
+   vector<double>  *PriVtx_B0CosAlpha3D_EX, *PriVtx_B0CosAlpha3D_EY, *PriVtx_B0CosAlpha3D_EZ ;
+   vector<float>   *PriVtx_B0CosAlpha3D_Chi2, *PriVtx_B0CosAlpha3D_CL;
+   vector<int>     *PriVtx_B0CosAlpha3D_tracks ;
+   vector<float>   *PriVtxB0Less_B0CosAlpha3D_X, *PriVtxB0Less_B0CosAlpha3D_Y, *PriVtxB0Less_B0CosAlpha3D_Z ; 
+   vector<double>  *PriVtxB0Less_B0CosAlpha3D_EX, *PriVtxB0Less_B0CosAlpha3D_EY, *PriVtxB0Less_B0CosAlpha3D_EZ ;
+   vector<float>   *PriVtxB0Less_B0CosAlpha3D_Chi2, *PriVtxB0Less_B0CosAlpha3D_CL;
+   vector<int>     *PriVtxB0Less_B0CosAlpha3D_tracks ;
+   // Primary Vertex with "B0 correction" // check name
+   vector<float>   *PriVtxB0Corr_X, *PriVtxB0Corr_Y, *PriVtxB0Corr_Z;
+   vector<double>  *PriVtxB0Corr_EX, *PriVtxB0Corr_EY, *PriVtxB0Corr_EZ;
+   vector<float>   *PriVtxB0Corr_Chi2, *PriVtxB0Corr_CL;
    vector<int>     *PriVtxB0Corr_tracks;
-   vector<double>  *B0LxyPV;
-   vector<double>  *B0CosAlphaPV;
-   vector<double>  *B0CTauPV;
-   vector<double>  *B0CTauPVE;
-   vector<double>  *B0LxyPVCosAlpha;
-   vector<double>  *B0CosAlphaPVCosAlpha;
-   vector<double>  *B0CTauPVCosAlpha;
-   vector<double>  *B0CTauPVCosAlphaE;
-   vector<double>  *B0LxyPVX;
-   vector<double>  *B0CosAlphaPVX;
-   vector<double>  *B0CTauPVX;
-   vector<double>  *B0CTauPVXE;
-   vector<double>  *B0LxyBS;
-   vector<double>  *B0CosAlphaBS;
-   vector<double>  *B0CTauBS;
-   vector<double>  *B0CTauBSE;
-   vector<float>   *B0CTauPVX_3D;
-   vector<float>   *B0CTauPVX_3D_err;
-   vector<int>     *B0MuMuIdx;
-   vector<int>     *B0PionIdx;
-   vector<int>     *B0KaonIdx;
+   // Lifetimes
+   vector<double>  *B0CosAlphaBS, *B0CosAlpha3DBS, *B0CTauBS, *B0CTauBSE, *B0LxyBS ;
+   vector<double>  *B0CosAlphaPV, *B0CosAlpha3DPV, *B0CTauPV, *B0CTauPVE, *B0LxyPV ;
+   vector<double>  *B0CosAlphaPVCosAlpha, *B0CTauPVCosAlpha, *B0CTauPVCosAlphaE, *B0LxyPVCosAlpha ;
+   vector<double>  *B0CosAlphaPVCosAlpha3D, *B0CTauPVCosAlpha3D, *B0CTauPVCosAlpha3DE, *B0LxyPVCosAlpha3D ;
+   vector<double>  *B0CosAlphaB0LessPV, *B0CosAlpha3DB0LessPV, *B0CTauB0LessPV, *B0CTauB0LessPVE, *B0LxyB0LessPV ;
+   vector<double>  *B0CosAlphaB0LessPVCosAlpha, *B0CTauB0LessPVCosAlpha, *B0CTauB0LessPVCosAlphaE, *B0LxyB0LessPVCosAlpha ;
+   vector<double>  *B0CosAlphaB0LessPVCosAlpha3D, *B0CTauB0LessPVCosAlpha3D, *B0CTauB0LessPVCosAlpha3DE, *B0LxyB0LessPVCosAlpha3D ;
+   vector<double>  *B0CosAlphaPVX, *B0CTauPVX, *B0CTauPVXE, *B0LxyPVX ;
+   vector<float>   *B0CTauPVX_3D, *B0CTauPVX_3D_err ;
+   vector<int>     *B0MuMuIdx, *B0PionIdx, *B0KaonIdx ;
    vector<float>   *PiPiMass_err;
-   vector<float>   *Muon1Px_MuMuPiK;
-   vector<float>   *Muon1Py_MuMuPiK;
-   vector<float>   *Muon1Pz_MuMuPiK;
-   vector<float>   *Muon1E_MuMuPiK;
-   vector<float>   *Muon2Px_MuMuPiK;
-   vector<float>   *Muon2Py_MuMuPiK;
-   vector<float>   *Muon2Pz_MuMuPiK;
-   vector<float>   *Muon2E_MuMuPiK;
-   vector<float>   *PionPx_MuMuPiK;
-   vector<float>   *PionPy_MuMuPiK;
-   vector<float>   *PionPz_MuMuPiK;
-   vector<float>   *PionE_MuMuPiK;
+   vector<float>   *Muon1Px_MuMuPiK, *Muon1Py_MuMuPiK, *Muon1Pz_MuMuPiK, *Muon1E_MuMuPiK;
+   vector<float>   *Muon2Px_MuMuPiK, *Muon2Py_MuMuPiK, *Muon2Pz_MuMuPiK, *Muon2E_MuMuPiK;
+   vector<float>   *PionPx_MuMuPiK, *PionPy_MuMuPiK, *PionPz_MuMuPiK, *PionE_MuMuPiK;
    vector<double>  *pion_nsigdedx;
-   vector<float>   *pion_dedx;
-   vector<float>   *pion_dedxMass;
-   vector<float>   *pion_theo;
-   vector<float>   *pion_sigma;
-   vector<float>   *pion_dedx_byHits;
-   vector<float>   *pion_dedxErr_byHits;
-   vector<int>     *pion_saturMeas_byHits;
-   vector<int>     *pion_Meas_byHits;
-   vector<float>   *KaonPx_MuMuPiK;
-   vector<float>   *KaonPy_MuMuPiK;
-   vector<float>   *KaonPz_MuMuPiK;
-   vector<float>   *KaonE_MuMuPiK;
+   vector<float>   *pion_dedx, *pion_dedxMass, *pion_theo, *pion_sigma;
+   vector<float>   *pion_dedx_byHits, *pion_dedxErr_byHits;
+   vector<int>     *pion_saturMeas_byHits, *pion_Meas_byHits;
+   vector<float>   *KaonPx_MuMuPiK, *KaonPy_MuMuPiK, *KaonPz_MuMuPiK, *KaonE_MuMuPiK;
    vector<double>  *kaon_nsigdedx;
-   vector<float>   *kaon_dedx;
-   vector<float>   *kaon_dedxMass;
-   vector<float>   *kaon_theo;
-   vector<float>   *kaon_sigma;
-   vector<float>   *kaon_dedx_byHits;
-   vector<float>   *kaon_dedxErr_byHits;
-   vector<int>     *kaon_saturMeas_byHits;
-   vector<int>     *kaon_Meas_byHits;
+   vector<float>   *kaon_dedx, *kaon_dedxMass, *kaon_theo, *kaon_sigma;
+   vector<float>   *kaon_dedx_byHits, *kaon_dedxErr_byHits;
+   vector<int>     *kaon_saturMeas_byHits, *kaon_Meas_byHits;
 
    // List of branches
    TBranch        *b_TrigRes;   //!
@@ -305,6 +299,20 @@ public :
    TBranch        *b_nMCAll ;
    TBranch        *b_MCPdgIdAll ;
    TBranch        *b_nMCB0 ;
+   TBranch        *b_PriVtxGen_X ;
+   TBranch        *b_PriVtxGen_Y ;
+   TBranch        *b_PriVtxGen_Z ;
+   TBranch        *b_PriVtxGen_EX ;
+   TBranch        *b_PriVtxGen_EY ;
+   TBranch        *b_PriVtxGen_EZ ;
+   TBranch        *b_PriVtxGen_Chi2 ;
+   TBranch        *b_PriVtxGen_CL ;
+   TBranch        *b_PriVtxGen_Ndof ;
+   TBranch        *b_PriVtxGen_tracks ;
+   TBranch        *b_genEvtVtx_X ;
+   TBranch        *b_genEvtVtx_Y ;
+   TBranch        *b_genEvtVtx_Z ;
+   TBranch        *b_genEvtVtx_particlesOut ;
    TBranch        *b_MCpsi2SPx ;
    TBranch        *b_MCpsi2SPy ;
    TBranch        *b_MCpsi2SPz ;
@@ -432,80 +440,54 @@ public :
    TBranch        *b_B0DecayVtx_XE;   //!
    TBranch        *b_B0DecayVtx_YE;   //!
    TBranch        *b_B0DecayVtx_ZE;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_X;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_Y;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_Z;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_EX;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_EY;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_EZ;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_Chi2;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_CL;   //!
-   TBranch        *b_PriVtx_B0CosAlpha_tracks;   //!
-   TBranch        *b_PriVtxB0Corr_X;   //!
-   TBranch        *b_PriVtxB0Corr_Y;   //!
-   TBranch        *b_PriVtxB0Corr_Z;   //!
-   TBranch        *b_PriVtxB0Corr_EX;   //!
-   TBranch        *b_PriVtxB0Corr_EY;   //!
-   TBranch        *b_PriVtxB0Corr_EZ;   //!
-   TBranch        *b_PriVtxB0Corr_Chi2;   //!
-   TBranch        *b_PriVtxB0Corr_CL;   //!
-   TBranch        *b_PriVtxB0Corr_tracks;   //!
-   TBranch        *b_B0LxyPV;   //!
-   TBranch        *b_B0CosAlphaPV;   //!
-   TBranch        *b_B0CTauPV;   //!
-   TBranch        *b_B0CTauPVE;   //!
-   TBranch        *b_B0LxyPVCosAlpha;   //!
-   TBranch        *b_B0CosAlphaPVCosAlpha;   //!
-   TBranch        *b_B0CTauPVCosAlpha;   //!
-   TBranch        *b_B0CTauPVCosAlphaE;   //!
-   TBranch        *b_B0LxyPVX;   //!
-   TBranch        *b_B0CosAlphaPVX;   //!
-   TBranch        *b_B0CTauPVX;   //!
-   TBranch        *b_B0CTauPVXE;   //!
-   TBranch        *b_B0LxyBS;   //!
-   TBranch        *b_B0CosAlphaBS;   //!
-   TBranch        *b_B0CTauBS;   //!
-   TBranch        *b_B0CTauBSE;   //!
-   TBranch        *b_B0CTauPVX_3D;   //!
-   TBranch        *b_B0CTauPVX_3D_err;   //!
-   TBranch        *b_B0MuMuIdx;   //!
-   TBranch        *b_B0PionIdx;   //!
-   TBranch        *b_B0KaonIdx;   //!
+   // Primary Vertex with largest B0_cos(alpha)
+   TBranch        *b_PriVtx_B0CosAlpha_X, *b_PriVtx_B0CosAlpha_Y, *b_PriVtx_B0CosAlpha_Z ; 
+   TBranch        *b_PriVtx_B0CosAlpha_EX, *b_PriVtx_B0CosAlpha_EY, *b_PriVtx_B0CosAlpha_EZ ;
+   TBranch	  *b_PriVtx_B0CosAlpha_Chi2, *b_PriVtx_B0CosAlpha_CL;
+   TBranch        *b_PriVtx_B0CosAlpha_tracks ;
+   TBranch        *b_B0LessPV_tracksPtSq, *b_B0LessPV_4tracksPtSq ;
+   TBranch        *b_PriVtxB0Less_X, *b_PriVtxB0Less_Y, *b_PriVtxB0Less_Z ; 
+   TBranch        *b_PriVtxB0Less_EX, *b_PriVtxB0Less_EY, *b_PriVtxB0Less_EZ ;
+   TBranch	  *b_PriVtxB0Less_Chi2, *b_PriVtxB0Less_CL;
+   TBranch        *b_PriVtxB0Less_tracks ;
+   TBranch        *b_PriVtxB0Less_B0CosAlpha_X, *b_PriVtxB0Less_B0CosAlpha_Y, *b_PriVtxB0Less_B0CosAlpha_Z ; 
+   TBranch        *b_PriVtxB0Less_B0CosAlpha_EX, *b_PriVtxB0Less_B0CosAlpha_EY, *b_PriVtxB0Less_B0CosAlpha_EZ ;
+   TBranch	  *b_PriVtxB0Less_B0CosAlpha_Chi2, *b_PriVtxB0Less_B0CosAlpha_CL;
+   TBranch        *b_PriVtxB0Less_B0CosAlpha_tracks ;
+   // Primary Vertex with largest B0_cos(alpha) 3D
+   TBranch        *b_PriVtx_B0CosAlpha3D_X, *b_PriVtx_B0CosAlpha3D_Y, *b_PriVtx_B0CosAlpha3D_Z ; 
+   TBranch        *b_PriVtx_B0CosAlpha3D_EX, *b_PriVtx_B0CosAlpha3D_EY, *b_PriVtx_B0CosAlpha3D_EZ ;
+   TBranch	  *b_PriVtx_B0CosAlpha3D_Chi2, *b_PriVtx_B0CosAlpha3D_CL;
+   TBranch        *b_PriVtx_B0CosAlpha3D_tracks ;
+   TBranch        *b_PriVtxB0Less_B0CosAlpha3D_X, *b_PriVtxB0Less_B0CosAlpha3D_Y, *b_PriVtxB0Less_B0CosAlpha3D_Z ; 
+   TBranch        *b_PriVtxB0Less_B0CosAlpha3D_EX, *b_PriVtxB0Less_B0CosAlpha3D_EY, *b_PriVtxB0Less_B0CosAlpha3D_EZ ;
+   TBranch	  *b_PriVtxB0Less_B0CosAlpha3D_Chi2, *b_PriVtxB0Less_B0CosAlpha3D_CL;
+   TBranch        *b_PriVtxB0Less_B0CosAlpha3D_tracks ;
+   // Primary Vertex with "B0 correction" // check name
+   TBranch        *b_PriVtxB0Corr_X, *b_PriVtxB0Corr_Y, *b_PriVtxB0Corr_Z;
+   TBranch        *b_PriVtxB0Corr_EX, *b_PriVtxB0Corr_EY, *b_PriVtxB0Corr_EZ;
+   TBranch	  *b_PriVtxB0Corr_Chi2, *b_PriVtxB0Corr_CL;
+   TBranch        *b_PriVtxB0Corr_tracks;
+   // Lifetimes
+   TBranch        *b_B0CosAlphaBS, *b_B0CosAlpha3DBS, *b_B0CTauBS, *b_B0CTauBSE, *b_B0LxyBS ;
+   TBranch        *b_B0CosAlphaPV, *b_B0CosAlpha3DPV, *b_B0CTauPV, *b_B0CTauPVE, *b_B0LxyPV ;
+   TBranch        *b_B0CosAlphaPVCosAlpha, *b_B0CTauPVCosAlpha, *b_B0CTauPVCosAlphaE, *b_B0LxyPVCosAlpha ;
+   TBranch        *b_B0CosAlphaPVCosAlpha3D, *b_B0CTauPVCosAlpha3D, *b_B0CTauPVCosAlpha3DE, *b_B0LxyPVCosAlpha3D ;
+   TBranch        *b_B0CosAlphaB0LessPV, *b_B0CosAlpha3DB0LessPV, *b_B0CTauB0LessPV, *b_B0CTauB0LessPVE, *b_B0LxyB0LessPV ;
+   TBranch        *b_B0CosAlphaB0LessPVCosAlpha, *b_B0CTauB0LessPVCosAlpha, *b_B0CTauB0LessPVCosAlphaE, *b_B0LxyB0LessPVCosAlpha ;
+   TBranch        *b_B0CosAlphaB0LessPVCosAlpha3D, *b_B0CTauB0LessPVCosAlpha3D, *b_B0CTauB0LessPVCosAlpha3DE, *b_B0LxyB0LessPVCosAlpha3D ;
+   TBranch        *b_B0CosAlphaPVX, *b_B0CTauPVX, *b_B0CTauPVXE, *b_B0LxyPVX ;
+   TBranch	  *b_B0CTauPVX_3D, *b_B0CTauPVX_3D_err;
+   TBranch        *b_B0MuMuIdx, *b_B0PionIdx, *b_B0KaonIdx;   //!
    TBranch        *b_PiPiMass_err;   //!
-   TBranch        *b_Muon1Px_MuMuPiK;   //!
-   TBranch        *b_Muon1Py_MuMuPiK;   //!
-   TBranch        *b_Muon1Pz_MuMuPiK;   //!
-   TBranch        *b_Muon1E_MuMuPiK;   //!
-   TBranch        *b_Muon2Px_MuMuPiK;   //!
-   TBranch        *b_Muon2Py_MuMuPiK;   //!
-   TBranch        *b_Muon2Pz_MuMuPiK;   //!
-   TBranch        *b_Muon2E_MuMuPiK;   //!
-   TBranch        *b_PionPx_MuMuPiK;   //!
-   TBranch        *b_PionPy_MuMuPiK;   //!
-   TBranch        *b_PionPz_MuMuPiK;   //!
-   TBranch        *b_PionE_MuMuPiK;   //!
-   TBranch        *b_pion_nsigdedx;   //!
-   TBranch        *b_pion_dedx;   //!
-   TBranch        *b_pion_dedxMass;   //!
-   TBranch        *b_pion_theo;   //!
-   TBranch        *b_pion_sigma;   //!
-   TBranch        *b_pion_dedx_byHits;   //!
-   TBranch        *b_pion_dedxErr_byHits;   //!
-   TBranch        *b_pion_saturMeas_byHits;   //!
-   TBranch        *b_pion_Meas_byHits;   //!
-   TBranch        *b_KaonPx_MuMuPiK;   //!
-   TBranch        *b_KaonPy_MuMuPiK;   //!
-   TBranch        *b_KaonPz_MuMuPiK;   //!
-   TBranch        *b_KaonE_MuMuPiK;   //!
-   TBranch        *b_kaon_nsigdedx;   //!
-   TBranch        *b_kaon_dedx;   //!
-   TBranch        *b_kaon_dedxMass;   //!
-   TBranch        *b_kaon_theo;   //!
-   TBranch        *b_kaon_sigma;   //!
-   TBranch        *b_kaon_dedx_byHits;   //!
-   TBranch        *b_kaon_dedxErr_byHits;   //!
-   TBranch        *b_kaon_saturMeas_byHits;   //!
-   TBranch        *b_kaon_Meas_byHits;   //!
+   TBranch        *b_Muon1Px_MuMuPiK, *b_Muon1Py_MuMuPiK, *b_Muon1Pz_MuMuPiK, *b_Muon1E_MuMuPiK;   //!
+   TBranch        *b_Muon2Px_MuMuPiK, *b_Muon2Py_MuMuPiK, *b_Muon2Pz_MuMuPiK, *b_Muon2E_MuMuPiK;   //!
+   TBranch        *b_PionPx_MuMuPiK, *b_PionPy_MuMuPiK, *b_PionPz_MuMuPiK, *b_PionE_MuMuPiK;   //!
+   TBranch        *b_pion_nsigdedx, *b_pion_dedx, *b_pion_dedxMass, *b_pion_theo, *b_pion_sigma;   //!
+   TBranch        *b_pion_dedx_byHits, *b_pion_dedxErr_byHits, *b_pion_saturMeas_byHits, *b_pion_Meas_byHits;   //!
+   TBranch        *b_KaonPx_MuMuPiK, *b_KaonPy_MuMuPiK, *b_KaonPz_MuMuPiK, *b_KaonE_MuMuPiK;   //!
+   TBranch        *b_kaon_nsigdedx, *b_kaon_dedx, *b_kaon_dedxMass, *b_kaon_theo, *b_kaon_sigma;   //!
+   TBranch        *b_kaon_dedx_byHits, *b_kaon_dedxErr_byHits, *b_kaon_saturMeas_byHits, *b_kaon_Meas_byHits;   //!
 
    psiPrimePiK_MC(TTree * /*tree*/ =0) : fChain(0) { }
    virtual ~psiPrimePiK_MC() { }
@@ -539,7 +521,7 @@ public :
    TProofOutputFile *OutFile, *SaraFile, *AlexisFile, *tightCutsFile ;
    TFile            *fOut, *SaraOut, *AlexisOut, *tightCutsOut ;
    Bool_t newSoftMuonID, only1psiPrime;
-   Bool_t MC, oldNtuple, Kai_cuts, HLT_Displaced, fixedMassWind, sideband ;
+   Bool_t MC, officialMC, oldNtuple, priVtxsInfo, Kai_cuts, HLT_Displaced, fixedMassWind, sideband ;
 
    //TProofOutputFile *myOutFile, *myOutFileA, *myOutFileB;
    //ofstream *myoutfile, *myoutfileA, *myoutfileB; // works!
@@ -614,6 +596,7 @@ public :
    // K*
    TH1F* myExclusiveMuMuKPiMass ;
    TH1F* trk_dxy, *trk_dz, *hmyPsiPMassSel, *hPsiPrimefromBMassSel, *hmyPsiPKPiMassSelAlt, *hmyPsiPKPiMassSelAltZoom, *hmyPsiPKPiMassSelZoom ;
+   TH2F* psi2SPiSqMass_vs_KPiSqMass_AC ;
    // tight cuts
    vector <Float_t> piPt_B0, KPt_B0, vtxCL_B0, cTau_B0 ;
    vector <TH1F*> myMuMuKPiMass_piPt, myMuMuKPiMass_KPt, myMuMuKPiMass_vtxCL, myMuMuKPiMass_cTau ;
@@ -626,6 +609,7 @@ public :
    //
    // PV matching
    TH1F* priVtx_deltaZ ;
+   TH2F* B0_pointingAngle_PVvsB0LessPV[2], *z_PVvsB0LessPV[2] ;
    TH1F* B0_PVCTau_h, *B0_CosAlphaCTau_h, *B0_PVXCTau_h, *B0_PVX3DCTau_h ;
    TH1I* priVtx_matched ;
    //
@@ -661,14 +645,18 @@ public :
    //
    // selection varables
    // Z- variables
-   TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
-   TH1F* hB0Mass_1B0, *hB0Mass_1B0matched[2], *hB0Mass_noTwins_noSignalWinNotTwins ;
+   TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0AC_signalWin_h, *nB0AC_purityWin_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
+   TH1F* hB0Mass_1B0, *hB0Mass_1B0matched[2][2], *hB0Mass_noTwins_noSignalWinNotTwins ;
    TH2F* psi2SPiSqMass_vs_KPiSqMass_1B0[2] ;
    TH1F* hB0CTau_1B0, *hB0CTau_1B0matched ;
    TH1F* B0_gen_p_h, *B0_gen_pT_h, *psi2S_gen_p_h, *psi2S_gen_pT_h, *K_gen_p_h, *K_gen_pT_h, *pi_gen_p_h, *pi_gen_pT_h ;
    TH1F* hMCDeltaRPi_2B0, *hMCDeltaRK_2B0 ;
    TH1F* B0_gen_mass_h ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_gen, *psi2SPiSqMass_vs_KPiSqMass_BT_gen, *piCh_vs_KCh_gen ;
+   TH2F* psi2SPiSqMass_vs_KPiSqMass_gen, *psi2SPiSqMass_vs_KPiSqMass_BT_gen, *KPiSqMass_vs_psi2SKSqMass_BT_gen, *piCh_vs_KCh_gen ;
+   TH2F* B0CosAlpha_2Dvs3D[4] ;
+   TH1F* priVtx_z[7] ;
+   TH1F* priVtx_delta[2][3], *priVtx_deltaX_test, *priVtx_deltaY_test, *priVtx_B0_delta[2][3], *priVtx_B0CosAlpha_delta[2][2][3], *priVtxB0Less_delta[2][3], *priVtxB0Less_B0CosAlpha_delta[2][2][3] ;
+   TH1F* dz_pri_priB0CosAlpha[2][2], *dz_pri_priB0Less[2], *dz_pri_priB0LessB0CosAlpha[2][2], *dz_priB0CosAlpha_priB0LessB0CosAlpha[2][2], *dz_priB0Less_priB0LessB0CosAlpha[2][2] ;
    TH1F* hMCDeltaR_1B0, *hMCDeltaPt_1B0 ;
    TH1I* hMCTruthMatching_1B0[2][3], *hMCTruthMatching_2B0notTwin[3], *hMCTruthMatching_2B0twin[3], *hMCTruthMatching_2B0signalWin_notTwin ; 
    TH1F* hB0Mass_2B0notTwin, *hB0Mass_2B0notTwin_matched[3], *hB0Mass_2B0twin, *hB0Mass_2B0twin_matched[3] ;
@@ -789,15 +777,21 @@ void psiPrimePiK_MC::Init(TTree *tree)
   //MC = kFALSE ; oldNtuple = kTRUE ; // for June 2014 ntuples
   //MC = kTRUE ; oldNtuple = kFALSE ; // for late 2014 MC
   TString option = GetOption();
-  if (option == "MC")
+  if (option == "MC" || option == "officialMC") {
     MC = kTRUE ;
-  else
+    if (option == "officialMC") 
+      officialMC = kTRUE ;
+  } else {
     MC = kFALSE ;  
-  
-  if ( MC )
+    officialMC = kFALSE ;  
+  }
+
+  if ( MC || officialMC )
     oldNtuple = kFALSE ;
   else 
     oldNtuple = kTRUE ;
+
+  priVtxsInfo = kFALSE ; priVtxsInfo = kTRUE ;
 
   B0_Id = 511 ; psi2S_Id = 100443 ; Kaon_Id = 321; pion_Id = 211; muon_Id = 13;
   
@@ -826,204 +820,122 @@ void psiPrimePiK_MC::Init(TTree *tree)
    MatchTriggerNames = 0;
    L1TrigRes = 0;
    MCPdgIdAll = 0;
-   MCpsi2SPx = 0;
-   MCpsi2SPy = 0;
-   MCpsi2SPz = 0;
-   MCpionPx = 0;
-   MCpionPy = 0;
-   MCpionPz = 0;
-   MCkaonPx = 0;
-   MCkaonPy = 0;
-   MCkaonPz = 0;
-   MCPx = 0;
-   MCPy = 0;
-   MCPz = 0;
-   MCpionCh = 0;
-   MCkaonCh = 0;
+   PriVtxGen_X = 0; PriVtxGen_Y = 0; PriVtxGen_Z = 0;
+   PriVtxGen_EX = 0; PriVtxGen_EY = 0; PriVtxGen_EZ = 0;
+   PriVtxGen_Chi2 = 0; PriVtxGen_CL = 0; PriVtxGen_Ndof = 0;
+   PriVtxGen_tracks = 0;
+   genEvtVtx_X = 0; genEvtVtx_Y = 0; genEvtVtx_Z = 0;
+   genEvtVtx_particlesOut = 0;
+   MCpsi2SPx = 0; MCpsi2SPy = 0; MCpsi2SPz = 0;
+   MCpionPx = 0; MCpionPy = 0; MCpionPz = 0;
+   MCkaonPx = 0; MCkaonPy = 0; MCkaonPz = 0;
+   MCPx = 0; MCPy = 0; MCPz = 0;
+   MCpionCh = 0; MCkaonCh = 0;
 
    // Generic Muons
-   muPx = 0;
-   muPy = 0;
-   muPz = 0;
-   muD0 = 0;
-   muDz = 0;
-   muChi2 = 0;
-   muNDF = 0;
-   muPhits = 0;
-   muShits = 0;
-   muLayersTr = 0;
-   muLayersPix = 0;
-   muD0E = 0;
-   muDzVtxErr = 0;
+   muPx = 0; muPy = 0; muPz = 0;
+   muD0 = 0; muDz = 0;
+   muChi2 = 0; muNDF = 0;
+   muPhits = 0; muShits = 0;
+   muLayersTr = 0; muLayersPix = 0;
+   muD0E = 0; muDzVtxErr = 0;
    muKey = 0;
    muGlMuHits = 0;
-   muGlChi2 = 0;
-   muGlNDF = 0;
+   muGlChi2 = 0; muGlNDF = 0;
    muGlMatchedStation = 0;
-   muGlDzVtx = 0;
-   muGlDxyVtx = 0;
+   muGlDzVtx = 0; muGlDxyVtx = 0;
    muType = 0;
    muQual = 0;
    muTrack = 0;
    muCharge = 0;
    mufHits = 0;
-   muFirstBarrel = 0;
-   muFirstEndCap = 0;
-   muDzVtx = 0;
-   muDxyVtx = 0;
-   trNotRef = 0;
-   trRef = 0;
-   trackPx = 0;
-   trackPy = 0;
-   trackPz = 0;
+   muFirstBarrel = 0; muFirstEndCap = 0;
+   muDzVtx = 0; muDxyVtx = 0;
+   trNotRef = 0; trRef = 0;
+   trackPx = 0; trackPy = 0; trackPz = 0;
    trackEnergy = 0;
    trackNDF = 0;
-   trackPhits = 0;
-   trackShits = 0;
+   trackPhits = 0; trackShits = 0;
    trackChi2 = 0;
-   trackD0 = 0;
-   trackD0Err = 0;
+   trackD0 = 0; trackD0Err = 0;
    trackCharge = 0;
    TrackHighPurity = 0;
    TrackTight = 0;
    trackfHits = 0;
-   trackFirstBarrel = 0;
-   trackFirstEndCap = 0;
-   trackDzVtx = 0;
-   trackDxyVtx = 0;
-   tr_nsigdedx = 0;
-   tr_dedx = 0;
-   tr_dedxMass = 0;
-   tr_theo = 0;
-   tr_sigma = 0;
-   tr_dedx_byHits = 0;
-   tr_dedxErr_byHits = 0;
-   tr_saturMeas_byHits = 0;
-   tr_Meas_byHits = 0;
+   trackFirstBarrel = 0; trackFirstEndCap = 0;
+   trackDzVtx = 0; trackDxyVtx = 0;
+   tr_nsigdedx = 0; tr_dedx = 0; tr_dedxMass = 0; tr_theo = 0; tr_sigma = 0;
+   tr_dedx_byHits = 0; tr_dedxErr_byHits = 0; tr_saturMeas_byHits = 0; tr_Meas_byHits = 0;
    MuMuMass = 0;
-   MuMuPx = 0;
-   MuMuPy = 0;
-   MuMuPz = 0;
-   MuMuVtx_CL = 0;
-   MuMuVtx_Chi2 = 0;
-   MuMuDecayVtx_X = 0;
-   MuMuDecayVtx_Y = 0;
-   MuMuDecayVtx_Z = 0;
-   MuMuDecayVtx_XE = 0;
-   MuMuDecayVtx_YE = 0;
-   MuMuDecayVtx_ZE = 0;
-   mu1Idx = 0;
-   mu2Idx = 0;
-   mu1Px_MuMu = 0;
-   mu1Py_MuMu = 0;
-   mu1Pz_MuMu = 0;
-   mu1Chi_MuMu2 = 0;
-   mu1NDF_MuMu = 0;
-   mu2Px_MuMu = 0;
-   mu2Py_MuMu = 0;
-   mu2Pz_MuMu = 0;
-   mu2Chi2_MuMu = 0;
-   mu2NDF_MuMu = 0;
+   MuMuPx = 0; MuMuPy = 0; MuMuPz = 0;
+   MuMuVtx_CL = 0; MuMuVtx_Chi2 = 0;
+   MuMuDecayVtx_X = 0; MuMuDecayVtx_Y = 0; MuMuDecayVtx_Z = 0;
+   MuMuDecayVtx_XE = 0; MuMuDecayVtx_YE = 0; MuMuDecayVtx_ZE = 0;
+   mu1Idx = 0; mu2Idx = 0;
+   mu1Px_MuMu = 0; mu1Py_MuMu = 0; mu1Pz_MuMu = 0;
+   mu1Chi_MuMu2 = 0; mu1NDF_MuMu = 0;
+   mu2Px_MuMu = 0; mu2Py_MuMu = 0; mu2Pz_MuMu = 0;
+   mu2Chi2_MuMu = 0; mu2NDF_MuMu = 0;
    MuMuType = 0;
    MuMuMuonTrigMatch = 0;
-   PriVtxMuMuCorr_X = 0;
-   PriVtxMuMuCorr_Y = 0;
-   PriVtxMuMuCorr_Z = 0;
-   PriVtxMuMuCorr_EX = 0;
-   PriVtxMuMuCorr_EY = 0;
-   PriVtxMuMuCorr_EZ = 0;
-   PriVtxMuMuCorr_Chi2 = 0;
-   PriVtxMuMuCorr_CL = 0;
+   PriVtxMuMuCorr_X = 0; PriVtxMuMuCorr_Y = 0; PriVtxMuMuCorr_Z = 0;
+   PriVtxMuMuCorr_EX = 0; PriVtxMuMuCorr_EY = 0; PriVtxMuMuCorr_EZ = 0;
+   PriVtxMuMuCorr_Chi2 = 0; PriVtxMuMuCorr_CL = 0;
    PriVtxMuMuCorr_tracks = 0;
    B0Mass = 0;
-   B0Px = 0;
-   B0Py = 0;
-   B0Pz = 0;
-   B0PxE = 0;
-   B0PyE = 0;
-   B0PzE = 0;
-   B0Vtx_CL = 0;
-   B0Vtx_Chi2 = 0;
-   B0DecayVtx_X = 0;
-   B0DecayVtx_Y = 0;
-   B0DecayVtx_Z = 0;
-   B0DecayVtx_XE = 0;
-   B0DecayVtx_YE = 0;
-   B0DecayVtx_ZE = 0;
-   PriVtx_B0CosAlpha_X = 0;
-   PriVtx_B0CosAlpha_Y = 0;
-   PriVtx_B0CosAlpha_Z = 0;
-   PriVtx_B0CosAlpha_EX = 0;
-   PriVtx_B0CosAlpha_EY = 0;
-   PriVtx_B0CosAlpha_EZ = 0;
-   PriVtx_B0CosAlpha_Chi2 = 0;
-   PriVtx_B0CosAlpha_CL = 0;
+   B0Px = 0; B0Py = 0; B0Pz = 0;
+   B0PxE = 0; B0PyE = 0; B0PzE = 0;
+   B0Vtx_CL = 0; B0Vtx_Chi2 = 0;
+   B0DecayVtx_X = 0; B0DecayVtx_Y = 0; B0DecayVtx_Z = 0;
+   B0DecayVtx_XE = 0; B0DecayVtx_YE = 0; B0DecayVtx_ZE = 0;
+   // Primary Vertex with largest B0_cos(alpha)
+   PriVtx_B0CosAlpha_X = 0; PriVtx_B0CosAlpha_Y = 0; PriVtx_B0CosAlpha_Z = 0;
+   PriVtx_B0CosAlpha_EX = 0; PriVtx_B0CosAlpha_EY = 0; PriVtx_B0CosAlpha_EZ = 0;
+   PriVtx_B0CosAlpha_Chi2 = 0; PriVtx_B0CosAlpha_CL = 0;
    PriVtx_B0CosAlpha_tracks = 0;
-   PriVtxB0Corr_X = 0;
-   PriVtxB0Corr_Y = 0;
-   PriVtxB0Corr_Z = 0;
-   PriVtxB0Corr_EX = 0;
-   PriVtxB0Corr_EY = 0;
-   PriVtxB0Corr_EZ = 0;
-   PriVtxB0Corr_Chi2 = 0;
-   PriVtxB0Corr_CL = 0;
+   B0LessPV_tracksPtSq = 0; B0LessPV_4tracksPtSq = 0;
+   PriVtxB0Less_X = 0; PriVtxB0Less_Y = 0; PriVtxB0Less_Z = 0;
+   PriVtxB0Less_EX = 0; PriVtxB0Less_EY = 0; PriVtxB0Less_EZ = 0;
+   PriVtxB0Less_Chi2 = 0; PriVtxB0Less_CL = 0;
+   PriVtxB0Less_tracks = 0;
+   PriVtxB0Less_B0CosAlpha_X = 0; PriVtxB0Less_B0CosAlpha_Y = 0; PriVtxB0Less_B0CosAlpha_Z = 0;
+   PriVtxB0Less_B0CosAlpha_EX = 0; PriVtxB0Less_B0CosAlpha_EY = 0; PriVtxB0Less_B0CosAlpha_EZ = 0;
+   PriVtxB0Less_B0CosAlpha_Chi2 = 0; PriVtxB0Less_B0CosAlpha_CL = 0;
+   PriVtxB0Less_B0CosAlpha_tracks = 0;
+   // Primary Vertex with largest B0_cos(alpha) 3D
+   PriVtx_B0CosAlpha3D_X = 0; PriVtx_B0CosAlpha3D_Y = 0; PriVtx_B0CosAlpha3D_Z = 0;
+   PriVtx_B0CosAlpha3D_EX = 0; PriVtx_B0CosAlpha3D_EY = 0; PriVtx_B0CosAlpha3D_EZ = 0;
+   PriVtx_B0CosAlpha3D_Chi2 = 0; PriVtx_B0CosAlpha3D_CL = 0;
+   PriVtx_B0CosAlpha3D_tracks = 0;
+   PriVtxB0Less_B0CosAlpha3D_X = 0; PriVtxB0Less_B0CosAlpha3D_Y = 0; PriVtxB0Less_B0CosAlpha3D_Z = 0;
+   PriVtxB0Less_B0CosAlpha3D_EX = 0; PriVtxB0Less_B0CosAlpha3D_EY = 0; PriVtxB0Less_B0CosAlpha3D_EZ = 0;
+   PriVtxB0Less_B0CosAlpha3D_Chi2 = 0; PriVtxB0Less_B0CosAlpha3D_CL = 0;
+   PriVtxB0Less_B0CosAlpha3D_tracks = 0;
+   // Primary Vertex with "B0 correction"
+   PriVtxB0Corr_X = 0; PriVtxB0Corr_Y = 0; PriVtxB0Corr_Z = 0;
+   PriVtxB0Corr_EX = 0; PriVtxB0Corr_EY = 0; PriVtxB0Corr_EZ = 0;
+   PriVtxB0Corr_Chi2 = 0; PriVtxB0Corr_CL = 0;
    PriVtxB0Corr_tracks = 0;
-   B0LxyPV = 0;
-   B0CosAlphaPV = 0;
-   B0CTauPV = 0;
-   B0CTauPVE = 0;
-   B0LxyPVCosAlpha = 0;
-   B0CosAlphaPVCosAlpha = 0;
-   B0CTauPVCosAlpha = 0;
-   B0CTauPVCosAlphaE = 0;
-   B0LxyPVX = 0;
-   B0CosAlphaPVX = 0;
-   B0CTauPVX = 0;
-   B0CTauPVXE = 0;
-   B0LxyBS = 0;
-   B0CosAlphaBS = 0;
-   B0CTauBS = 0;
-   B0CTauBSE = 0;
-   B0CTauPVX_3D = 0;
-   B0CTauPVX_3D_err = 0;
-   B0MuMuIdx = 0;
-   B0PionIdx = 0;
-   B0KaonIdx = 0;
+   // Lifetime variables
+   B0CosAlphaBS = 0; B0CosAlpha3DBS = 0; B0CTauBS = 0; B0CTauBSE = 0; B0LxyBS = 0; 
+   B0CosAlphaPV = 0; B0CosAlpha3DPV = 0; B0CTauPV = 0; B0CTauPVE = 0; B0LxyPV = 0; 
+   B0CosAlphaPVCosAlpha = 0; B0CTauPVCosAlpha = 0; B0CTauPVCosAlphaE = 0; B0LxyPVCosAlpha = 0; 
+   B0CosAlphaPVCosAlpha3D = 0; B0CTauPVCosAlpha3D = 0; B0CTauPVCosAlpha3DE = 0; B0LxyPVCosAlpha3D = 0; 
+   B0CosAlphaB0LessPV = 0; B0CosAlpha3DB0LessPV = 0; B0CTauB0LessPV = 0; B0CTauB0LessPVE = 0; B0LxyB0LessPV = 0; 
+   B0CosAlphaB0LessPVCosAlpha = 0; B0CTauB0LessPVCosAlpha = 0; B0CTauB0LessPVCosAlphaE = 0; B0LxyB0LessPVCosAlpha = 0; 
+   B0CosAlphaB0LessPVCosAlpha3D = 0; B0CTauB0LessPVCosAlpha3D = 0; B0CTauB0LessPVCosAlpha3DE = 0; B0LxyB0LessPVCosAlpha3D = 0; 
+   B0CosAlphaPVX = 0; B0CTauPVX = 0; B0CTauPVXE = 0; B0LxyPVX = 0; 
+   B0CTauPVX_3D = 0; B0CTauPVX_3D_err = 0;
+   B0MuMuIdx = 0; B0PionIdx = 0; B0KaonIdx = 0;
    PiPiMass_err = 0;
-   Muon1Px_MuMuPiK = 0;
-   Muon1Py_MuMuPiK = 0;
-   Muon1Pz_MuMuPiK = 0;
-   Muon1E_MuMuPiK = 0;
-   Muon2Px_MuMuPiK = 0;
-   Muon2Py_MuMuPiK = 0;
-   Muon2Pz_MuMuPiK = 0;
-   Muon2E_MuMuPiK = 0;
-   PionPx_MuMuPiK = 0;
-   PionPy_MuMuPiK = 0;
-   PionPz_MuMuPiK = 0;
-   PionE_MuMuPiK = 0;
-   pion_nsigdedx = 0;
-   pion_dedx = 0;
-   pion_dedxMass = 0;
-   pion_theo = 0;
-   pion_sigma = 0;
-   pion_dedx_byHits = 0;
-   pion_dedxErr_byHits = 0;
-   pion_saturMeas_byHits = 0;
-   pion_Meas_byHits = 0;
-   KaonPx_MuMuPiK = 0;
-   KaonPy_MuMuPiK = 0;
-   KaonPz_MuMuPiK = 0;
-   KaonE_MuMuPiK = 0;
-   kaon_nsigdedx = 0;
-   kaon_dedx = 0;
-   kaon_dedxMass = 0;
-   kaon_theo = 0;
-   kaon_sigma = 0;
-   kaon_dedx_byHits = 0;
-   kaon_dedxErr_byHits = 0;
-   kaon_saturMeas_byHits = 0;
-   kaon_Meas_byHits = 0;
+   Muon1Px_MuMuPiK = 0; Muon1Py_MuMuPiK = 0; Muon1Pz_MuMuPiK = 0; Muon1E_MuMuPiK = 0;
+   Muon2Px_MuMuPiK = 0; Muon2Py_MuMuPiK = 0; Muon2Pz_MuMuPiK = 0; Muon2E_MuMuPiK = 0;
+   PionPx_MuMuPiK = 0; PionPy_MuMuPiK = 0; PionPz_MuMuPiK = 0; PionE_MuMuPiK = 0;
+   pion_nsigdedx = 0; pion_dedx = 0; pion_dedxMass = 0; pion_theo = 0; pion_sigma = 0;
+   pion_dedx_byHits = 0; pion_dedxErr_byHits = 0; pion_saturMeas_byHits = 0; pion_Meas_byHits = 0;
+   KaonPx_MuMuPiK = 0; KaonPy_MuMuPiK = 0; KaonPz_MuMuPiK = 0; KaonE_MuMuPiK = 0;
+   kaon_nsigdedx = 0; kaon_dedx = 0; kaon_dedxMass = 0; kaon_theo = 0; kaon_sigma = 0;
+   kaon_dedx_byHits = 0; kaon_dedxErr_byHits = 0; kaon_saturMeas_byHits = 0; kaon_Meas_byHits = 0;
    // Set branch addresses and branch pointers
    if (!tree) return;
    fChain = tree;
@@ -1046,10 +958,27 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("priVtx_Chi2", &priVtx_Chi2, &b_priVtx_Chi2);
    fChain->SetBranchAddress("priVtx_CL", &priVtx_CL, &b_priVtx_CL);
    fChain->SetBranchAddress("priVtx_tracks", &priVtx_tracks, &b_priVtx_tracks);
-   if (MC) { // MC Analysis
+   if ( MC || officialMC ) { // MC Analysis
      fChain->SetBranchAddress("nMCAll", &nMCAll, &b_nMCAll);
      fChain->SetBranchAddress("MCPdgIdAll", &MCPdgIdAll, &b_MCPdgIdAll);
      fChain->SetBranchAddress("nMCB0", &nMCB0, &b_nMCB0);
+     //
+     fChain->SetBranchAddress("PriVtxGen_X", &PriVtxGen_X, &b_PriVtxGen_X);
+     fChain->SetBranchAddress("PriVtxGen_Y", &PriVtxGen_Y, &b_PriVtxGen_Y);
+     fChain->SetBranchAddress("PriVtxGen_Z", &PriVtxGen_Z, &b_PriVtxGen_Z);
+     fChain->SetBranchAddress("PriVtxGen_EX", &PriVtxGen_EX, &b_PriVtxGen_EX);
+     fChain->SetBranchAddress("PriVtxGen_EY", &PriVtxGen_EY, &b_PriVtxGen_EY);
+     fChain->SetBranchAddress("PriVtxGen_EZ", &PriVtxGen_EZ, &b_PriVtxGen_EZ);
+     fChain->SetBranchAddress("PriVtxGen_Chi2", &PriVtxGen_Chi2, &b_PriVtxGen_Chi2);
+     fChain->SetBranchAddress("PriVtxGen_CL", &PriVtxGen_CL, &b_PriVtxGen_CL);
+     fChain->SetBranchAddress("PriVtxGen_Ndof", &PriVtxGen_Ndof, &b_PriVtxGen_Ndof);
+     fChain->SetBranchAddress("PriVtxGen_tracks", &PriVtxGen_tracks, &b_PriVtxGen_tracks);
+     //
+     fChain->SetBranchAddress("genEvtVtx_X", &genEvtVtx_X, &b_genEvtVtx_X);
+     fChain->SetBranchAddress("genEvtVtx_Y", &genEvtVtx_Y, &b_genEvtVtx_Y);
+     fChain->SetBranchAddress("genEvtVtx_Z", &genEvtVtx_Z, &b_genEvtVtx_Z);
+     fChain->SetBranchAddress("genEvtVtx_particles", &genEvtVtx_particlesOut, &b_genEvtVtx_particlesOut);
+     //
      fChain->SetBranchAddress("MCpsi2SPx", &MCpsi2SPx, &b_MCpsi2SPx);
      fChain->SetBranchAddress("MCpsi2SPy", &MCpsi2SPy, &b_MCpsi2SPy);
      fChain->SetBranchAddress("MCpsi2SPz", &MCpsi2SPz, &b_MCpsi2SPz);
@@ -1202,6 +1131,13 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0DecayVtx_XE", &B0DecayVtx_XE, &b_B0DecayVtx_XE);
    fChain->SetBranchAddress("B0DecayVtx_YE", &B0DecayVtx_YE, &b_B0DecayVtx_YE);
    fChain->SetBranchAddress("B0DecayVtx_ZE", &B0DecayVtx_ZE, &b_B0DecayVtx_ZE);
+   //
+   fChain->SetBranchAddress("B0CosAlphaPV", &B0CosAlphaPV, &b_B0CosAlphaPV);
+   fChain->SetBranchAddress("B0CosAlpha3DPV", &B0CosAlpha3DPV, &b_B0CosAlpha3DPV);
+   fChain->SetBranchAddress("B0CTauPV", &B0CTauPV, &b_B0CTauPV);
+   fChain->SetBranchAddress("B0CTauPVE", &B0CTauPVE, &b_B0CTauPVE);
+   fChain->SetBranchAddress("B0LxyPV", &B0LxyPV, &b_B0LxyPV);
+   //
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_X", &PriVtx_B0CosAlpha_X, &b_PriVtx_B0CosAlpha_X);
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_Y", &PriVtx_B0CosAlpha_Y, &b_PriVtx_B0CosAlpha_Y);
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_Z", &PriVtx_B0CosAlpha_Z, &b_PriVtx_B0CosAlpha_Z);
@@ -1211,6 +1147,72 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_Chi2", &PriVtx_B0CosAlpha_Chi2, &b_PriVtx_B0CosAlpha_Chi2);
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_CL", &PriVtx_B0CosAlpha_CL, &b_PriVtx_B0CosAlpha_CL);
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_tracks", &PriVtx_B0CosAlpha_tracks, &b_PriVtx_B0CosAlpha_tracks);
+   fChain->SetBranchAddress("B0CosAlphaPVCosAlpha", &B0CosAlphaPVCosAlpha, &b_B0CosAlphaPVCosAlpha);
+   fChain->SetBranchAddress("B0CTauPVCosAlpha", &B0CTauPVCosAlpha, &b_B0CTauPVCosAlpha);
+   fChain->SetBranchAddress("B0CTauPVCosAlphaE", &B0CTauPVCosAlphaE, &b_B0CTauPVCosAlphaE);
+   fChain->SetBranchAddress("B0LxyPVCosAlpha", &B0LxyPVCosAlpha, &b_B0LxyPVCosAlpha);
+   // 3D
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_X", &PriVtx_B0CosAlpha3D_X, &b_PriVtx_B0CosAlpha3D_X);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Y", &PriVtx_B0CosAlpha3D_Y, &b_PriVtx_B0CosAlpha3D_Y);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Z", &PriVtx_B0CosAlpha3D_Z, &b_PriVtx_B0CosAlpha3D_Z);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EX", &PriVtx_B0CosAlpha3D_EX, &b_PriVtx_B0CosAlpha3D_EX);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EY", &PriVtx_B0CosAlpha3D_EY, &b_PriVtx_B0CosAlpha3D_EY);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EZ", &PriVtx_B0CosAlpha3D_EZ, &b_PriVtx_B0CosAlpha3D_EZ);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Chi2", &PriVtx_B0CosAlpha3D_Chi2, &b_PriVtx_B0CosAlpha3D_Chi2);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_CL", &PriVtx_B0CosAlpha3D_CL, &b_PriVtx_B0CosAlpha3D_CL);
+   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_tracks", &PriVtx_B0CosAlpha3D_tracks, &b_PriVtx_B0CosAlpha3D_tracks);
+   fChain->SetBranchAddress("B0CosAlphaPVCosAlpha3D", &B0CosAlphaPVCosAlpha3D, &b_B0CosAlphaPVCosAlpha3D);
+   fChain->SetBranchAddress("B0CTauPVCosAlpha3D", &B0CTauPVCosAlpha3D, &b_B0CTauPVCosAlpha3D);
+   fChain->SetBranchAddress("B0CTauPVCosAlpha3DE", &B0CTauPVCosAlpha3DE, &b_B0CTauPVCosAlpha3DE);
+   fChain->SetBranchAddress("B0LxyPVCosAlpha3D", &B0LxyPVCosAlpha3D, &b_B0LxyPVCosAlpha3D);
+   //
+   if (priVtxsInfo) {
+     fChain->SetBranchAddress("B0LessPV_tracksPtSq", &B0LessPV_tracksPtSq, &b_B0LessPV_tracksPtSq);
+     fChain->SetBranchAddress("B0LessPV_4tracksPtSq", &B0LessPV_4tracksPtSq, &b_B0LessPV_4tracksPtSq);
+     fChain->SetBranchAddress("PriVtxB0Less_X", &PriVtxB0Less_X, &b_PriVtxB0Less_X);
+     fChain->SetBranchAddress("PriVtxB0Less_Y", &PriVtxB0Less_Y, &b_PriVtxB0Less_Y);
+     fChain->SetBranchAddress("PriVtxB0Less_Z", &PriVtxB0Less_Z, &b_PriVtxB0Less_Z);
+     fChain->SetBranchAddress("PriVtxB0Less_EX", &PriVtxB0Less_EX, &b_PriVtxB0Less_EX);
+     fChain->SetBranchAddress("PriVtxB0Less_EY", &PriVtxB0Less_EY, &b_PriVtxB0Less_EY);
+     fChain->SetBranchAddress("PriVtxB0Less_EZ", &PriVtxB0Less_EZ, &b_PriVtxB0Less_EZ);
+     fChain->SetBranchAddress("PriVtxB0Less_Chi2", &PriVtxB0Less_Chi2, &b_PriVtxB0Less_Chi2);
+     fChain->SetBranchAddress("PriVtxB0Less_CL", &PriVtxB0Less_CL, &b_PriVtxB0Less_CL);
+     fChain->SetBranchAddress("PriVtxB0Less_tracks", &PriVtxB0Less_tracks, &b_PriVtxB0Less_tracks);
+     fChain->SetBranchAddress("B0CosAlphaB0LessPV", &B0CosAlphaB0LessPV, &b_B0CosAlphaB0LessPV);
+     fChain->SetBranchAddress("B0CosAlpha3DB0LessPV", &B0CosAlpha3DB0LessPV, &b_B0CosAlpha3DB0LessPV);
+     fChain->SetBranchAddress("B0CTauB0LessPV", &B0CTauB0LessPV, &b_B0CTauB0LessPV);
+     fChain->SetBranchAddress("B0CTauB0LessPVE", &B0CTauB0LessPVE, &b_B0CTauB0LessPVE);
+     fChain->SetBranchAddress("B0LxyB0LessPV", &B0LxyB0LessPV, &b_B0LxyB0LessPV);
+     //	
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_X", &PriVtxB0Less_B0CosAlpha_X, &b_PriVtxB0Less_B0CosAlpha_X);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_Y", &PriVtxB0Less_B0CosAlpha_Y, &b_PriVtxB0Less_B0CosAlpha_Y);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_Z", &PriVtxB0Less_B0CosAlpha_Z, &b_PriVtxB0Less_B0CosAlpha_Z);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_EX", &PriVtxB0Less_B0CosAlpha_EX, &b_PriVtxB0Less_B0CosAlpha_EX);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_EY", &PriVtxB0Less_B0CosAlpha_EY, &b_PriVtxB0Less_B0CosAlpha_EY);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_EZ", &PriVtxB0Less_B0CosAlpha_EZ, &b_PriVtxB0Less_B0CosAlpha_EZ);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_Chi2", &PriVtxB0Less_B0CosAlpha_Chi2, &b_PriVtxB0Less_B0CosAlpha_Chi2);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_CL", &PriVtxB0Less_B0CosAlpha_CL, &b_PriVtxB0Less_B0CosAlpha_CL);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_tracks", &PriVtxB0Less_B0CosAlpha_tracks, &b_PriVtxB0Less_B0CosAlpha_tracks);
+     fChain->SetBranchAddress("B0LxyB0LessPVCosAlpha", &B0LxyB0LessPVCosAlpha, &b_B0LxyB0LessPVCosAlpha);
+     fChain->SetBranchAddress("B0CosAlphaB0LessPVCosAlpha", &B0CosAlphaB0LessPVCosAlpha, &b_B0CosAlphaB0LessPVCosAlpha);
+     fChain->SetBranchAddress("B0CTauB0LessPVCosAlpha", &B0CTauB0LessPVCosAlpha, &b_B0CTauB0LessPVCosAlpha);
+     fChain->SetBranchAddress("B0CTauB0LessPVCosAlphaE", &B0CTauB0LessPVCosAlphaE, &b_B0CTauB0LessPVCosAlphaE);
+     // 3D	
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_X", &PriVtxB0Less_B0CosAlpha3D_X, &b_PriVtxB0Less_B0CosAlpha3D_X);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_Y", &PriVtxB0Less_B0CosAlpha3D_Y, &b_PriVtxB0Less_B0CosAlpha3D_Y);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_Z", &PriVtxB0Less_B0CosAlpha3D_Z, &b_PriVtxB0Less_B0CosAlpha3D_Z);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_EX", &PriVtxB0Less_B0CosAlpha3D_EX, &b_PriVtxB0Less_B0CosAlpha3D_EX);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_EY", &PriVtxB0Less_B0CosAlpha3D_EY, &b_PriVtxB0Less_B0CosAlpha3D_EY);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_EZ", &PriVtxB0Less_B0CosAlpha3D_EZ, &b_PriVtxB0Less_B0CosAlpha3D_EZ);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_Chi2", &PriVtxB0Less_B0CosAlpha3D_Chi2, &b_PriVtxB0Less_B0CosAlpha3D_Chi2);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_CL", &PriVtxB0Less_B0CosAlpha3D_CL, &b_PriVtxB0Less_B0CosAlpha3D_CL);
+     fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha3D_tracks", &PriVtxB0Less_B0CosAlpha3D_tracks, &b_PriVtxB0Less_B0CosAlpha3D_tracks);
+     fChain->SetBranchAddress("B0CosAlphaB0LessPVCosAlpha3D", &B0CosAlphaB0LessPVCosAlpha3D, &b_B0CosAlphaB0LessPVCosAlpha3D);
+     fChain->SetBranchAddress("B0CTauB0LessPVCosAlpha3D", &B0CTauB0LessPVCosAlpha3D, &b_B0CTauB0LessPVCosAlpha3D);
+     fChain->SetBranchAddress("B0CTauB0LessPVCosAlpha3DE", &B0CTauB0LessPVCosAlpha3DE, &b_B0CTauB0LessPVCosAlpha3DE);
+     fChain->SetBranchAddress("B0LxyB0LessPVCosAlpha3D", &B0LxyB0LessPVCosAlpha3D, &b_B0LxyB0LessPVCosAlpha3D);
+   }
+   //
    fChain->SetBranchAddress("PriVtxB0Corr_X", &PriVtxB0Corr_X, &b_PriVtxB0Corr_X);
    fChain->SetBranchAddress("PriVtxB0Corr_Y", &PriVtxB0Corr_Y, &b_PriVtxB0Corr_Y);
    fChain->SetBranchAddress("PriVtxB0Corr_Z", &PriVtxB0Corr_Z, &b_PriVtxB0Corr_Z);
@@ -1220,22 +1222,16 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("PriVtxB0Corr_Chi2", &PriVtxB0Corr_Chi2, &b_PriVtxB0Corr_Chi2);
    fChain->SetBranchAddress("PriVtxB0Corr_CL", &PriVtxB0Corr_CL, &b_PriVtxB0Corr_CL);
    fChain->SetBranchAddress("PriVtxB0Corr_tracks", &PriVtxB0Corr_tracks, &b_PriVtxB0Corr_tracks);
-   fChain->SetBranchAddress("B0LxyPV", &B0LxyPV, &b_B0LxyPV);
-   fChain->SetBranchAddress("B0CosAlphaPV", &B0CosAlphaPV, &b_B0CosAlphaPV);
-   fChain->SetBranchAddress("B0CTauPV", &B0CTauPV, &b_B0CTauPV);
-   fChain->SetBranchAddress("B0CTauPVE", &B0CTauPVE, &b_B0CTauPVE);
-   fChain->SetBranchAddress("B0LxyPVCosAlpha", &B0LxyPVCosAlpha, &b_B0LxyPVCosAlpha);
-   fChain->SetBranchAddress("B0CosAlphaPVCosAlpha", &B0CosAlphaPVCosAlpha, &b_B0CosAlphaPVCosAlpha);
-   fChain->SetBranchAddress("B0CTauPVCosAlpha", &B0CTauPVCosAlpha, &b_B0CTauPVCosAlpha);
-   fChain->SetBranchAddress("B0CTauPVCosAlphaE", &B0CTauPVCosAlphaE, &b_B0CTauPVCosAlphaE);
-   fChain->SetBranchAddress("B0LxyPVX", &B0LxyPVX, &b_B0LxyPVX);
+   //
+   fChain->SetBranchAddress("B0CosAlphaBS", &B0CosAlphaBS, &b_B0CosAlphaBS);
+   fChain->SetBranchAddress("B0CosAlpha3DBS", &B0CosAlpha3DBS, &b_B0CosAlpha3DBS);
+   fChain->SetBranchAddress("B0CTauBS", &B0CTauBS, &b_B0CTauBS);
+   fChain->SetBranchAddress("B0CTauBSE", &B0CTauBSE, &b_B0CTauBSE);
+   fChain->SetBranchAddress("B0LxyBS", &B0LxyBS, &b_B0LxyBS);
    fChain->SetBranchAddress("B0CosAlphaPVX", &B0CosAlphaPVX, &b_B0CosAlphaPVX);
    fChain->SetBranchAddress("B0CTauPVX", &B0CTauPVX, &b_B0CTauPVX);
    fChain->SetBranchAddress("B0CTauPVXE", &B0CTauPVXE, &b_B0CTauPVXE);
-   fChain->SetBranchAddress("B0LxyBS", &B0LxyBS, &b_B0LxyBS);
-   fChain->SetBranchAddress("B0CosAlphaBS", &B0CosAlphaBS, &b_B0CosAlphaBS);
-   fChain->SetBranchAddress("B0CTauBS", &B0CTauBS, &b_B0CTauBS);
-   fChain->SetBranchAddress("B0CTauBSE", &B0CTauBSE, &b_B0CTauBSE);
+   fChain->SetBranchAddress("B0LxyPVX", &B0LxyPVX, &b_B0LxyPVX);
    fChain->SetBranchAddress("B0CTauPVX_3D", &B0CTauPVX_3D, &b_B0CTauPVX_3D);
    fChain->SetBranchAddress("B0CTauPVX_3D_err", &B0CTauPVX_3D_err, &b_B0CTauPVX_3D_err);
    if (!oldNtuple) {

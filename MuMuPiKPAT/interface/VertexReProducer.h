@@ -24,6 +24,8 @@ class VertexReProducer {
 
         /// Make the vertices
         std::vector<TransientVertex> makeVertices(const reco::TrackCollection &tracks, const reco::BeamSpot &bs, const edm::EventSetup &iSetup) const;
+	// added by Leo
+	std::vector<TransientVertex> makeVertices(const std::vector<reco::TransientTrack> &tracks, const reco::BeamSpot &bs, const edm::EventSetup &iSetup) const; 
 
         /// Get the configuration used in the VertexProducer
         const edm::ParameterSet & inputConfig()   const { return config_; }
@@ -43,3 +45,5 @@ class VertexReProducer {
 };
 
 #endif
+
+// rsync -vut --existing interface/VertexReProducer.h cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/interface/VertexReProducer.h

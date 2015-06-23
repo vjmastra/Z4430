@@ -14,9 +14,9 @@ VertexReProducer::VertexReProducer(const edm::Handle<reco::VertexCollection> &ha
     edm::ParameterSetID psid = prov->psetID();
     edm::pset::Registry *psregistry = edm::pset::Registry::instance();
     edm::ParameterSet psetFromProvenance;
-    if (!psregistry->getMapped(psid, psetFromProvenance)) 
+    if ( !psregistry->getMapped(psid, psetFromProvenance) ) 
         throw cms::Exception("CorruptData") << "Vertex handle parameter set ID id = " << psid;
-    if (prov->moduleName() != "PrimaryVertexProducer") 
+    if ( prov->moduleName() != "PrimaryVertexProducer" ) 
         throw cms::Exception("Configuration") << "Vertices to re-produce don't come from a PrimaryVertexProducer, but from a " << prov->moduleName() <<".\n";
 
     configure(psetFromProvenance); 
@@ -67,3 +67,17 @@ VertexReProducer::makeVertices(const reco::TrackCollection &tracks,
 
     return algo_->vertices(t_tks, bs);
 }
+
+// added by Leo
+std::vector<TransientVertex> 
+VertexReProducer::makeVertices(const std::vector<reco::TransientTrack> &tracks, 
+                               const reco::BeamSpot &bs, 
+                               const edm::EventSetup &iSetup) const 
+{
+    edm::ESHandle<TransientTrackBuilder> theB;
+    iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
+
+    return algo_->vertices(tracks, bs);
+}
+
+// rsync -vut --existing src/VertexReProducer.cc cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/src/VertexReProducer.cc
