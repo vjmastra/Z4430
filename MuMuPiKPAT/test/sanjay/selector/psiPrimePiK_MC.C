@@ -595,12 +595,15 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   hB0CTau_1B0 = new TH1F("B0CTau_1B0", "c*#tau of single B^{0} candidates;c*#tau(B^{0}_{reco}) [GeV]", 100,0,20) ;
   hB0CTau_1B0matched = new TH1F("B0CTau_1B0matched", "c*#tau of single matched B^{0} candidates;c*#tau(matched B^{0}_{reco}) [GeV]", 100,0,20) ;
   hB0Mass_noTwins_noSignalWinNotTwins = new TH1F("hB0Mass_noTwins_noSignalWinNotTwins", "mass of B^{0} candidates w/o (twins & both B^{0} in signal);m(B^{0}_{reco}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
-  psi2SPiSqMass_vs_KPiSqMass_1B0[0] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0","#psi'#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 30,0.,3., 36,13.,25.) ;
+  psi2SPiSqMass_vs_KPiSqMass_1B0[0] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0","#psi'#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 2*15,0.,3., 2*24,13.,25.) ;
+  psi2S_helicityAngle = new TH1F("psi2S_helicityAngle","#psi' helicity angle reco;#theta_{#psi'}", 160, -0.03, 3.17) ;
+  cos_psi2S_helicityAngle = new TH1F("cos_psi2S_helicityAngle","cosine of #psi' helicity angle reco;cos #theta_{#psi'}", 102, -1.02, 1.02) ;
+  planesAngle = new TH1F("planesAngle","angle between K#pi and #mu#mu planes reco;#phi(#psi',K*)", 80, -0.03, 3.17) ;
   hB0Mass_2B0twin = new TH1F("B0Mass_2B0twin", "mass of 2 B^{0} twin;m(twin B^{0}_{reco}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
   // MC analysis
   nMCB0_BT_h = new TH1I("MC_B0_multiplicity_BT", "B^{0} MC multiplicity before trigger;B^{0} multiplicity;Events", 10, -0.5, 9.5) ;
   psi2SPiSqMass_vs_KPiSqMass_BT_gen = new TH2F("gen_psi2SPi_vs_KPi_dalitz_BT","#psi'#pi^{-} vs K^{+}#pi^{-} gen before trigger;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 2*15,0.,3., 2*24,13.,25.) ;
-  KPiSqMass_vs_psi2SKSqMass_BT_gen = new TH2F("gen_KPi_vs_psi2SK_dalitz_BT","K^{+}#pi^{-} vs #psi'K^{+} gen before trigger;m^{2}(#psi'K^{+});m^{2}(K^{+}#pi^{-})", 48,13.,25., 30,0.,3.) ;
+  KPiSqMass_vs_psi2SKSqMass_BT_gen = new TH2F("gen_KPi_vs_psi2SK_dalitz_BT","K^{+}#pi^{-} vs #psi'K^{+} gen before trigger;m^{2}(#psi'K^{+});m^{2}(K^{+}#pi^{-})", 2*24,13.,25., 2*15,0.,3.) ;
   nMCB0_h = new TH1I("MC_B0_multiplicity", "B^{0} MC multiplicity;B^{0} multiplicity;Events", 10, -0.5, 9.5) ;
   B0_gen_p_h = new TH1F("B0_gen_p", "gen B^{0} p;p [GeV]", 200, 0, 40) ;
   B0_gen_pT_h = new TH1F("B0_gen_pT", "gen B^{0} p_{T};p_{T} [GeV]", 200, 0, 40) ;
@@ -611,7 +614,10 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   pi_gen_p_h = new TH1F("pi_gen_p", "gen #pi^{+} p;p [GeV]", 150, 0, 15) ;
   pi_gen_pT_h = new TH1F("pi_gen_pT", "gen #pi^{+} p_{T};p_{T} [GeV]", 150, 0, 15) ;
   //
-  psi2SPiSqMass_vs_KPiSqMass_gen = new TH2F("gen_psi2SPi_vs_KPi_dalitz","#psi'#pi^{-} vs K^{+}#pi^{-} gen;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 15*2,0.,3., 24*2,13.,25.) ;
+  psi2SPiSqMass_vs_KPiSqMass_gen = new TH2F("gen_psi2SPi_vs_KPi_dalitz","#psi'#pi^{-} vs K^{+}#pi^{-} gen;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 2*15,0.,3., 2*24,13.,25.) ;
+  psi2S_helicityAngle_BT_gen = new TH1F("psi2S_helicityAngle_BT_gen","#psi' helicity angle gen;#theta_{#psi'}", 160, -0.03, 3.17) ;
+  cos_psi2S_helicityAngle_BT_gen = new TH1F("cos_psi2S_helicityAngle_BT_gen","cosine of #psi' helicity angle gen;cos #theta_{#psi'}", 102, -1.02, 1.02) ;
+  planesAngle_BT_gen = new TH1F("planesAngle_BT_gen","angle between K#pi and #mu#mu planes gen;#phi(#psi',K*)", 80, -0.03, 3.17) ;
   //
   B0CosAlpha_2Dvs3D[0] = new TH2F("PV_2Dvs3D", "B^{0}_cos(#alpha)_3D vs B^{0}_cos(#alpha)_2D wrt standard PV;B^{0} cos(#alpha) 2D;B^{0} cos(#alpha) 3D", 2000, 0.8, 1., 2000, 0.8, 1.) ;
   B0CosAlpha_2Dvs3D[1] = new TH2F("B0CosAlpha2D_vs_B0CosAlpha3D", "best B^{0}_cos(#alpha)_3D vs best B^{0}_cos(#alpha)_2D wrt standard PV;B^{0} cos(#alpha) 2D;B^{0} cos(#alpha) 3D", 2000, 0.8, 1., 2000, 0.8, 1.) ;
@@ -672,7 +678,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   hMCpTTrueK_fromTwins = new TH1F("MCpTTrueK_fromTwins", "matched K p_{T} from B^{0} twins;p_{T}(K_{reco}) [GeV]", 150, 0, 15);
   //
   nB0ACInMC_h = new TH1I("B0_multiplicity_ACInMC", "B0 multiplicity AC in MC;B^{0} multiplicity;Events", 10, -0.5, 9.5) ;
-  psi2SPiSqMass_vs_KPiSqMass_1B0[1] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0_signalWin","#psi'#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates in signal;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 15,0.,3., 24,13.,25.) ;
+  psi2SPiSqMass_vs_KPiSqMass_1B0[1] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0_signalWin","#psi'#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates in signal;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 15,0.,3., 2*24,13.,25.) ;
   hMCDeltaR_1B0 = new TH1F("MCDeltaR_1B0", "#DeltaR for 1 B^{0} candidates;#DeltaR(B^{0}_{gen},B^{0}_{reco})", 200, 0, 0.2) ;
   hMCDeltaPt_1B0 = new TH1F("MCDeltaPt_1B0", "#Deltap_{T}/p_{T} for 1 B^{0} candidates;|p_{T}(B^{0}_{gen}) - p_{T}(B^{0}_{reco})| / p_{T}(B^{0}_{gen})", 100, 0, 1) ;
   hMCTruthMatching_1B0[0][0] = new TH1I("MCTruthMatching_1B0", "MC matching for 1 B^{0} candidate;n(B^{0} matched);Events", 4, -1.5, 2.5) ;
@@ -954,11 +960,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   
   GetEntry(entry);
   //if (entry % 10000 == 0) cout << "I am running " << entry << "th entries out of " << nentries << " total entries" << endl; //not with PROOF
+  /*
   cout <<"running Process with MC set to = " <<(MC ? "true" : "false") <<endl ;
   cout <<"running Process with officialMC set to = " <<(officialMC ? "true" : "false") <<endl ;
   cout <<"running Process with oldNtuple set to = " <<(oldNtuple ? "true" : "false") <<endl ;
   cout <<"running Process with priVtxsInfo = " <<(priVtxsInfo ? "true" : "false") <<endl ;
-
+  */
   //////////////////////////////// put the code here
   Bool_t year2011 = false, year2012 = false;
   /////////////////////// HLT
@@ -1110,12 +1117,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       if ( HLT_5_vAll ) {
 	myMuMuMass_noMuID->Fill( Jmass );
 	if ( 1 // old SoftMuonID
-	     &&  ( ((*muQual)[mupidx]) & (1 << muonQual[3]) )  &&  ( ((*muQual)[mumidx]) & (1 << muonQual[3]) ) // TMOneStationTight
-	     &&  (*muShits)[mupidx] >= 5 && (*muShits)[mumidx] >= 5 // trackerLayersWithMeasurement
-	     &&  (*muPhits)[mupidx] >= 1 && (*muPhits)[mumidx] >= 1 // pixelLayersWithMeasurement 
+	     &&  ( ((*muQual)[mupidx]) & (1 << muonQual[3]) ) && ( ((*muQual)[mumidx]) & (1 << muonQual[3]) ) // TMOneStationTight
+	     &&  ((*muShits)[mupidx] >= 5) && ((*muShits)[mumidx] >= 5) // trackerLayersWithMeasurement
+	     &&  ((*muPhits)[mupidx] >= 1) && ((*muPhits)[mumidx] >= 1) // pixelLayersWithMeasurement 
 	     //&&  (( (*mu1Chi_MuMu2)[mupidx] / (*mu1NDF_MuMu)[mupidx] ) < 1.8)  &&  (( (*mu2Chi2_MuMu)[mumidx] / (*mu2NDF_MuMu)[mumidx] ) < 1.8) // wrong variables!
-	     &&  fabs((*muDzVtx)[mupidx]) < 30  &&  fabs((*muDzVtx)[mumidx]) < 30
-	     &&  fabs((*muDxyVtx)[mupidx]) < 3  &&  fabs((*muDxyVtx)[mumidx]) < 3
+	     &&  (fabs((*muDzVtx)[mupidx]) < 30) && (fabs((*muDzVtx)[mumidx]) < 30)
+	     &&  (fabs((*muDxyVtx)[mupidx]) < 3) && (fabs((*muDxyVtx)[mumidx]) < 3)
 	     ) {
 	  if ( ((*muChi2)[mupidx] / (*muNDF)[mupidx] ) < 1.8 )
 	    myMuMuMass_Mu1ID->Fill( Jmass );
@@ -1128,12 +1135,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
       if (newSoftMuonID) {
 	if ( !( 1
-		&&  ( ((*muQual)[mupidx]) & (1 << muonQual[3]) )  &&  ( ((*muQual)[mumidx]) & (1 << muonQual[3]) ) // TMOneStationTight
-		&&  (*muShits)[mupidx] > 5 && (*muShits)[mumidx] > 5 // trackerLayersWithMeasurement
-		&&  (*muPhits)[mupidx] > 0 && (*muPhits)[mumidx] > 0 // pixelLayersWithMeasurement 
-		&&  (*muChi2)[mupidx]/(*muNDF)[mupidx] < 3.0  &&  (*muChi2)[mumidx]/(*muNDF)[mumidx] < 3.0
-		&&  fabs((*muDzVtx)[mupidx]) < 20  &&  fabs((*muDzVtx)[mumidx]) < 20
-		&&  fabs((*muDxyVtx)[mupidx]) < 0.3  &&  fabs((*muDxyVtx)[mumidx]) < 0.3
+		&&  ( ((*muQual)[mupidx]) & (1 << muonQual[3]) ) && ( ((*muQual)[mumidx]) & (1 << muonQual[3]) ) // TMOneStationTight
+		&&  ((*muShits)[mupidx] > 5) && ((*muShits)[mumidx] > 5) // trackerLayersWithMeasurement
+		&&  ((*muPhits)[mupidx] > 0) && ((*muPhits)[mumidx] > 0) // pixelLayersWithMeasurement 
+		&&  ((*muChi2)[mupidx]/(*muNDF)[mupidx] < 3.0) && ((*muChi2)[mumidx]/(*muNDF)[mumidx] < 3.0)
+		&&  (fabs((*muDzVtx)[mupidx]) < 20) && (fabs((*muDzVtx)[mumidx]) < 20)
+		&&  (fabs((*muDxyVtx)[mupidx]) < 0.3) && (fabs((*muDxyVtx)[mumidx]) < 0.3)
 		) )
 	  isNewSoftMuons = kFALSE;
       }
@@ -1467,13 +1474,14 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   Int_t nB0AC_noMassWin = 0, nB0AC = 0, nB0AC_purityWin = 0, nB0AC_signalWin = 0, nB0ACInMC = 0, nTwins = 0, nTwins_signalWin = 0 ;
   //
   Float_t priVtx_XYZ[5], priVtx_B0CosAlpha_XYZ[2][5], priVtxB0Less_XYZ[5], priVtxB0Less_B0CosAlpha_XYZ[2][5], priVtxGen_XYZ[3], genEvtVtx_XYZ[3] ;
+  Float_t pB0_XYZ[3], secVtx_XYZ[3] ;
   for (Int_t i=0; i<5; i++) {
     priVtx_XYZ[i] = 999. ;
     priVtx_B0CosAlpha_XYZ[0][i] = 999. ; priVtx_B0CosAlpha_XYZ[1][i] = 999. ;
     priVtxB0Less_XYZ[i] = 999. ;
     priVtxB0Less_B0CosAlpha_XYZ[0][i] = 999. ; priVtxB0Less_B0CosAlpha_XYZ[1][i] = 999. ;
     if (i<3) {
-      priVtxGen_XYZ[i] = 999. ; genEvtVtx_XYZ[i] = 999. ;
+      priVtxGen_XYZ[i] = 999. ; genEvtVtx_XYZ[i] = 999. ; pB0_XYZ[i] = 999. ; secVtx_XYZ[i] = 999. ;
     }
   }
   //
@@ -1483,11 +1491,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   Bool_t MuMuMatched_1B0[2] = {kFALSE,kFALSE}, pionMatched_1B0[2] = {kFALSE,kFALSE}, kaonMatched_1B0[2] = {kFALSE,kFALSE} ;
 
   // twin variables
-  Float_t DeltaR_2B0[2][2] = {{99,99},{99,99}}, DeltaPt_2B0[2][2] = {{99,99},{99,99}}, B0VtxCL_2B0[2] = {-1,-1}, B0Mass_2B0[2][2] = { {-1,-1},{-1,-1} }, B0CTau_2B0[2] = {-1,-1}, alpha_2B0[2] = {-2,-2} ;
+  Float_t DeltaR_2B0[2][2] = {{99,99},{99,99}}, DeltaPt_2B0[2][2] = {{99,99},{99,99}}, B0VtxCL_2B0[2] = {-1,-1}, B0Mass_2B0[2][2] = { {-1,-1},{-1,-1} }, B0CTau_2B0[2][2] = { {-1,-1},{-1,-1} }, alpha_2B0[2] = {-2,-2} ;
   Double_t DrPi_2B0[2] = {99,99}, DrK_2B0[2] = {99,99} ;
   Int_t chargePi_2B0[2][2] = { {0,0},{0,0} }, chargeK_2B0[2][2] = { {0,0},{0,0} } ;
   Float_t B0Mass_gen = 0 ;
-  TLorentzVector PsiPp4_2B0[2][2], Pip4_2B0[2][2], Kp4_2B0[2][2] ; 
+  TLorentzVector PsiPp4_2B0[2][2], Pip4_2B0[2][2], Kp4_2B0[2][2] ;
+  Double_t theta_psi = 10., phi = 10. ; 
   Int_t PiCharge_2B0[2][2] = { {0,0},{0,0} }, KCharge_2B0[2][2] = { {0,0},{0,0} } ; 
   //Bool_t MuMuMatched[2][2] = {{kFALSE,kFALSE},{kFALSE,kFALSE}}, pionMatched[2][2] = {{kFALSE,kFALSE},{kFALSE,kFALSE}}, kaonMatched[2][2] = {{kFALSE,kFALSE},{kFALSE,kFALSE}} ;
   Bool_t MuMuMatched[2][2] = { {kFALSE,kFALSE},{kFALSE,kFALSE} }, pionMatched[2][2] = { {kFALSE,kFALSE},{kFALSE,kFALSE} }, kaonMatched[2][2] = { {kFALSE,kFALSE},{kFALSE,kFALSE} } ;
@@ -1819,17 +1828,20 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     if ( MC ) {
       nMCB0_BT_h->Fill( nMCB0 ) ;
       for (Int_t myMCB0Idx = 0; myMCB0Idx < abs(nMCB0); myMCB0Idx++) { // only 0 and 1 candidate
-	TLorentzVector B0p4_gen, Jp4_gen, Kp4_gen, Pip4_gen ;
+	TLorentzVector B0p4_gen, Jp4_gen, muPp4_gen, muMp4_gen, Kp4_gen, Pip4_gen, Kstar_gen ;
 	//      
-	Float_t J_E_gen = 0, K_E_gen = 0, Pi_E_gen = 0 ;
+	Float_t J_E_gen = 0, K_E_gen = 0, Pi_E_gen = 0, muP_E_gen = 0, muM_E_gen = 0;
 	J_E_gen = sqrt( pow((*MCpsi2SPx)[myMCB0Idx], 2) + pow((*MCpsi2SPy)[myMCB0Idx], 2) + pow((*MCpsi2SPz)[myMCB0Idx], 2) + pow(psi2S_mass, 2) ) ;
 	K_E_gen = sqrt( pow((*MCkaonPx)[myMCB0Idx], 2) + pow((*MCkaonPy)[myMCB0Idx], 2) + pow((*MCkaonPz)[myMCB0Idx], 2) + pow(kaonCh_mass, 2) ) ;
 	Pi_E_gen = sqrt( pow((*MCpionPx)[myMCB0Idx], 2) + pow((*MCpionPy)[myMCB0Idx], 2) + pow((*MCpionPz)[myMCB0Idx], 2) + pow(pionCh_mass, 2) ) ;
 	//
 	Jp4_gen.SetPxPyPzE( (*MCpsi2SPx)[myMCB0Idx], (*MCpsi2SPy)[myMCB0Idx], (*MCpsi2SPz)[myMCB0Idx], J_E_gen ) ;
+	muPp4_gen.SetPxPyPzE( (*MCmupPx)[myMCB0Idx], (*MCmupPy)[myMCB0Idx], (*MCmupPz)[myMCB0Idx], muP_E_gen ) ;
+	muMp4_gen.SetPxPyPzE( (*MCmumPx)[myMCB0Idx], (*MCmumPy)[myMCB0Idx], (*MCmumPz)[myMCB0Idx], muM_E_gen ) ;
 	Kp4_gen.SetPxPyPzE( (*MCkaonPx)[myMCB0Idx], (*MCkaonPy)[myMCB0Idx], (*MCkaonPz)[myMCB0Idx], K_E_gen ) ;
 	Pip4_gen.SetPxPyPzE( (*MCpionPx)[myMCB0Idx], (*MCpionPy)[myMCB0Idx], (*MCpionPz)[myMCB0Idx], Pi_E_gen ) ;
 	B0p4_gen = Jp4_gen + Pip4_gen + Kp4_gen ;
+	Kstar_gen = Pip4_gen + Kp4_gen ;
 	/*
 	B0_gen_p_h->Fill( B0p4_gen.P() ) ; B0_gen_pT_h->Fill( B0p4_gen.Pt() ) ;
 	psi2S_gen_p_h->Fill( Jp4_gen.P() ) ; psi2S_gen_pT_h->Fill( Jp4_gen.Pt() ) ;
@@ -1838,6 +1850,19 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	*/
 	psi2SPiSqMass_vs_KPiSqMass_BT_gen->Fill( (Kp4_gen + Pip4_gen).M2(), (Jp4_gen + Pip4_gen).M2() );
 	KPiSqMass_vs_psi2SKSqMass_BT_gen->Fill( (Jp4_gen + Kp4_gen).M2(), (Kp4_gen + Pip4_gen).M2() );
+
+	// gen angle variables
+	//
+	// psi helicity angle
+	Double_t theta_psi_gen = getMumuHelicityAngle(B0p4_gen, Kstar_gen, Jp4_gen, muMp4_gen);
+	//Double_t theta_psi_gen = getAleMumuHelicityAngle(B0p4_gen, Kstar_gen, Jp4_gen, muMp4_gen);
+	psi2S_helicityAngle_BT_gen->Fill( theta_psi_gen ) ; 
+	cos_psi2S_helicityAngle_BT_gen->Fill( TMath::Cos(theta_psi_gen) ) ;
+	//cos_psi2S_helicityAngle_BT_gen->Fill( theta_psi_gen ) ;
+	// planes angle
+	Double_t phi_gen = getPlanesAngle(B0p4_gen, Kp4_gen, Pip4_gen, muMp4_gen, muPp4_gen) ;
+	//Double_t phi_gen = getBellePlanesAngle(B0p4_gen, Kp4_gen, Pip4_gen, muMp4_gen, muPp4_gen) ;
+	planesAngle_BT_gen->Fill( phi_gen ) ;
       }
     }
     
@@ -1917,6 +1942,15 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	Float_t pi_ex_KstarPt = sqrt( pow(Pip4_orig_ex.Rho(),2) - pow(pi_ex_KstarPl,2) ) ;
 	Float_t K_ex_KstarPt = sqrt( pow(Kp4_orig_ex.Rho(),2) - pow(K_ex_KstarPl,2) ) ;
 	//
+	// reco angle variables
+	//
+	// psi helicity angle
+	theta_psi = getMumuHelicityAngle(myB0p4_orig, Kstarp4_orig, PsiPp4, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4) ;
+	//theta_psi = getAleMumuHelicityAngle(myB0p4_orig, Kstarp4_orig, PsiPp4, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4) ;
+	// planes angle
+	phi = getPlanesAngle(myB0p4_orig, Kp4_orig, Pip4_orig, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4, (*muCharge)[mu1_fromB0_index]<0 ? mu2_p4 : mu1_p4) ;
+	//phi = getBellePlanesAngle(myB0p4_orig, Kp4_orig, Pip4_orig, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4, (*muCharge)[mu1_fromB0_index]<0 ? mu2_p4 : mu1_p4) ;
+
 	myExclusiveMuMuKPiMass->Fill( (*B0Mass)[myB0Idx] ) ; // B0mass before any selection
 	hmyPsiPKPiMass->Fill(myB0p4.M());                    // recalculated with 4-vectors
 	hmyPsiPKPiMass_KPiExchanged->Fill(myB0p4_KPiExchanged.M()); // recalculated exchanging mass hypotheses
@@ -1970,7 +2004,8 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	//
 	if ( 1 
 	     && ( (*B0Vtx_CL)[myB0Idx] > 0.05 )
-	     && ( (*B0CosAlphaPV)[myB0Idx] > 0.9 ) // 0.99
+	     //&& ( (*B0CosAlphaPV)[myB0Idx] > 0.9 ) // 0.99
+	     && ( (*B0CosAlphaPV)[myB0Idx] > 0.99 ) && ( (*B0CosAlpha3DPV)[myB0Idx] > 0.99 )
 	     && ( (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] > 3.5 ) // 7
 	     )
 	  BO_selectionCuts = kTRUE ;
@@ -1982,7 +2017,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	     //&& ( kaon_fromB0_Pt > 0.5 ) // 0.45
 	     && ( B0_Pt > 7.)
 	     && ( PsiPrime_fromB0_Pt > 5.)
-	     && ( mu1_p4.Pt() > 3.3 && mu2_p4.Pt() > 3.3)
+	     //&& ( mu1_p4.Pt() > 3.3 && mu2_p4.Pt() > 3.3)
 	     && Mu1_PtSel && Mu2_PtSel
 	     )
 	  {
@@ -2115,8 +2150,9 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		//int myMuMuMatched[] = {-1,-1}, myPiMatched[] = {-1,-1}, myKMatched[] = {-1,-1};
 		
 		vector<int> truePiCharge, trueKCharge ;
-		vector<TLorentzVector> truePi4Vec, trueK4Vec, trueMuMu4Vec, trueB04Vec ;
-		TLorentzVector B0p4_gen, Jp4_gen, Kp4_gen, Pip4_gen ;
+		vector<TLorentzVector> truePi4Vec, trueK4Vec, trueMuMu4Vec, trueB04Vec ;   
+
+		TLorentzVector B0p4_gen, Jp4_gen, muPp4_gen, muMp4_gen, Kp4_gen, Pip4_gen, Kstar_gen ;
 		
 		if ( MC ) {
 		  nMCB0_h->Fill( nMCB0 ) ;
@@ -2124,16 +2160,21 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		    priVtxGen_XYZ[0] = (*PriVtxGen_X)[myMCB0Idx] ; priVtxGen_XYZ[1] = (*PriVtxGen_Y)[myMCB0Idx] ; priVtxGen_XYZ[2] = (*PriVtxGen_Z)[myMCB0Idx] ;
 		    genEvtVtx_XYZ[0] = (*genEvtVtx_X)[myMCB0Idx] ; genEvtVtx_XYZ[1] = (*genEvtVtx_Y)[myMCB0Idx] ; genEvtVtx_XYZ[2] = (*genEvtVtx_Z)[myMCB0Idx] ;
 		    //      
-		    Float_t J_E_gen = 0, K_E_gen = 0, Pi_E_gen = 0 ;
+		    Float_t J_E_gen = 0, K_E_gen = 0, Pi_E_gen = 0, muP_E_gen = 0, muM_E_gen = 0;
 		    J_E_gen = sqrt( pow((*MCpsi2SPx)[myMCB0Idx], 2) + pow((*MCpsi2SPy)[myMCB0Idx], 2) + pow((*MCpsi2SPz)[myMCB0Idx], 2) + pow(psi2S_mass, 2) ) ;
 		    K_E_gen = sqrt( pow((*MCkaonPx)[myMCB0Idx], 2) + pow((*MCkaonPy)[myMCB0Idx], 2) + pow((*MCkaonPz)[myMCB0Idx], 2) + pow(kaonCh_mass, 2) ) ;
 		    Pi_E_gen = sqrt( pow((*MCpionPx)[myMCB0Idx], 2) + pow((*MCpionPy)[myMCB0Idx], 2) + pow((*MCpionPz)[myMCB0Idx], 2) + pow(pionCh_mass, 2) ) ;
+		    muP_E_gen = sqrt( pow((*MCmupPx)[myMCB0Idx], 2) + pow((*MCmupPy)[myMCB0Idx], 2) + pow((*MCmupPz)[myMCB0Idx], 2) + pow(muon_mass, 2) ) ;
+		    muM_E_gen = sqrt( pow((*MCmumPx)[myMCB0Idx], 2) + pow((*MCmumPy)[myMCB0Idx], 2) + pow((*MCmumPz)[myMCB0Idx], 2) + pow(muon_mass, 2) ) ;
 		    //
 		    Jp4_gen.SetPxPyPzE( (*MCpsi2SPx)[myMCB0Idx], (*MCpsi2SPy)[myMCB0Idx], (*MCpsi2SPz)[myMCB0Idx], J_E_gen ) ;
+		    muPp4_gen.SetPxPyPzE( (*MCmupPx)[myMCB0Idx], (*MCmupPy)[myMCB0Idx], (*MCmupPz)[myMCB0Idx], muP_E_gen ) ;
+		    muMp4_gen.SetPxPyPzE( (*MCmumPx)[myMCB0Idx], (*MCmumPy)[myMCB0Idx], (*MCmumPz)[myMCB0Idx], muM_E_gen ) ;
 		    Kp4_gen.SetPxPyPzE( (*MCkaonPx)[myMCB0Idx], (*MCkaonPy)[myMCB0Idx], (*MCkaonPz)[myMCB0Idx], K_E_gen ) ;
 		    Pip4_gen.SetPxPyPzE( (*MCpionPx)[myMCB0Idx], (*MCpionPy)[myMCB0Idx], (*MCpionPz)[myMCB0Idx], Pi_E_gen ) ;
 		    B0p4_gen = Jp4_gen + Pip4_gen + Kp4_gen ;
-		    
+		    Kstar_gen = Pip4_gen + Kp4_gen ;
+
 		    B0_gen_p_h->Fill( B0p4_gen.P() ) ; B0_gen_pT_h->Fill( B0p4_gen.Pt() ) ;
 		    psi2S_gen_p_h->Fill( Jp4_gen.P() ) ; psi2S_gen_pT_h->Fill( Jp4_gen.Pt() ) ;
 		    K_gen_p_h->Fill( Kp4_gen.P() ) ; K_gen_pT_h->Fill( Kp4_gen.Pt() ) ;
@@ -2142,7 +2183,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		    psi2SPiSqMass_vs_KPiSqMass_gen->Fill( (Kp4_gen + Pip4_gen).M2(), (Jp4_gen + Pip4_gen).M2() );
 		    
 		    truePi4Vec.push_back( Pip4_gen ); trueK4Vec.push_back( Kp4_gen ); trueMuMu4Vec.push_back( Jp4_gen ); trueB04Vec.push_back( B0p4_gen );
-		    truePiCharge.push_back( (*MCpionCh)[myMCB0Idx] ); trueKCharge.push_back( (*MCkaonCh)[myMCB0Idx] );
+		    truePiCharge.push_back( (*MCpionCh)[myMCB0Idx] ); trueKCharge.push_back( (*MCkaonCh)[myMCB0Idx] ); 
 		  }
 		  if (nMCB0 > 0)
 		    B0Mass_gen = B0p4_gen.M() ;
@@ -2152,6 +2193,9 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
 		  if ( (nB0AC == 1 ) ) {
 		    
+		    pB0_XYZ[0] = (*B0Px)[myB0Idx] ; pB0_XYZ[1] = (*B0Py)[myB0Idx] ; pB0_XYZ[2] = (*B0Pz)[myB0Idx] ;
+		    B0CTau_2B0[0][0] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
+		    secVtx_XYZ[0] = (*B0DecayVtx_X)[myB0Idx] ; secVtx_XYZ[1] = (*B0DecayVtx_Y)[myB0Idx] ; secVtx_XYZ[2] = (*B0DecayVtx_Z)[myB0Idx] ;
 		    //if ( priVtx_Z )
 		    priVtx_XYZ[0] = priVtx_X; priVtx_XYZ[1] = priVtx_Y; priVtx_XYZ[2] = priVtx_Z;
 		    priVtx_XYZ[3] = (*B0CosAlphaPV)[myB0Idx] ; priVtx_XYZ[4] = (*B0CosAlpha3DPV)[myB0Idx] ;
@@ -2271,7 +2315,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
 		    B0Mass_2B0[1][nB0ACInMC-1] = myB0MassAlt ;
 		    B0VtxCL_2B0[0] = (*B0Vtx_CL)[myB0Idx] ;
-		    B0CTau_2B0[0] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
+		    B0CTau_2B0[1][0] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
 		    alpha_2B0[0] = alpha_orig;
 		    DeltaR_1B0[1] = myB0p4_orig.DeltaR(trueB04Vec[0]) ;
 		    DeltaPt_1B0[1] = fabs(myB0p4_orig.Pt() - trueB04Vec[0].Pt()) / trueB04Vec[0].Pt() ;
@@ -2314,7 +2358,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  else if ( (!MC && (nB0AC_signalWin == 2)) || nB0ACInMC == 2 ) {
 		    B0Mass_2B0[1][nB0ACInMC-1] = myB0MassAlt ;
 		    B0VtxCL_2B0[1] = (*B0Vtx_CL)[myB0Idx] ;
-		    B0CTau_2B0[1] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
+		    B0CTau_2B0[1][1] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
 		    alpha_2B0[1] = alpha_orig;
 		    PsiPp4_2B0[1][1] = PsiPp4; Pip4_2B0[1][1] = Pip4_orig; Kp4_2B0[1][1] = Kp4_orig ;
 		    PiCharge_2B0[1][1] = (*trackCharge)[pi_orig_Index] ; KCharge_2B0[1][1] = (*trackCharge)[ka_orig_Index] ;
@@ -3045,15 +3089,20 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   Float_t minDeltaRB0 = 0.1, minDeltaPtB0 = 0.02 ; // (0.1,0.02)
   if (nB0AC == 1) {
     hB0Mass_1B0->Fill( B0Mass_2B0[0][0] ) ;
-    hB0CTau_1B0->Fill( B0CTau_2B0[0] ) ;
+    hB0CTau_1B0->Fill( B0CTau_2B0[0][0] ) ;
     hB0Mass_noTwins_noSignalWinNotTwins->Fill( B0Mass_2B0[0][0] ) ;
-    if ( fabs(B0Mass_2B0[0][0] - B0_massFit) < 3*B0_sigmaFit )  
+    if ( fabs(B0Mass_2B0[0][0] - B0_massFit) < 3*B0_sigmaFit ) { 
       psi2SPiSqMass_vs_KPiSqMass_1B0[0]->Fill( (Kp4_2B0[0][0] + Pip4_2B0[0][0]).M2(), (PsiPp4_2B0[0][0] + Pip4_2B0[0][0]).M2() ) ;
+      psi2S_helicityAngle->Fill( theta_psi ) ;
+      cos_psi2S_helicityAngle->Fill( TMath::Cos(theta_psi) ) ;
+      //cos_psi2S_helicityAngle->Fill( theta_psi ) ;
+      planesAngle->Fill( phi ) ;
+    }
 
     if ( MC ) {
       if ( (DeltaR_1B0[0] < minDeltaRB0) && (DeltaPt_1B0[0] < minDeltaPtB0) ) {
 	hB0Mass_1B0matched[0][0]->Fill( B0Mass_2B0[0][0] ) ;
-	hB0CTau_1B0matched->Fill( B0CTau_2B0[0] ) ; 
+	hB0CTau_1B0matched->Fill( B0CTau_2B0[0][0] ) ; 
 
 	hMCTruthMatching_1B0[0][0]->Fill(1) ;
 	//if ( (chargePi_1B0[0] > 0) && (chargeK_1B0[0] > 0) ) {
@@ -3069,6 +3118,22 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		priVtx_delta[j][i]->Fill( genEvtVtx_XYZ[i] - priVtxGen_XYZ[i] ) ;
 
 	    if ( fabs(genEvtVtx_XYZ[2] - priVtxGen_XYZ[2]) < 0.0001) {
+	      if ( fabs(priVtx_XYZ[2] - genEvtVtx_XYZ[2]) < 0.1 ) 
+		if ( fabs(priVtx_XYZ[2] - priVtxB0Less_XYZ[2]) > 0.1 ) {
+		  cout <<"\nB0CTau_2B0[0][0] = " <<B0CTau_2B0[0][0] <<" ; " ;
+		  for (Int_t i=0; i<3; i++) {
+		    cout <<"\ngenEvtVtx_XYZ[" <<i <<"] = " <<genEvtVtx_XYZ[i] <<" ; " ;
+		    cout <<"pB0_XYZ[" <<i <<"] = " <<pB0_XYZ[i] <<" ; " ;
+		    cout <<"secVtx_XYZ[" <<i <<"] = " <<secVtx_XYZ[i] <<" ; " ;
+		    cout <<"priVtx_XYZ[" <<i <<"] = " <<priVtx_XYZ[i] <<" ; " ;
+		    cout <<"priVtx_B0CosAlpha2D_XYZ[" <<i <<"] = " <<priVtx_B0CosAlpha_XYZ[0][i] <<" ; " ;
+		    cout <<"priVtx_B0CosAlpha3D_XYZ[" <<i <<"] = " <<priVtx_B0CosAlpha_XYZ[1][i] <<" ; " ;
+		    cout <<"priVtxB0Less_XYZ[" <<i <<"] = " <<priVtxB0Less_XYZ[i] <<" ; " ;
+		    cout <<"priVtxB0Less_B0CosAlpha2D_XYZ[" <<i <<"] = " <<priVtxB0Less_B0CosAlpha_XYZ[0][i] <<" ; " ;
+		    cout <<"priVtxB0Less_B0CosAlpha3D_XYZ[" <<i <<"] = " <<priVtxB0Less_B0CosAlpha_XYZ[1][i] <<" ;\n" ;
+		  }
+		  cout <<endl ;
+		}
 	      priVtx_deltaX_test->Fill( genEvtVtx_XYZ[0] - priVtxGen_XYZ[0] ) ;
 	      priVtx_deltaY_test->Fill( genEvtVtx_XYZ[1] - priVtxGen_XYZ[1] ) ;
 	      //
@@ -3336,7 +3401,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	}
 	hB0VtxCL_1vs2_2B0twin->Fill( B0VtxCL_2B0[0], B0VtxCL_2B0[1] ) ;
 	hB0Mass_1vs2_2B0twin->Fill( B0Mass_2B0[1][0], B0Mass_2B0[1][1] ) ;
-	hB0CTau_1vs2_2B0twin->Fill( B0CTau_2B0[0], B0CTau_2B0[1] ) ;
+	hB0CTau_1vs2_2B0twin->Fill( B0CTau_2B0[1][0], B0CTau_2B0[1][1] ) ;
 	hAlpha_1vs2_2B0twin->Fill( alpha_2B0[0], alpha_2B0[1] ) ;
 	
 	if ( MC )
@@ -3346,7 +3411,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      hMCDeltaPt_matchedTwin[1]->Fill( DeltaPt_2B0[1][i] ) ;
 	      hB0VtxCL_matchedTwin[1]->Fill( B0VtxCL_2B0[i] ) ;
 	      hB0Mass_matchedTwin[1]->Fill( B0Mass_2B0[1][i] ) ;
-	      hB0CTau_matchedTwin[1]->Fill( B0CTau_2B0[i] ) ;
+	      hB0CTau_matchedTwin[1]->Fill( B0CTau_2B0[1][i] ) ;
 	      hAlpha_matchedTwin[1]->Fill( alpha_2B0[i] ) ;
 	      if (i==0) {
 		hDeltaB0Mass_2B0twin[1]->Fill( B0Mass_2B0[1][i] - B0Mass_gen, B0Mass_2B0[1][1] - B0Mass_gen) ;
@@ -3360,7 +3425,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      hMCDeltaPt_matchedTwin[0]->Fill( DeltaPt_2B0[1][i] ) ;
 	      hB0VtxCL_matchedTwin[0]->Fill( B0VtxCL_2B0[i] ) ;
 	      hB0Mass_matchedTwin[0]->Fill( B0Mass_2B0[1][i] ) ;
-	      hB0CTau_matchedTwin[0]->Fill( B0CTau_2B0[i] ) ;
+	      hB0CTau_matchedTwin[0]->Fill( B0CTau_2B0[1][i] ) ;
 	      hAlpha_matchedTwin[0]->Fill( alpha_2B0[i] ) ;
 	    }
       } // if (nTwins_signalWin > 0)
@@ -3477,10 +3542,12 @@ void psiPrimePiK_MC::SlaveTerminate()
       hB0Mass_1B0->Write() ; hB0Mass_noTwins_noSignalWinNotTwins->Write() ; 
       for (Int_t i=0; i<2; i++)
 	psi2SPiSqMass_vs_KPiSqMass_1B0[i]->Write() ;
+      psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle->Write() ; planesAngle->Write() ;
       hB0CTau_1B0->Write() ; hB0CTau_1B0matched->Write() ;
       nMCB0_h->Write() ;
       B0_gen_p_h->Write() ; B0_gen_pT_h->Write() ; psi2S_gen_p_h->Write() ; psi2S_gen_pT_h->Write() ; K_gen_p_h->Write() ; K_gen_pT_h->Write() ; pi_gen_p_h->Write() ; pi_gen_pT_h->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_gen->Write() ;
+      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; planesAngle_BT_gen->Write() ;
       B0_gen_mass_h->Write() ;
       piCh_vs_KCh_gen->Write() ;
       hMCDeltaRK_fromTwins->Write() ; hMCPtRecoVsPtTrueK_fromTwins->Write() ; hMCDeltaPtK_fromTwins->Write() ; hMCDeltaPtK_fromTwinsPiMatched->Write() ; hMCpTTrueK_fromTwins->Write() ;
@@ -3723,6 +3790,7 @@ void psiPrimePiK_MC::SlaveTerminate()
       hB0Mass_1B0->Write() ; hB0Mass_noTwins_noSignalWinNotTwins->Write() ;
       for (Int_t i=0; i<2; i++)
 	psi2SPiSqMass_vs_KPiSqMass_1B0[i]->Write() ; 
+      psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle->Write() ; planesAngle->Write() ;
       hB0CTau_1B0->Write() ; hB0CTau_1B0matched->Write() ;
       hMCDeltaR_1B0->Write() ; hMCDeltaPt_1B0->Write() ; 
       for (Int_t i=0; i<3; i++) {
@@ -3763,7 +3831,8 @@ void psiPrimePiK_MC::SlaveTerminate()
       }
       hMCDeltaPt_1vs2_2B0->Write() ; hMCDeltaR_1vs2_2B0->Write() ;
       hMCDeltaR_1vs2_2B0twin->Write() ; hMCDeltaPt_1vs2_2B0twin->Write() ; hB0VtxCL_1vs2_2B0twin->Write() ; hB0Mass_1vs2_2B0twin->Write() ; hB0CTau_1vs2_2B0twin->Write() ; hAlpha_1vs2_2B0twin->Write() ;
-      psi2SPiSqMass_vs_KPiSqMass_gen->Write() ; psi2SPiSqMass_vs_KPiSqMass_BT_gen->Write() ; KPiSqMass_vs_psi2SKSqMass_BT_gen->Write() ;
+      psi2SPiSqMass_vs_KPiSqMass_gen->Write() ;
+      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; planesAngle_BT_gen->Write() ;
       B0_gen_mass_h->Write() ;
       piCh_vs_KCh_gen->Write() ; 
       hMCDeltaRK_fromTwins->Write() ; hMCPtRecoVsPtTrueK_fromTwins->Write() ; hMCDeltaPtK_fromTwins->Write() ; hMCDeltaPtK_fromTwinsPiMatched->Write() ; hMCpTTrueK_fromTwins->Write() ;
@@ -3843,9 +3912,13 @@ void psiPrimePiK_MC::Terminate()
   TString dir = "";
 
   TString option = GetOption();
-  if (option == "officialMC") 
-    dir = "officialMC/0p9" ; // dir = "officialMC"
-
+  if (option == "officialMC") {
+    //dir = "officialMC" ;
+    //dir = "officialMC/0p9" ; 
+    dir = "officialMC_extended" ;
+  }
+  gSystem->mkdir(TString::Format("plots/%s", dir.Data()), true);
+  
   if ( (AlexisFile = dynamic_cast<TProofOutputFile*>(fOutput->FindObject("26Jan_histos.root"))) ) {
     TString outputFile(AlexisFile->GetOutputFileName());
     TString outputName(AlexisFile->GetName()); outputName += ".root";
@@ -3912,209 +3985,24 @@ void psiPrimePiK_MC::Terminate()
       } else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin\" not found");
       //
       ////////// Plot histograms //////////
-      
-      cout <<"\nDalitz plot:" <<endl ;
-      TString name = "gen_psi2SPi_vs_KPi_dalitz";
-      name = "gen_psi2SPi_vs_KPi_dalitz_BT";
-      //name = "gen_KPi_vs_psi2SK_dalitz_BT";
-      if ( (psi2SPiSqMass_vs_KPiSqMass_gen = (TH2F*) AlexisOut->Get("gen_psi2SPi_vs_KPi_dalitz_BT")) ) {
-      //if ( (KPiSqMass_vs_psi2SKSqMass_BT_gen = (TH2F*) AlexisOut->Get("gen_KPi_vs_psi2SK_dalitz_BT")) ) {
-
-	gStyle->SetOptStat( 10 ) ;
-
-	//psi2SPiSqMass_vs_KPiSqMass_gen->Draw("lego") ;
-	psi2SPiSqMass_vs_KPiSqMass_gen->Draw("colz") ;
-	//KPiSqMass_vs_psi2SKSqMass_BT_gen->Draw("colz") ;
-
-	// Dalitz contour
-	Int_t m = 19800;
-	Double_t x[19800], m23_max[19800], m23_min[19800];
-	Double_t E2[19800], E3[19800];
-	
-	Double_t m_mother = B0_mass; 
-	//Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = psi2S_mass ; 
-	Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = psi2S_mass ; 
-
-	Double_t m12_min = (m_dau1+m_dau2)*(m_dau1+m_dau2);
-	Double_t m12_max = (m_mother-m_dau3)*(m_mother-m_dau3);
-	Double_t step = (m12_max - m12_min)/(m-1);
-	
-	x[0] = m12_min + 0.0001;
-	
-	for (Int_t k=1; k<m; k++ ) 
-	  x[k] = x[k-1] + step;
-	
-	Int_t n = 19799;
-	for (Int_t i=0; i<n; i++) {
-	  E2[i] = (x[i] - m_dau1*m_dau1 + m_dau2*m_dau2)/(2*sqrt(x[i]));
-	  E3[i] = (m_mother*m_mother - x[i] - m_dau3*m_dau3)/(2*sqrt(x[i]));
-	  m23_min[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) + sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
-	  m23_max[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) - sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
-	}
-	
-	TGraph *cont_up = new TGraph(n,x,m23_min);
-	TGraph *cont_down = new TGraph(n,x,m23_max);
-	cont_up->Draw("lsame"); 
-	cont_down->Draw("lsame"); 
-
-	gPad->SaveAs( TString::Format("plots/%s/dalitz_gen.png", dir.Data()) );
-	//psi2SPiSqMass_vs_KPiSqMass_gen->Rebin2D();
-	gPad->SaveAs( TString::Format("plots/%s/dalitz_gen_rebinned.png", dir.Data()) );
-
-	TString nameReco = "reco_psi2SPi_vs_KPi_dalitz" ;
-	if ( (psi2SPiSqMass_vs_KPiSqMass_AC = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
-	  psi2SPiSqMass_vs_KPiSqMass_AC->Draw("colz") ;
-	  cont_up->Draw("lsame"); 
-	  cont_down->Draw("lsame"); 
-
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_reco.png", dir.Data()) );
-	  //psi2SPiSqMass_vs_KPiSqMass_AC->Rebin2D();
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_reco_rebinned.png", dir.Data()) );
-
-	  cout <<"\nCreating efficiency Dalitz" <<endl ;
-	  TH2D *hAbsEff, *hAbsEffErr, *hRelEff;
-	  TH1D *hAbsEffDistr, *hGenDistr, *hRecoDistr;
-	  
-	  Float_t xLow = psi2SPiSqMass_vs_KPiSqMass_gen->GetXaxis()->GetXmin() ;
-	  Float_t xHigh = psi2SPiSqMass_vs_KPiSqMass_gen->GetXaxis()->GetXmax() ;
-	  Int_t nX = psi2SPiSqMass_vs_KPiSqMass_gen->GetNbinsX() ;
-	  Float_t yLow = psi2SPiSqMass_vs_KPiSqMass_gen->GetYaxis()->GetXmin() ;
-	  Float_t yHigh = psi2SPiSqMass_vs_KPiSqMass_gen->GetYaxis()->GetXmax() ;
-	  Int_t nY = psi2SPiSqMass_vs_KPiSqMass_gen->GetNbinsY() ;
-	  hAbsEff = new TH2D ("AbsEff", "AbsEff", nX, xLow, xHigh, nY, yLow, yHigh);
-	  hAbsEff->SetXTitle( psi2SPiSqMass_vs_KPiSqMass_gen->GetXaxis()->GetTitle() );
-	  hAbsEff->SetYTitle( psi2SPiSqMass_vs_KPiSqMass_gen->GetYaxis()->GetTitle() );
-	  hRelEff = new TH2D ("RelEff", "RelEff", nX, xLow, xHigh, nY, yLow, yHigh);
-	  hRelEff->SetXTitle( psi2SPiSqMass_vs_KPiSqMass_gen->GetXaxis()->GetTitle() );
-	  hRelEff->SetYTitle( psi2SPiSqMass_vs_KPiSqMass_gen->GetYaxis()->GetTitle() );
-	  hAbsEffErr = new TH2D ("AbsEffErr", "AbsEffErr", nX, xLow, xHigh, nY, yLow, yHigh);
-	  hAbsEffErr->SetXTitle( psi2SPiSqMass_vs_KPiSqMass_gen->GetXaxis()->GetTitle() );
-	  hAbsEffErr->SetYTitle( psi2SPiSqMass_vs_KPiSqMass_gen->GetYaxis()->GetTitle() );
-	  hAbsEffDistr = new TH1D ("hAbsEffDistr","Efficiency distribution", 100, -0.001, 0.006);
-	  hGenDistr = new TH1D ("hGenDistr","Bins' Gen entries distribution", 100, 0., 25000);
-	  hRecoDistr = new TH1D ("hRecoDistr","Bins' Reco entries distribution", 110, 0., 55.);
-	 	  
-	  Int_t MyPalette[100];
-	  Double_t red[]   = { 1.0, 0.0, 1.0, 1.0 };
-	  Double_t green[] = { 1.0, 0.0, 0.0, 1.0 };
-	  Double_t blue[]  = { 1.0, 1.0, 0.0, 0.0 };
-	  Double_t stop[] = { 0.0, 0.5, 0.9, 1.0 };
-	  Int_t FI = TColor::CreateGradientColorTable(4, stop, red, green, blue, 100);
-	  for (int i=0; i<100; i++)
-	    MyPalette[i] = FI+i;
-	  
-	  gStyle->SetPalette(100, MyPalette);
-	  
-	  // 32 righe & 40 colonne
-	  Double_t genBinCont[nX][nY], recoBinCont[nX][nY];
-	  Double_t absEff[nX][nY], absEffErr[nX][nY];
-	  Double_t absEffSingleValue, absEffErrSingleValue;
-	  Double_t genSingleValue, recoSingleValue;
-	  //
-	  Int_t count=0;
-	  Double_t sumAbsEff = 0, sumAbsEffErr = 0.;
-	  //
-	  for (Int_t i=0; i<nX; i++)
-	    {
-	      for (Int_t j=0; j<nY; j++)
-		{
-		  genBinCont[i][j] = psi2SPiSqMass_vs_KPiSqMass_gen->GetBinContent(i,j);
-		  recoBinCont[i][j] = psi2SPiSqMass_vs_KPiSqMass_AC->GetBinContent(i,j);
-		  //cout << "riga j=" << j << " e colonna i=" << i << " -> no. candidati generati = " << genBinCont[j][i] << " & no. ricostruiti = " << recoBinCont[j][i] << endl;
-		  //
-		  genSingleValue = genBinCont[i][j];
-		  recoSingleValue = recoBinCont[i][j];
-		  hGenDistr->Fill(genSingleValue);
-		  hRecoDistr->Fill(recoSingleValue);
-		  //
-		  if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
-		    {
-		      absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
-		      absEffSingleValue = absEff[i][j];
-		      hAbsEffDistr->Fill(absEffSingleValue);
-		      absEffErr[i][j] = (1 / genBinCont[i][j] ) * (sqrt( genBinCont[i][j] * absEff[i][j] * (1 - absEff[i][j]) ) );
-		      absEffErrSingleValue = absEffErr[i][j];
-		      //
-		      // calculate weighted mean: two possible intervals: ]0,0.00225[ or ]0,0.005[
-		      if (absEffSingleValue > 0. /*&& absEffSingleValue < 0.01*/) //0.005
-			{
-			  sumAbsEff = sumAbsEff + (absEffSingleValue/(absEffErrSingleValue * absEffErrSingleValue)) ;
-			  sumAbsEffErr = sumAbsEffErr + (1./(absEffErrSingleValue * absEffErrSingleValue));
-			  count++ ;
-			}
-		      //
-		    } else {
-		    absEff[i][j] = 0.;
-		    absEffErr[i][j] = 0.;
-		    absEffSingleValue = -0.0005;
-		    hAbsEffDistr->Fill(absEffSingleValue);
-		  }
-		  //cout << "raw-j=" << j << " e col-i=" << i << " -> no. gen-cand = " << genBinCont[j][i] << " & no. reco-cand = " << recoBinCont[j][i] << " & eff= " << absEff[j][i] << endl;
-		  //
-		  hAbsEff->SetBinContent(i,j,absEff[i][j]);
-		  hAbsEffErr->SetBinContent(i,j,absEffErr[i][j]);
-		  //
-		} // for (Int_t j=0; j<nY; j++)
-	    } // for (Int_t i=0; i<nX; i++)
-	  //
-	  cout <<"count = " <<count << " with weighted mean = " << sumAbsEff/sumAbsEffErr << " and weighted mean uncertainty = " << 1./sqrt(sumAbsEffErr) << endl; // about 10-3 with error 10-5
-	  //
-	  hAbsEff->Draw("colz"); 
-	  cont_up->Draw("lsame"); 
-	  cont_down->Draw("lsame"); 
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_absEff.png", dir.Data()) );
-
-	  hAbsEffErr->Draw("colz");
-	  cont_up->Draw("lsame"); 
-	  cont_down->Draw("lsame"); 
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_absEffErr.png", dir.Data()) );
-
-	  //////////////////////////////////////// RELATIVE EFFICIENCY CALCULATION
-	  //   
-	  Double_t relEff[nX][nY];
-	  //Double_t relEffErr[nX][nY];
-	  //
-	  Double_t weightedMeanEff = sumAbsEff/sumAbsEffErr;
-	  // Double_t weightedMeanEffErr = 1./sqrt(sumAbsEffErr);
-	  //
-	  for (Int_t i=0; i<nX; i++)
-	    {
-	      for (Int_t j=0; j<nY; j++)
-		{
-		  //genBinCont[i][j] = psi2SPiSqMass_vs_KPiSqMass_gen->GetBinContent(i,j);
-		  //recoBinCont[i][j] = psi2SPiSqMass_vs_KPiSqMass_AC->GetBinContent(i,j);	   
-		  if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
-		    {
-		      //absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
-		      if (absEff[i][j] > 0. && absEff[i][j] < 0.05) // 0. && 0.005
-			{
-			  relEff[i][j] = absEff[i][j]/weightedMeanEff;
-			}
-		      else 
-			relEff[i][j] = 0. ;
-		    }
-		  else
-		    relEff[i][j] = 0. ;
-		  hRelEff->SetBinContent(i,j,relEff[i][j]);
-		}
-	    }
-	  //
-	  hRelEff->Draw("colz"); 
-	  hRelEff->SetMinimum(0.); hRelEff->SetMaximum(2.2);
-	  cont_up->Draw("lsame"); cont_down->Draw("lsame"); 
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_relEff.png", dir.Data()) );
-
-	  hAbsEffDistr->Draw() ;
-	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
-
-      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
-      
       //
-      // B0 mass plots
       /*
-      if ( (hmyPsiPKPiMassSelAltZoom = (TH1F*) AlexisOut->Get("myPsiPKPiMassSelAltZoom")) ) {
+      // B0 mass plots
+      if ( (nB0AC_h = (TH1I*) AlexisOut->Get("B0_multiplicity_AC")) ) {
+	nB0AC_h->Draw() ;
+	nB0AC_h->Draw("text30same") ;
+	gPad->SetLogy() ;
+	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), nB0AC_h->GetName()) );
+      } else Warning("Terminate", "histogram \"myPsiPKPiMassSelAltZoom\" not found");
 
-	TCanvas *Bpeak_C = new TCanvas("Bpeak_C","Bpeak_C", 800, 600) ;  
+      if ( (nTwins_h[0] = (TH1I*) AlexisOut->Get("B0twins_multiplicity_AC")) ) {
+	nTwins_h[0]->Draw() ;
+	nTwins_h[0]->Draw("text30same") ;
+	gPad->SetLogy(0) ;
+	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), nTwins_h[0]->GetName()) );
+      } else Warning("Terminate", "histogram \"B0twins_multiplicity_AC\" not found");
+
+      if ( (hmyPsiPKPiMassSelAltZoom = (TH1F*) AlexisOut->Get("myPsiPKPiMassSelAltZoom")) ) {
 
 	Double_t xMin = hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetXmin();
 	Double_t xMax = hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetXmax();
@@ -4163,11 +4051,11 @@ void psiPrimePiK_MC::Terminate()
 	//totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
 
 	xframe->Draw();
-	//Bpeak_C->SaveAs("plots/B0_mass_1B0_fit.png");
+	//gPad->SaveAs( TString::Format("plots/%s/B0_mass_1B0_fit.png", dir.Data()) );
 
       } else Warning("Terminate", "histogram \"myPsiPKPiMassSelAltZoom\" not found");
       //
-      *//*
+      
       // 1 B0
       if ( (hB0Mass_1B0 = (TH1F*) AlexisOut->Get("B0Mass_1B0")) ) {
 	if ( (hB0Mass_1B0matched[0][0] = (TH1F*) AlexisOut->Get("B0Mass_1B0matched")) ) {
@@ -4208,7 +4096,7 @@ void psiPrimePiK_MC::Terminate()
 	//RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
 	//RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
 	
-	RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+4);
+	RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+5);
 
 	RooRealVar c1("c_{1}", "c1", +0.02, -10, 10);
 	RooRealVar c2("c_{2}", "c2", -0.001, -10, 10);
@@ -4234,6 +4122,7 @@ void psiPrimePiK_MC::Terminate()
 	totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9)) ;
 	//totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
 
+	xframe->SetTitleOffset(1.3, "XY");
 	xframe->Draw();
 	Bpeak_C->SaveAs( TString::Format("plots/%s/B0_mass_1B0_fit.png", dir.Data()) );
 
@@ -4249,7 +4138,7 @@ void psiPrimePiK_MC::Terminate()
 	
       } else Warning("Terminate", "histogram \"B0Mass_1B0\" not found");
       //
-      *//*
+      
       // 2 B0 not twin
       if ( (hB0Mass_2B0notTwin = (TH1F*) AlexisOut->Get("B0Mass_2B0notTwin")) ) {
 	if ( (hB0Mass_2B0notTwin_matched[0] = (TH1F*) AlexisOut->Get("B0Mass_2B0notTwin_matched")) ) {
@@ -4269,7 +4158,7 @@ void psiPrimePiK_MC::Terminate()
 	} else Warning("Terminate", "histogram \"B0Mass_2B0notTwin_matched\" not found");
       } else Warning("Terminate", "histogram \"B0Mass_2B0notTwin\" not found");
       //
-      *//*
+      
       // 2 B0 twin
       if ( (hB0Mass_2B0twin = (TH1F*) AlexisOut->Get("B0Mass_2B0twin")) ) {
 	if ( (hB0Mass_2B0twin_matched[0] = (TH1F*) AlexisOut->Get("B0Mass_2B0twin_matched")) ) {
@@ -4289,10 +4178,20 @@ void psiPrimePiK_MC::Terminate()
 	} else Warning("Terminate", "histogram \"B0Mass_2B0twin_matched\" not found");
       } else Warning("Terminate", "histogram \"B0Mass_2B0twin\" not found");
       //
-      */
-      /*
+      
       // hourglass
       cout <<"\nHourglass plot:" <<endl ;
+
+      if ( ( hDeltaB0Mass_2B0twin[0] = (TH2F*) AlexisOut->Get("DeltaB0Mass_2B0twin")) ) {
+	hDeltaB0Mass_2B0twin[0]->Draw("colz") ;
+	gPad->SaveAs( TString::Format("plots/%s/Hourglass.png", dir.Data()) ) ;
+      } else Warning("Terminate", "histogram \"DeltaB0Mass_2B0twin\" not found");
+
+      if ( ( hDeltaB0Mass_2B0twin[1] = (TH2F*) AlexisOut->Get("DeltaB0Mass_2B0twin_signalWin")) ) {
+	hDeltaB0Mass_2B0twin[1]->Draw("colz") ;
+	gPad->SaveAs( TString::Format("plots/%s/Hourglass_signalWin.png", dir.Data()) ) ;
+      } else Warning("Terminate", "histogram \"DeltaB0Mass_2B0twin_signalWin\" not found");
+
       if ( ( hB0Mass_2B0twin_hourglass[1][1] = (TH1F*) AlexisOut->Get("B0Mass_inside_matchedTwin")) ) {
 	hB0Mass_2B0twin_hourglass[1][1]->SetLineWidth(2) ;
 	hB0Mass_2B0twin_hourglass[1][1]->SetLineColor( kBlack ) ;
@@ -4326,17 +4225,281 @@ void psiPrimePiK_MC::Terminate()
 	gPad->SaveAs( TString::Format("plots/%s/B0_mass_2B0twin_hourglass_logy.png", dir.Data()) ) ;
 
       } else Warning("Terminate", "histogram \"B0Mass_inside_matchedTwin\" not found");
-      */		
+      */
+      /*
+      cout <<"\nDalitz plot:" <<endl ;
+      TString name = "gen_psi2SPi_vs_KPi_dalitz";
+      name = "gen_psi2SPi_vs_KPi_dalitz_BT";
+      //name = "gen_KPi_vs_psi2SK_dalitz_BT";
+      TH2F* dalitzGen = 0 ;
+      if ( (dalitzGen = (TH2F*) AlexisOut->Get("gen_psi2SPi_vs_KPi_dalitz_BT")) ) {
 
+	gStyle->SetOptStat( 10 ) ;
+
+	//dalitzGen->Draw("lego") ;
+	dalitzGen->Draw("colz") ;
+
+	// Dalitz contour
+	Int_t m = 19800;
+	Double_t x[19800], m23_max[19800], m23_min[19800];
+	Double_t E2[19800], E3[19800];
+	
+	Double_t m_mother = B0_mass; 
+	//Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = psi2S_mass ; 
+	Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = psi2S_mass ; 
+
+	Double_t m12_min = (m_dau1+m_dau2)*(m_dau1+m_dau2);
+	Double_t m12_max = (m_mother-m_dau3)*(m_mother-m_dau3);
+	Double_t step = (m12_max - m12_min)/(m-1);
+	
+	x[0] = m12_min + 0.0001;
+	
+	for (Int_t k=1; k<m; k++ ) 
+	  x[k] = x[k-1] + step;
+	
+	Int_t n = 19799;
+	for (Int_t i=0; i<n; i++) {
+	  E2[i] = (x[i] - m_dau1*m_dau1 + m_dau2*m_dau2)/(2*sqrt(x[i]));
+	  E3[i] = (m_mother*m_mother - x[i] - m_dau3*m_dau3)/(2*sqrt(x[i]));
+	  m23_min[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) + sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
+	  m23_max[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) - sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
+	}
+	
+	TGraph *cont_up = new TGraph(n,x,m23_min); cont_up->SetLineWidth(3);
+	TGraph *cont_down = new TGraph(n,x,m23_max); cont_up->SetLineWidth(3);
+	cont_up->Draw("lsame"); 
+	cont_down->Draw("lsame"); 
+
+	gPad->SaveAs( TString::Format("plots/%s/dalitz_gen.png", dir.Data()) );
+	//dalitzGen->Rebin2D();
+	//gPad->SaveAs( TString::Format("plots/%s/dalitz_gen_rebinned.png", dir.Data()) );
+
+	//TString nameReco = "reco_psi2SPi_vs_KPi_dalitz" ;
+	TString nameReco = "psi2SPi_vs_KPi_dalitz_1B0" ;
+	TH2F* dalitzReco = 0 ;
+	//if ( (psi2SPiSqMass_vs_KPiSqMass_AC = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
+	if ( (dalitzReco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
+	  dalitzReco->Draw("colz") ;
+	  cont_up->Draw("lsame"); 
+	  cont_down->Draw("lsame"); 
+
+	  gPad->SaveAs( TString::Format("plots/%s/dalitz_reco.png", dir.Data()) );
+	  //dalitzReco->Rebin2D();
+	  //gPad->SaveAs( TString::Format("plots/%s/dalitz_reco_rebinned.png", dir.Data()) );
+
+	  cout <<"\nCreating efficiency Dalitz" <<endl ;
+	  TH2D *hAbsEff, *hAbsEffErr, *hRelEff;
+	  TH1D *hAbsEffDistr, *hGenDistr, *hRecoDistr;
+	  
+	  Float_t xLow = dalitzGen->GetXaxis()->GetXmin() ;
+	  Float_t xHigh = dalitzGen->GetXaxis()->GetXmax() ;
+	  Int_t nX = dalitzGen->GetNbinsX() ;
+	  Float_t yLow = dalitzGen->GetYaxis()->GetXmin() ;
+	  Float_t yHigh = dalitzGen->GetYaxis()->GetXmax() ;
+	  Int_t nY = dalitzGen->GetNbinsY() ;
+	  hAbsEff = new TH2D ("AbsEff", "AbsEff", nX, xLow, xHigh, nY, yLow, yHigh);
+	  hAbsEff->SetXTitle( dalitzGen->GetXaxis()->GetTitle() );
+	  hAbsEff->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
+	  hRelEff = new TH2D ("RelEff", "RelEff", nX, xLow, xHigh, nY, yLow, yHigh);
+	  hRelEff->SetXTitle( dalitzGen->GetXaxis()->GetTitle() );
+	  hRelEff->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
+	  hAbsEffErr = new TH2D ("AbsEffErr", "AbsEffErr", nX, xLow, xHigh, nY, yLow, yHigh);
+	  hAbsEffErr->SetXTitle( dalitzGen->GetXaxis()->GetTitle() );
+	  hAbsEffErr->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
+	  hAbsEffDistr = new TH1D ("hAbsEffDistr","Efficiency distribution", 100, -0.001, 0.006);
+	  hGenDistr = new TH1D ("hGenDistr","Bins' Gen entries distribution", 100, 0., 25000);
+	  hRecoDistr = new TH1D ("hRecoDistr","Bins' Reco entries distribution", 110, 0., 55.);
+	 	  
+	  Int_t MyPalette[100];
+	  Double_t red[]   = { 1.0, 0.0, 1.0, 1.0 };
+	  Double_t green[] = { 1.0, 0.0, 0.0, 1.0 };
+	  Double_t blue[]  = { 1.0, 1.0, 0.0, 0.0 };
+	  Double_t stop[] = { 0.0, 0.5, 0.9, 1.0 };
+	  Int_t FI = TColor::CreateGradientColorTable(4, stop, red, green, blue, 100);
+	  for (int i=0; i<100; i++)
+	    MyPalette[i] = FI+i;
+	  
+	  gStyle->SetPalette(100, MyPalette);
+	  
+	  // 32 righe & 40 colonne
+	  Double_t genBinCont[nX][nY], recoBinCont[nX][nY];
+	  Double_t absEff[nX][nY], absEffErr[nX][nY];
+	  Double_t absEffSingleValue, absEffErrSingleValue;
+	  Double_t genSingleValue, recoSingleValue;
+	  //
+	  Int_t count=0;
+	  Double_t sumAbsEff = 0, sumAbsEffErr = 0.;
+	  //
+	  for (Int_t i=0; i<nX; i++)
+	    {
+	      for (Int_t j=0; j<nY; j++)
+		{
+		  genBinCont[i][j] = dalitzGen->GetBinContent(i,j);
+		  recoBinCont[i][j] = dalitzReco->GetBinContent(i,j);
+		  //cout << "riga j=" << j << " e colonna i=" << i << " -> no. candidati generati = " << genBinCont[j][i] << " & no. ricostruiti = " << recoBinCont[j][i] << endl;
+		  //
+		  genSingleValue = genBinCont[i][j];
+		  recoSingleValue = recoBinCont[i][j];
+		  hGenDistr->Fill(genSingleValue);
+		  hRecoDistr->Fill(recoSingleValue);
+		  //
+		  if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
+		    {
+		      absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
+		      absEffSingleValue = absEff[i][j];
+		      hAbsEffDistr->Fill(absEffSingleValue);
+		      absEffErr[i][j] = (1 / genBinCont[i][j] ) * (sqrt( genBinCont[i][j] * absEff[i][j] * (1 - absEff[i][j]) ) );
+		      absEffErrSingleValue = absEffErr[i][j];
+		      //
+		      // calculate weighted mean: two possible intervals: ]0,0.00225[ or ]0,0.005[
+		      //if (absEffSingleValue > 0. && absEffSingleValue < 0.01) //0.005
+		      if (absEffSingleValue > 0.) //0.005
+			{
+			  sumAbsEff = sumAbsEff + (absEffSingleValue/(absEffErrSingleValue * absEffErrSingleValue)) ;
+			  sumAbsEffErr = sumAbsEffErr + (1./(absEffErrSingleValue * absEffErrSingleValue));
+			  count++ ;
+			}
+		      //
+		    } else {
+		    absEff[i][j] = 0.;
+		    absEffErr[i][j] = 0.;
+		    absEffSingleValue = -0.0005;
+		    hAbsEffDistr->Fill(absEffSingleValue);
+		  }
+		  //cout << "raw-j=" << j << " e col-i=" << i << " -> no. gen-cand = " << genBinCont[j][i] << " & no. reco-cand = " << recoBinCont[j][i] << " & eff= " << absEff[j][i] << endl;
+		  //
+		  hAbsEff->SetBinContent(i,j,absEff[i][j]);
+		  hAbsEffErr->SetBinContent(i,j,absEffErr[i][j]);
+		  //
+		} // for (Int_t j=0; j<nY; j++)
+	    } // for (Int_t i=0; i<nX; i++)
+	  //
+	  cout <<"count = " <<count << " with weighted mean = " << sumAbsEff/sumAbsEffErr << " and weighted mean uncertainty = " << 1./sqrt(sumAbsEffErr) << endl; // about 10-3 with error 10-5
+	  //
+	  hAbsEff->Draw("colz"); hAbsEff->SetStats(kFALSE);
+	  cont_up->Draw("lsame"); 
+	  cont_down->Draw("lsame"); 
+	  gPad->SaveAs( TString::Format("plots/%s/dalitz_absEff.png", dir.Data()) );
+
+	  hAbsEffErr->Draw("colz"); hAbsEffErr->SetStats(kFALSE);
+	  cont_up->Draw("lsame"); 
+	  cont_down->Draw("lsame"); 
+	  gPad->SaveAs( TString::Format("plots/%s/dalitz_absEffErr.png", dir.Data()) );
+
+	  //////////////////////////////////////// RELATIVE EFFICIENCY CALCULATION
+	  //   
+	  Double_t relEff[nX][nY];
+	  //Double_t relEffErr[nX][nY];
+	  //
+	  Double_t weightedMeanEff = sumAbsEff/sumAbsEffErr;
+	  // Double_t weightedMeanEffErr = 1./sqrt(sumAbsEffErr);
+	  //
+	  for (Int_t i=0; i<nX; i++)
+	    {
+	      for (Int_t j=0; j<nY; j++)
+		{
+		  //genBinCont[i][j] = dalitzGen->GetBinContent(i,j);
+		  //recoBinCont[i][j] = dalitzReco->GetBinContent(i,j);	   
+		  if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
+		    {
+		      //absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
+		      if (absEff[i][j] > 0. && absEff[i][j] < 0.05) // 0. && 0.005
+			{
+			  relEff[i][j] = absEff[i][j]/weightedMeanEff;
+			}
+		      else 
+			relEff[i][j] = 0. ;
+		    }
+		  else
+		    relEff[i][j] = 0. ;
+		  hRelEff->SetBinContent(i,j,relEff[i][j]);
+		}
+	    }
+	  //
+	  hRelEff->Draw("colz"); hRelEff->SetStats(kFALSE);
+	  hRelEff->SetMinimum(0.); hRelEff->SetMaximum(2.2);
+	  cont_up->Draw("lsame"); cont_down->Draw("lsame"); 
+	  gPad->SaveAs( TString::Format("plots/%s/dalitz_relEff.png", dir.Data()) );
+
+	  hAbsEffDistr->Draw() ;
+	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+
+      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
+      */		
+      cout <<"\nAngles plot:" <<endl ;
+      // psi helicity angle
+      TH1F* helicityAngleGen = 0, *cosHelicityAngleGen = 0 ;
+      TString name = "psi2S_helicityAngle_BT_gen";
+      TString nameCos = "cos_psi2S_helicityAngle_BT_gen";
+      if ( (helicityAngleGen = (TH1F*) AlexisOut->Get( name.Data() )) ) {
+	gStyle->SetOptStat( 10 ) ;
+	helicityAngleGen->Draw() ;
+	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), helicityAngleGen->GetName()) );
+
+	if ( (cosHelicityAngleGen = (TH1F*) AlexisOut->Get( nameCos.Data() )) ) {
+	  cosHelicityAngleGen->Draw() ;
+	  gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), cosHelicityAngleGen->GetName()) );
+	  
+	  TH2F* helicityAngleReco = 0, *cosHelicityAngleReco = 0 ;
+	  TString nameReco = "psi2S_helicityAngle" ;
+	  TString nameRecoCos = "cos_psi2S_helicityAngle" ;
+	  if ( (helicityAngleReco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
+	    helicityAngleReco->Draw() ;
+	    gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), helicityAngleReco->GetName()) );
+
+	    if ( (cosHelicityAngleReco = (TH2F*) AlexisOut->Get( nameRecoCos.Data() )) ) {
+	      cosHelicityAngleReco->Draw() ;
+	      gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), cosHelicityAngleReco->GetName()) );
+
+	      TH1F* cosHelicityAngleEff = (TH1F*) cosHelicityAngleReco->Clone("cos_psi2S_helicityAngle_Eff"); cosHelicityAngleEff->SetTitle("efficiency of #psi' helicity angle cosine") ;
+	      cosHelicityAngleEff->Divide( cosHelicityAngleReco, cosHelicityAngleGen, 1,1,"B") ;
+	      cosHelicityAngleEff->Draw() ;
+	      gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), cosHelicityAngleEff->GetName()) );
+
+	    } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameRecoCos.Data()));
+	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+	
+	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameCos.Data()));
+      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
+      //
+      // planes angle
+      TH1F* planesAngleGen = 0 ;
+      name = "planesAngle_BT_gen";
+      if ( (planesAngleGen = (TH1F*) AlexisOut->Get( name.Data() )) ) {
+
+	gStyle->SetOptStat( 10 ) ;
+
+	planesAngleGen->Draw() ;
+	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), planesAngleGen->GetName()) );
+
+	TH2F* planesAngleReco = 0 ;
+	TString nameReco = "planesAngle" ;
+	if ( (planesAngleReco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
+
+	  planesAngleReco->Draw() ;
+	  gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), planesAngleReco->GetName()) );
+
+	  TH1F* planesAngleEff = (TH1F*) planesAngleReco->Clone("planesAngle_Eff"); planesAngleEff->SetTitle("efficiency of #phi angle") ;
+	  planesAngleEff->Divide( planesAngleReco, planesAngleGen, 1,1,"B") ;
+	  planesAngleEff->Draw() ;
+	  gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), planesAngleEff->GetName()) );
+
+	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+	
+      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
+      
     } else Error("Terminate", "could not open file: %s", outputFile.Data()) ;
     
   }
   else Warning("Terminate", "file \"26Jan_histos.root\" not found");
-  
+
   cout <<endl ;
-  /*
+  
   // Primary vertex plots
+  /*
   cout <<"\nPrimary vertex plots:" <<endl ;
+  gSystem->mkdir(TString::Format("plots/%s/priVtx", dir.Data()), true);
+
   if ( (OutFile = dynamic_cast<TProofOutputFile*>(fOutput->FindObject("officialMC_Bd2Psi2SKpi.root"))) ) {
     TString outputFile(OutFile->GetOutputFileName());
     TString outputName(OutFile->GetName()); outputName += ".root";
@@ -4348,6 +4511,7 @@ void psiPrimePiK_MC::Terminate()
     // primary vertex
     //TCanvas *priVtx_C = new TCanvas("priVtx_C","priVtx_C", 800, 600) ; // useless
     TString type[7] = {"","_B0","_B0CosAlpha","_B0CosAlpha3D","_B0Less","_B0LessB0CosAlpha","_B0LessB0CosAlpha3D"} ;
+    gPad->SetLogy(0) ;
     for (Int_t i=0; i<7; i++) {
       TString name = TString::Format("priVtx%s_z", type[i].Data()) ;
       if ( (priVtx_z[i] = (TH1F*) fOut->Get( name.Data() )) ) {
@@ -4491,6 +4655,95 @@ float psiPrimePiK_MC::GetWeightPtShape( float pt, TH1F* histo ) {
     } 
   }
   return weight;
+}
+
+double psiPrimePiK_MC::getMumuHelicityAngle(TLorentzVector B0, TLorentzVector Kstar, TLorentzVector mumu, TLorentzVector muM) {
+
+  TLorentzVector mumuBoosted = mumu, muMBoosted = muM, KstarBoosted = Kstar ;
+  mumuBoosted.Boost( -B0.BoostVector() ) ;
+  muMBoosted.Boost( -B0.BoostVector() ) ; muMBoosted.Boost( -mumuBoosted.BoostVector() ) ;
+  KstarBoosted.Boost( -B0.BoostVector() ) ; KstarBoosted.Boost( -mumuBoosted.BoostVector() ) ;
+
+  //return muMBoosted.Angle( KstarBoosted.Vect() );    
+  return muMBoosted.Angle( mumuBoosted.Vect() );    
+}
+
+double psiPrimePiK_MC::getBelleMumuHelicityAngle(TLorentzVector B0, TLorentzVector Kstar, TLorentzVector mumu, TLorentzVector muM) {
+		    
+  TLorentzVector mumuBoosted = mumu, muMBoosted = muM, KstarBoosted = Kstar ;
+  mumuBoosted.Boost( -B0.BoostVector() ) ;
+  muMBoosted.Boost( -B0.BoostVector() ) ; muMBoosted.Boost( -mumuBoosted.BoostVector() ) ;
+  TVector3 muM3 = muMBoosted.Vect() ;
+  KstarBoosted.Boost( -B0.BoostVector() ) ; KstarBoosted.Boost( -mumuBoosted.BoostVector() ) ;
+  TVector3 Kstar3 = KstarBoosted.Vect() ; 
+
+  return TMath::ACos( -(muM3.Dot(Kstar3)) / (muM3.Mag()*Kstar3.Mag()) ) ;    
+}
+
+double psiPrimePiK_MC::getAleMumuHelicityAngle(TLorentzVector mumu, TLorentzVector muM) {
+  
+  //INPUT:
+  // JPsi 4-momentum and muon 4-momentum
+  //OUTPUT:
+  // muon cos(theta) in helicity frame
+  // muon phi in helicity frame
+  //
+  
+  TLorentzVector mumuBoosted = mumu, muMBoosted = muM ;
+  //JPsi momentum in lab frame
+  TVector3 bMumu = mumuBoosted.BoostVector() ;
+  TLorentzVector beam1(0., 0.,  4000., 4000.) ; // beam momentum in lab frame
+  TLorentzVector beam2(0., 0., -4000., 4000.) ; // beam momentum in lab frame
+  beam1.Boost( -bMumu ) ; // beam momentum in JPsi rest frame
+  beam2.Boost( -bMumu ) ; // beam momentum in JPsi rest frame
+  TVector3 beam1_dir = beam1.Vect().Unit();  // beam direction in JPsi rest frame
+  TVector3 beam2_dir = beam2.Vect().Unit();  // beam direction in JPsi rest frame
+
+  TVector3 Y = beam1_dir.Cross( beam2_dir ).Unit(); // the production plane normal
+  TVector3 Z = mumuBoosted.Vect().Unit();         // JPsi direction in lab frame
+  TVector3 X = Y.Cross(Z).Unit();         // completes the right-handed coordinate
+
+  muMBoosted.Boost( -bMumu );     // muon- momentum in JPsi rest frame
+
+  TRotation rotation;
+  rotation.SetToIdentity();
+  rotation.RotateAxes(X,Y,Z);
+  rotation.Invert(); // transforms coordinates from the "xyz" frame to the new frame
+  TVector3 mu_rotated = muMBoosted.Vect();
+  mu_rotated.Transform(rotation);
+  
+return mu_rotated.CosTheta() ;
+  //return TMath::ACos( mu_rotated.CosTheta() );
+  //muphi_hx = mu_rotated.Phi()>0. ? mu_rotated.Phi() : mu_rotated.Phi()+2.*TMath::Pi(); // radians
+}
+
+double psiPrimePiK_MC::getPlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP) {
+
+  TLorentzVector KBoosted = K, PiBoosted = Pi, muMBoosted = muM, muPBoosted = muP ;
+  K.Boost( -B0.BoostVector() ) ;
+  PiBoosted.Boost( -B0.BoostVector() ) ;
+  muPBoosted.Boost( -B0.BoostVector() ) ;
+  muMBoosted.Boost( -B0.BoostVector() ) ;
+  TVector3 KPiplane_normal = PiBoosted.Vect().Cross( K.Vect() ) ;
+  TVector3 MuMuplane_normal = muMBoosted.Vect().Cross( muPBoosted.Vect() ) ;
+
+  return KPiplane_normal.Angle( MuMuplane_normal );
+}
+
+double psiPrimePiK_MC::getBellePlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP) {
+
+  TLorentzVector KBoosted = K, PiBoosted = Pi, muMBoosted = muM, muPBoosted = muP ;
+  K.Boost( -B0.BoostVector() ) ; TVector3 K3 = K.Vect() ;
+  PiBoosted.Boost( -B0.BoostVector() ) ; TVector3 Pi3 = PiBoosted.Vect() ;
+  TVector3 Kstar3 = K3 + Pi3 ;
+  muPBoosted.Boost( -B0.BoostVector() ) ; TVector3 muP3 = muPBoosted.Vect() ;
+  muMBoosted.Boost( -B0.BoostVector() ) ; TVector3 muM3 = muMBoosted.Vect() ;
+  TVector3 MuMu3 = muP3 + muM3 ;
+
+  TVector3 aKplus = K3 - (Kstar3.Dot(K3)/Kstar3.Mag2())*Kstar3 ;
+  TVector3 aMuplus = muP3 - (muP3.Dot(MuMu3)/MuMu3.Mag2())*MuMu3 ;
+
+  return aKplus.Angle( aMuplus );
 }
 
 //rsync -vut --existing psiPrimePiK_MC.C cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/psiPrimePiK_MC.C

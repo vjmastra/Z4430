@@ -33,7 +33,10 @@
 	// without tree
 	dataset->SetDirectory("");
 	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withGenVert/150511_225852/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
-	dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withCosAlpha3D/150616_232452/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withCosAlpha3D/150616_232452/official_BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	// extension
+	dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_withGenMuons/150712_142925/official_BdToPsiKpi_18Mar_MuMuPiKPAT_ext1.root");
+	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/BdToPsi2SKPi_MSEL5_TuneZ2star_8TeV-pythia6/crab_official_MC_ext1_Legnaro/150709_161215/official_BdToPsiKpi_18Mar_MuMuPiKPAT_ext1.root");
 	// with tree
 	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/officialBdToPsiKpi_18Mar_MuMuPiKPAT_ntpl.root");
       }

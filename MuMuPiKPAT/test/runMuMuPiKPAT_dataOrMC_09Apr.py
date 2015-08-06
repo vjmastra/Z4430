@@ -12,8 +12,8 @@ process.MessageLogger.suppressInfo = cms.untracked.vstring( "mkcands" )
 process.MessageLogger.suppressWarning = cms.untracked.vstring( "mkcands" )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
-#MC = False
-MC = True
+MC = False
+#MC = True
 if MC :
         #official = False
         official = True
@@ -32,11 +32,14 @@ process.source = cms.Source("PoolSource",
 )
 
 if (not MC) :
-    sourceFiles = cms.untracked.vstring(
+    sourceFiles = cms.untracked.vstring( # 'root://cms-xrd-global.cern.ch/' prefix could help sometimes
             # Sanjay
             #'file:PYTHIA6_Bd2Psi2SKpi_TuneZ2star_8TeV_cff_py_RAW2DIGI_L1Reco_RECO.root'
             # dataset C
-            '/store/data/Run2012C/MuOniaParked/AOD/22Jan2013-v1/30000/1E71D761-D870-E211-9343-00215E25A5E2.root'
+            #'root://cmsxrootd.fnal.gov//store/data/Run2012C/MuOniaParked/AOD/22Jan2013-v1/30000/1E71D761-D870-E211-9343-00215E25A5E2.root' # used to work, not on 30/07/2015
+            #'/store/data/Run2012C/MuOniaParked/AOD/22Jan2013-v1/30000/1E71D761-D870-E211-9343-00215E25A5E2.root'
+	    #'root://cms-xrd-global.cern.ch//store/data/Run2012C/MuOniaParked/AOD/22Jan2013-v1/30000/1E71D761-D870-E211-9343-00215E25A5E2.root'
+	    '/store/data/Run2012B/MuOniaParked/AOD/22Jan2013-v1/20002/1A5DE0F3-646B-E211-91AA-001A645C2BC0.root' # guilty file
     )
 elif MC :
         if MCMotherId == 511 :
@@ -180,7 +183,7 @@ process.source.inputCommands = cms.untracked.vstring(
 	)
 
 process.maxEvents = cms.untracked.PSet(
-        input = cms.untracked.int32( 10000 ) # 256Kb in 2' for 100 events, 1Mb in 7' for 1k events, 6Mb in 50' for 8650 events, 11Mb in 66' for 10k events, 100Mb in 14h for 150k events, 1.4Gb in 4 days for 1.2M events of official MC
+        input = cms.untracked.int32( -1 ) # 256Kb in 2' for 100 events, 1Mb in 7' for 1k events, 6Mb in 50' for 8650 events, 11Mb in 66' for 10k events, 100Mb in 14h for 150k events, 1.4Gb in 4 days for 1.2M events of official MC
         #input = cms.untracked.int32( 1000 ) # 310Kb in 3' for 1k events of private MC
         #input = cms.untracked.int32( 100 ) # = 20Mb in 2h for 15k events, 2Mb in 10' for 1k events of Run2012C/MuOniaParked/AOD/22Jan2013-v1
 	#input = cms.untracked.int32( 1000 ) # = 3Mb for 6546 events, 85Kb for 100, 800kb for 1k events of BsToPsiMuMu
@@ -309,12 +312,13 @@ makeTrackCandidates( process,                                # patAODTrackCands
                      tracks = cms.InputTag('generalTracks'), # input track collection
                      #tracks = cms.InputTag('refittedGeneralTracksMuon'), # input track collection               // AP changed from generalTracks
                      #tracks = cms.InputTag('refittedGeneralTracksPion'), # input track collection               // AP changed from generalTracks
-                     #particleType = 'mu+',                   # particle type (for assigning a mass)
-                     particleType = 'pi+',                   # particle type (for assigning a mass)
+                     #particleType = 'mu+',                   # particle type (for assigning a mass) # not working, everything is a pion
+                     particleType = 'pi+',                   # particle type (for assigning a mass) # not working, everything is a pion
                      preselection = 'pt > 0.35',              # preselection cut on candidates. Only methods of 'reco::Candidate' are available
-                     selection = 'pt > 0.35',                 # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
-                     #selection = 'p < 0.7',                 # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
-                     isolation = {},                         # Isolations to use ('source':deltaR; set to {} for None)
+                     #selection = 'pt > 0.35',                 # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
+                     #selection = 'p > 0.5',                 # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
+                     selection = 'pt > 0.35 && p > 0.5',     # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
+		     isolation = {},                         # Isolations to use ('source':deltaR; set to {} for None)
                      isoDeposits = [],
                      mcAs = None                           # Replicate MC match as the one used for Muons
              );                                    # you can specify more than one collection for this
@@ -332,13 +336,14 @@ makeTrackCandidates( process,                                        # patAODTra
                      label = 'TrackKaonCands',                       # output collection will be 'allLayer0TrackCands', 'allLayer1TrackCands', 'selectedLayer1TrackCands'
                      #tracks = cms.InputTag('refittedGeneralTracksKaon'), # input track collection               // AP changed from generalTracks
                      tracks = cms.InputTag('generalTracks'), # input track collection               // AP changed from generalTracks
-                     particleType = 'K+',                            # particle type (for assigning a mass)  // AP changed from pi to K
-                     #particleType = 'pi+',                            # particle type (for assigning a mass)  // AP changed from pi to K
-                     #particleType = 'mu+',                            # particle type (for assigning a mass)  // AP changed from pi to K
+                     particleType = 'K+',                            # particle type (for assigning a mass)  // AP changed from pi to K # not working, everything is a pion
+                     #particleType = 'pi+',                            # particle type (for assigning a mass)  // AP changed from pi to K # not working, everything is a pion
+                     #particleType = 'mu+',                            # particle type (for assigning a mass)  // AP changed from pi to K # not working, everything is a pion
                      preselection = 'pt > 0.35',                      # preselection cut on candidates. Only methods of 'reco::Candidate' are available
-                     selection = 'pt > 0.35',                         # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
-                     #selection = 'p < 0.7',                         # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
-                     isolation = {},                                 # Isolations to use ('source':deltaR; set to {} for None)
+                     #selection = 'pt > 0.35',                 # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
+                     #selection = 'p > 0.5',                 # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
+                     selection = 'pt > 0.35 && p > 0.5',     # Selection on PAT Layer 1 objects ('selectedLayer1TrackCands')
+		     isolation = {},                                 # Isolations to use ('source':deltaR; set to {} for None)
                      isoDeposits = [],
                      #mcAs = 'muon'                                   # Replicate MC match as the one used for Muons # AP "=None"  ??
                      mcAs = None                                    # Replicate MC match as the one used for Muons
@@ -426,14 +431,14 @@ process.mkcands = cms.EDAnalyzer("MuMuPiKPAT",
                                  MaxB0CandTrackDR = cms.untracked.double(1.5),   
                                  UseB0Dr = cms.untracked.bool(True),            
 
-                                 MinMuMuPiKMass = cms.untracked.double(4.8),
-                                 MaxMuMuPiKMass = cms.untracked.double(5.6),
+                                 MinMuMuPiKMass = cms.untracked.double(5.1),
+                                 MaxMuMuPiKMass = cms.untracked.double(5.45),
 
                                  resolvePileUpAmbiguity = cms.untracked.bool(True),
                                  addMuMulessPrimaryVertex = cms.untracked.bool(True),
                                  #addMuMulessPrimaryVertex = cms.untracked.bool(False),
                                  addB0lessPrimaryVertex = cms.untracked.bool(True),
-                                 #Debug_Output = cms.untracked.bool(True),
+                                 Debug_Output = cms.untracked.bool(True),
                                  ##
                                  ##  use the correct trigger path
                                  ##
@@ -450,16 +455,20 @@ process.mkcands = cms.EDAnalyzer("MuMuPiKPAT",
                                          #"HLT_Dimuon11_PsiPrime_v1", "HLT_Dimuon11_PsiPrime_v4", "HLT_Dimuon11_PsiPrime_v5",
                                          # inclusive psi(2S)
                                          #"HLT_Dimuon0_PsiPrime_v3", "HLT_Dimuon0_PsiPrime_v4", "HLT_Dimuon0_PsiPrime_v5", "HLT_Dimuon0_PsiPrime_v6",
-                                         "HLT_Dimuon5_PsiPrime_v3", "HLT_Dimuon5_PsiPrime_v4", "HLT_Dimuon5_PsiPrime_v5", "HLT_Dimuon5_PsiPrime_v6"
+                                         "HLT_Dimuon5_PsiPrime_v3", "HLT_Dimuon5_PsiPrime_v4", "HLT_Dimuon5_PsiPrime_v5", "HLT_Dimuon5_PsiPrime_v6",
                                          #"HLT_Dimuon7_PsiPrime_v1", "HLT_Dimuon7_PsiPrime_v2", "HLT_Dimuon7_PsiPrime_v3", "HLT_Dimuon9_PsiPrime_v9",
                                          #"HLT_DoubleMu3p5_LowMass_Displaced_v3", "HLT_DoubleMu3p5_LowMass_Displaced_v4", "HLT_DoubleMu3p5_LowMass_Displaced_v5", "HLT_DoubleMu3p5_LowMass_Displaced_v6"
+					 # inclusive J/psi
+					 "HLT_Dimuon8_Jpsi_v3", "HLT_Dimuon8_Jpsi_v4", "HLT_Dimuon8_Jpsi_v5", "HLT_Dimuon8_Jpsi_v6", "HLT_Dimuon8_Jpsi_v7",  
                                  ),
-                                FiltersForMatching = cms.untracked.vstring(
-                                        # Alessandra
-                                        #"hltDisplacedmumuFilterDoubleMu4Jpsi", "hltDisplacedmumuFilterDoubleMu4Jpsi", "hltDisplacedmumuFilterDoubleMu4Jpsi", "hltDisplacedmumuFilterDoubleMu4Jpsi"
-                                        # Kay
-                                        "hltVertexmumuFilterDimuon5PsiPrime", "hltVertexmumuFilterDimuon5PsiPrime", "hltVertexmumuFilterDimuon5PsiPrime", "hltVertexmumuFilterDimuon5PsiPrime"#, "hltVertexmumuFilterDimuon7PsiPrime", "hltVertexmumuFilterDimuon7PsiPrime", "hltVertexmumuFilterDimuon7PsiPrime", "hltVertexmumuFilterDimuon7PsiPrime"                               
-                                        #hltDoubleMu4JpsiDisplacedL3Filtered         
+				 FiltersForMatching = cms.untracked.vstring(
+                                         # Alessandra
+                                         #"hltDisplacedmumuFilterDoubleMu4Jpsi", "hltDisplacedmumuFilterDoubleMu4Jpsi", "hltDisplacedmumuFilterDoubleMu4Jpsi", "hltDisplacedmumuFilterDoubleMu4Jpsi"
+                                         # Kay
+                                         "hltVertexmumuFilterDimuon5PsiPrime", "hltVertexmumuFilterDimuon5PsiPrime", "hltVertexmumuFilterDimuon5PsiPrime", "hltVertexmumuFilterDimuon5PsiPrime", #"hltVertexmumuFilterDimuon7PsiPrime", "hltVertexmumuFilterDimuon7PsiPrime", "hltVertexmumuFilterDimuon7PsiPrime", "hltVertexmumuFilterDimuon7PsiPrime"
+                                         #hltDoubleMu4JpsiDisplacedL3Filtered
+					 # inclusive J/psi (https://espace.cern.ch/cms-quarkonia/trigger-bph/SitePages/2012-InclusiveJPsi.aspx)         
+					 "hltVertexmumuFilterDimuon8Jpsi", "hltVertexmumuFilterDimuon8Jpsi", "hltVertexmumuFilterDimuon8Jpsi", "hltVertexmumuFilterDimuon8Jpsi", "hltVertexmumuFilterDimuon8Jpsi",
                                 )
                                  
                                  
@@ -506,8 +515,8 @@ process.patDefaultSequence.remove(process.countPatJets)
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string('onia2MuMuPAT.root'),
                                outputCommands = cms.untracked.vstring('drop *',
-                                                #'keep *_genMuons_*_Onia2MuMuPAT',                      # generated muons and parents
-                                                'keep patMuons_patMuonsWithTrigger_*_NTUPLE',    # All PAT muons including general tracks and matches to triggers
+                                             #'keep *_genMuons_*_Onia2MuMuPAT', # generated muons and parents
+                                             'keep patMuons_patMuonsWithTrigger_*_NTUPLE', # All PAT muons including general tracks and matches to triggers
                                                               )
                        )
 

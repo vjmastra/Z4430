@@ -156,7 +156,7 @@ Z4430FilterPAT::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
         }
         const reco::Muon* mum = dynamic_cast<const reco::Muon * >(iMuonM->originalObject());   
         if(!muon::overlap(*mup, *mum)) {
-          cout << "\n=================================  KEEPING NEW EVENT  ========================================\n" << endl;
+          cout << "\n================================= NEW EVENT PASSING THE FILTER ========================================\n" << endl;
           return true;
         }
       }// 2nd loop over muons

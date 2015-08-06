@@ -100,6 +100,12 @@ public :
    vector<float>   *MCpsi2SPx ;
    vector<float>   *MCpsi2SPy ;
    vector<float>   *MCpsi2SPz ;
+   vector<float>   *MCmupPx ;
+   vector<float>   *MCmupPy ;
+   vector<float>   *MCmupPz ;
+   vector<float>   *MCmumPx ;
+   vector<float>   *MCmumPy ;
+   vector<float>   *MCmumPz ;
    vector<float>   *MCpionPx ;
    vector<float>   *MCpionPy ;
    vector<float>   *MCpionPz ;
@@ -316,6 +322,12 @@ public :
    TBranch        *b_MCpsi2SPx ;
    TBranch        *b_MCpsi2SPy ;
    TBranch        *b_MCpsi2SPz ;
+   TBranch        *b_MCmupPx ;
+   TBranch        *b_MCmupPy ;
+   TBranch        *b_MCmupPz ;
+   TBranch        *b_MCmumPx ;
+   TBranch        *b_MCmumPy ;
+   TBranch        *b_MCmumPz ;
    TBranch        *b_MCpionPx ;
    TBranch        *b_MCpionPy ;
    TBranch        *b_MCpionPz ;
@@ -511,7 +523,11 @@ public :
    virtual bool     isMuonInAccept(float eta, float pt);
    virtual float    GetWeightPtShape(float pt, TH1F* histo );
    virtual float    ComputedEdxMass(int itrack, float TrackPt, float K, float C);
-
+   virtual double   getMumuHelicityAngle(TLorentzVector B0, TLorentzVector Kstar, TLorentzVector mumu, TLorentzVector muM);
+   virtual double   getBelleMumuHelicityAngle(TLorentzVector B0, TLorentzVector Kstar, TLorentzVector mumu, TLorentzVector muM);
+   virtual double   getAleMumuHelicityAngle(TLorentzVector mumu, TLorentzVector muM);
+   virtual double   getPlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP);
+   virtual double   getBellePlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP);
    ///////////////////////////////////////// adde here my stuff
 
    ///////////// Input file //////////////////
@@ -648,11 +664,13 @@ public :
    TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0AC_signalWin_h, *nB0AC_purityWin_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
    TH1F* hB0Mass_1B0, *hB0Mass_1B0matched[2][2], *hB0Mass_noTwins_noSignalWinNotTwins ;
    TH2F* psi2SPiSqMass_vs_KPiSqMass_1B0[2] ;
+   TH1F* psi2S_helicityAngle, *cos_psi2S_helicityAngle, *planesAngle ;
    TH1F* hB0CTau_1B0, *hB0CTau_1B0matched ;
    TH1F* B0_gen_p_h, *B0_gen_pT_h, *psi2S_gen_p_h, *psi2S_gen_pT_h, *K_gen_p_h, *K_gen_pT_h, *pi_gen_p_h, *pi_gen_pT_h ;
    TH1F* hMCDeltaRPi_2B0, *hMCDeltaRK_2B0 ;
    TH1F* B0_gen_mass_h ;
    TH2F* psi2SPiSqMass_vs_KPiSqMass_gen, *psi2SPiSqMass_vs_KPiSqMass_BT_gen, *KPiSqMass_vs_psi2SKSqMass_BT_gen, *piCh_vs_KCh_gen ;
+   TH1F* psi2S_helicityAngle_BT_gen, *cos_psi2S_helicityAngle_BT_gen, *planesAngle_BT_gen ;
    TH2F* B0CosAlpha_2Dvs3D[4] ;
    TH1F* priVtx_z[7] ;
    TH1F* priVtx_delta[2][3], *priVtx_deltaX_test, *priVtx_deltaY_test, *priVtx_B0_delta[2][3], *priVtx_B0CosAlpha_delta[2][2][3], *priVtxB0Less_delta[2][3], *priVtxB0Less_B0CosAlpha_delta[2][2][3] ;
@@ -827,6 +845,8 @@ void psiPrimePiK_MC::Init(TTree *tree)
    genEvtVtx_X = 0; genEvtVtx_Y = 0; genEvtVtx_Z = 0;
    genEvtVtx_particlesOut = 0;
    MCpsi2SPx = 0; MCpsi2SPy = 0; MCpsi2SPz = 0;
+   MCmupPx = 0; MCmupPy = 0; MCmupPz = 0;
+   MCmumPx = 0; MCmumPy = 0; MCmumPz = 0;
    MCpionPx = 0; MCpionPy = 0; MCpionPz = 0;
    MCkaonPx = 0; MCkaonPy = 0; MCkaonPz = 0;
    MCPx = 0; MCPy = 0; MCPz = 0;
@@ -982,6 +1002,12 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("MCpsi2SPx", &MCpsi2SPx, &b_MCpsi2SPx);
      fChain->SetBranchAddress("MCpsi2SPy", &MCpsi2SPy, &b_MCpsi2SPy);
      fChain->SetBranchAddress("MCpsi2SPz", &MCpsi2SPz, &b_MCpsi2SPz);
+     fChain->SetBranchAddress("MCmupPx", &MCmupPx, &b_MCmupPx);
+     fChain->SetBranchAddress("MCmupPy", &MCmupPy, &b_MCmupPy);
+     fChain->SetBranchAddress("MCmupPz", &MCmupPz, &b_MCmupPz);
+     fChain->SetBranchAddress("MCmumPx", &MCmumPx, &b_MCmumPx);
+     fChain->SetBranchAddress("MCmumPy", &MCmumPy, &b_MCmumPy);
+     fChain->SetBranchAddress("MCmumPz", &MCmumPz, &b_MCmumPz);
      fChain->SetBranchAddress("MCpionPx", &MCpionPx, &b_MCpionPx);
      fChain->SetBranchAddress("MCpionPy", &MCpionPy, &b_MCpionPy);
      fChain->SetBranchAddress("MCpionPz", &MCpionPz, &b_MCpionPz);
@@ -1132,6 +1158,12 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0DecayVtx_YE", &B0DecayVtx_YE, &b_B0DecayVtx_YE);
    fChain->SetBranchAddress("B0DecayVtx_ZE", &B0DecayVtx_ZE, &b_B0DecayVtx_ZE);
    //
+   fChain->SetBranchAddress("B0CosAlphaBS", &B0CosAlphaBS, &b_B0CosAlphaBS);
+   fChain->SetBranchAddress("B0CosAlpha3DBS", &B0CosAlpha3DBS, &b_B0CosAlpha3DBS);
+   fChain->SetBranchAddress("B0CTauBS", &B0CTauBS, &b_B0CTauBS);
+   fChain->SetBranchAddress("B0CTauBSE", &B0CTauBSE, &b_B0CTauBSE);
+   fChain->SetBranchAddress("B0LxyBS", &B0LxyBS, &b_B0LxyBS);
+   //
    fChain->SetBranchAddress("B0CosAlphaPV", &B0CosAlphaPV, &b_B0CosAlphaPV);
    fChain->SetBranchAddress("B0CosAlpha3DPV", &B0CosAlpha3DPV, &b_B0CosAlpha3DPV);
    fChain->SetBranchAddress("B0CTauPV", &B0CTauPV, &b_B0CTauPV);
@@ -1223,11 +1255,6 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("PriVtxB0Corr_CL", &PriVtxB0Corr_CL, &b_PriVtxB0Corr_CL);
    fChain->SetBranchAddress("PriVtxB0Corr_tracks", &PriVtxB0Corr_tracks, &b_PriVtxB0Corr_tracks);
    //
-   fChain->SetBranchAddress("B0CosAlphaBS", &B0CosAlphaBS, &b_B0CosAlphaBS);
-   fChain->SetBranchAddress("B0CosAlpha3DBS", &B0CosAlpha3DBS, &b_B0CosAlpha3DBS);
-   fChain->SetBranchAddress("B0CTauBS", &B0CTauBS, &b_B0CTauBS);
-   fChain->SetBranchAddress("B0CTauBSE", &B0CTauBSE, &b_B0CTauBSE);
-   fChain->SetBranchAddress("B0LxyBS", &B0LxyBS, &b_B0LxyBS);
    fChain->SetBranchAddress("B0CosAlphaPVX", &B0CosAlphaPVX, &b_B0CosAlphaPVX);
    fChain->SetBranchAddress("B0CTauPVX", &B0CTauPVX, &b_B0CTauPVX);
    fChain->SetBranchAddress("B0CTauPVXE", &B0CTauPVXE, &b_B0CTauPVXE);

@@ -151,7 +151,7 @@ private:
   int  MatchingTriggerResult[50];
 
   bool addMuMulessPrimaryVertex_;
-  double MuMuMinMass, MuMuMaxMass, JPsiMaxMass, JPsiMinMass, PsiPrimeMinMass, PsiPrimeMaxMass ;
+  double MuMuMinMass, MuMuMaxMass, JPsiMinMass, JPsiMaxMass, PsiPrimeMinMass, PsiPrimeMaxMass ;
   double MuMuTrackMaxDR, B0TrackMaxDR ;
   bool   UseB0DR ;
   double MuMuPiKMinMass, MuMuPiKMaxMass;
@@ -197,6 +197,8 @@ private:
   vector<float>	      *PriVtxGen_Chi2, *PriVtxGen_CL, *PriVtxGen_Ndof;
   vector<int>         *PriVtxGen_tracks ;
   vector<float>       *MCpsi2SPx, *MCpsi2SPy, *MCpsi2SPz;
+  vector<float>       *MCmupPx, *MCmupPy, *MCmupPz;
+  vector<float>       *MCmumPx, *MCmumPy, *MCmumPz;
   vector<float>       *MCpionPx, *MCpionPy, *MCpionPz;
   vector<float>       *MCkaonPx, *MCkaonPy, *MCkaonPz;
   vector<int>         *MCpionCh, *MCkaonCh;
