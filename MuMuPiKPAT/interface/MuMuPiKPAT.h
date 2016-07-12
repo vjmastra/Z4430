@@ -130,10 +130,11 @@ private:
 
   edm::InputTag inputGEN_;
   std::string vtxSample;
-  bool doData, doMC;
+  bool doData, doGEN;
   int  MCParticle;
   bool MCExclusiveDecay;
   int  MCMother, MCDaughtersN;
+  vector<unsigned int> MCDaughterID;
   bool doMuMuMassConst;
   bool skipJPsi, skipPsi2S;
 
@@ -196,12 +197,13 @@ private:
   vector<double>      *PriVtxGen_EX, *PriVtxGen_EY, *PriVtxGen_EZ ;
   vector<float>	      *PriVtxGen_Chi2, *PriVtxGen_CL, *PriVtxGen_Ndof;
   vector<int>         *PriVtxGen_tracks ;
-  vector<float>       *MCpsi2SPx, *MCpsi2SPy, *MCpsi2SPz;
+  vector<float>       *MCpsi2SPx, *MCpsi2SPy, *MCpsi2SPz, *MCpsi2SMass;
   vector<float>       *MCmupPx, *MCmupPy, *MCmupPz;
   vector<float>       *MCmumPx, *MCmumPy, *MCmumPz;
   vector<float>       *MCpionPx, *MCpionPy, *MCpionPz;
   vector<float>       *MCkaonPx, *MCkaonPy, *MCkaonPz;
-  vector<int>         *MCpionCh, *MCkaonCh;
+  vector<float>       *MCkaonStarPx, *MCkaonStarPy, *MCkaonStarPz, *MCkaonStarMass;
+  vector<int>         *MCpionCh, *MCkaonCh, *MCkaonStarCh;
   vector<float>       *MCPx, *MCPy, *MCPz;
 
   //// Generic Muons
