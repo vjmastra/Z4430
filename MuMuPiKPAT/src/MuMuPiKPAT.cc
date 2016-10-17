@@ -193,7 +193,7 @@ MuMuPiKPAT::MuMuPiKPAT(const edm::ParameterSet& iConfig) :
   MCpionPx(0), MCpionPy(0), MCpionPz(0), 
   MCkaonPx(0), MCkaonPy(0), MCkaonPz(0),
   MCkaonStarPx(0), MCkaonStarPy(0), MCkaonStarPz(0), MCkaonStarMass(0),
-  MCpionCh(0), MCkaonCh(0), MCkaonStarCh(0),
+  MCpionCh(0), MCkaonCh(0), MCkaonStarCh(0), MCkaonStarId(0),
   MCPx(0), MCPy(0), MCPz(0), 
 
   // generic muons
@@ -347,23 +347,13 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     genEvtVtx_particles->push_back( primaryGenVtx->particles_out_size() );
     */
 
-    if ( doData ) {
-      Handle< vector< PileupSummaryInfo > >  PupInfo;
-      iEvent.getByLabel("addPileupInfo", PupInfo);
-      
-      vector<PileupSummaryInfo>::const_iterator PVI;
-      // (then, for example, you can do)
-      if (Debug_) cout <<"\nBunchXing multiplicity = " <<PupInfo->size() <<endl ;
-      for (PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI)
-	if (Debug_) cout <<"Pileup Information: bunchXing, nvtx: " <<PVI->getBunchCrossing() <<" " <<PVI->getPU_NumInteractions() <<endl;
-    }
 
     Handle<GenParticleCollection> genParticles;
-    iEvent.getByLabel("genParticles", genParticles);
+    iEvent.getByLabel(inputGEN_, genParticles);
     
     if (Debug_) cout << "############### GenParticles Analysis ###############" << endl;
     float psi2SPx=0., psi2SPy=0., psi2SPz=0., psi2SMass=0., mupPx=0., mupPy=0., mupPz=0., mumPx=0., mumPy=0., mumPz=0., pionPx=0., pionPy=0., pionPz=0., kaonPx=0., kaonPy=0., kaonPz=0., kaonStarPx=0., kaonStarPy=0., kaonStarPz=0., kaonStarMass=0.;
-    int pionCh=10, kaonCh=10, kaonStarCh=10 ;
+    int pionCh=10, kaonCh=10, kaonStarCh=10, kaonStarId=0 ;
 
     for (size_t i = 0; i < genParticles->size(); ++ i) {
       nMCAll++;
@@ -419,18 +409,19 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    } // end check if one of the MCMother daughters is a J/Psi or psi'
 	    
 	    //else if ( abs(dau->pdgId()) == 211 ) { // check if one of B0 daughters is a pion
-	    else if ( abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of B0 daughters is a pion
+	    else if ( dauNum > 2  &&  abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of B0 daughters is a pion (check on array length done above)
 	      thirdDau = true;
 	      pionPx = dau->px(); pionPy = dau->py(); pionPz = dau->pz();
 	      pionCh = (dau->pdgId() > 0)? 1 : -1;
 	      dauOK[j] = true;
 	    //} else if ( abs(dau->pdgId()) == 321 ) { // check if one of B0 daughters is a kaon
 	    } else if ( abs(dau->pdgId()) == MCDaughterID[1] ) { // check if one of B0 daughters is a kaon of a K*
-	      if ( abs(dau->pdgId()) != 313) {
+	      if ( abs(dau->pdgId()) == 321) {
 		kaonPx = dau->px(); kaonPy=dau->py(); kaonPz=dau->pz();
 		kaonCh = (dau->pdgId() > 0)? 1 : -1;
 		dauOK[j] = true;
-	      } else { // check if one of B0 daughters is a K*0(892) which decayed to K+ pi-
+	      } else { // check if one of B0 daughters is a K which decayed to K+ pi-
+		kaonStarId = dau->pdgId();
 		kaonStarPx = dau->px(); kaonStarPy=dau->py(); kaonStarPz=dau->pz();
 		kaonStarMass = dau->mass() ; kaonStarCh = 0;
 		//
@@ -439,10 +430,10 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		for (int k=0; k<kstarDauNum; ++k) {
 		  const Candidate *grandDau = dau->daughter(k); 
 		  if (Debug_) cout << "grandDauPdgId = " << grandDau->pdgId() << endl;
-		  if ( abs(grandDau->pdgId()) == 211 ) { // check if one of K* daughters is a pion
+		  if ( abs(grandDau->pdgId()) == 211 ) { // check if one of the K* daughters is a pion
 		    pionPx = grandDau->px(); pionPy = grandDau->py(); pionPz = grandDau->pz();
 		    pionCh = (grandDau->pdgId() > 0)? 1 : -1;
-		  } else if ( abs(grandDau->pdgId()) == 321 ) { // check if one of K* daughters is a kaon
+		  } else if ( abs(grandDau->pdgId()) == 321 ) { // check if one of the K* daughters is a kaon
 		    kaonPx = grandDau->px(); kaonPy = grandDau->py(); kaonPz = grandDau->pz();
 		    kaonCh = (grandDau->pdgId() > 0)? 1 : -1;
 		  }
@@ -504,6 +495,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    MCmumPx->push_back(mumPx); MCmumPy->push_back(mumPy); MCmumPz->push_back(mumPz);
 	    MCpionPx->push_back(pionPx); MCpionPy->push_back(pionPy); MCpionPz->push_back(pionPz);
 	    MCkaonPx->push_back(kaonPx); MCkaonPy->push_back(kaonPy); MCkaonPz->push_back(kaonPz);
+	    MCkaonStarId->push_back(kaonStarId);
 	    MCkaonStarPx->push_back(kaonStarPx); MCkaonStarPy->push_back(kaonStarPy); MCkaonStarPz->push_back(kaonStarPz); MCkaonStarMass->push_back(kaonStarMass);
 	    MCpionCh->push_back(pionCh) ; MCkaonCh->push_back(kaonCh) ; MCkaonStarCh->push_back(kaonStarCh) ;
 	    decayChainOK = true;
@@ -524,6 +516,16 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       //return ;
       cout <<"\nafter" <<endl ;
     }*/
+
+    Handle< vector< PileupSummaryInfo > >  PupInfo;
+    iEvent.getByLabel("addPileupInfo", PupInfo);
+
+    vector<PileupSummaryInfo>::const_iterator PVI;
+    // (then, for example, you can do)
+    if (Debug_) cout <<"\nBunchXing multiplicity = " <<PupInfo->size() <<endl ;
+    for (PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI)
+      if (Debug_) cout <<"Pileup Information: bunchXing, nvtx: " <<PVI->getBunchCrossing() <<" " <<PVI->getPU_NumInteractions() <<endl;
+
 
     bool hasRequestedTrigger = false;
     ESHandle<MagneticField> bFieldHandle;
@@ -1925,7 +1927,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   } else if ( nB0 > 0 )
       Z_One_Tree_->Fill() ;
   */
-  if ( doGEN ) { // MC
+  if ( MCExclusiveDecay ) { // MC
     if ( nMCB0 > 0 )
       Z_One_Tree_->Fill() ;
   } else         // DATA
@@ -1972,6 +1974,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     MCmumPx->clear(); MCmumPy->clear(); MCmumPz->clear(); 
     MCpionPx->clear(); MCpionPy->clear(); MCpionPz->clear(); 
     MCkaonPx->clear(); MCkaonPy->clear(); MCkaonPz->clear(); 
+    MCkaonStarId->clear();
     MCkaonStarPx->clear(); MCkaonStarPy->clear(); MCkaonStarPz->clear(); MCkaonStarMass->clear(); 
     MCpionCh->clear(); MCkaonCh->clear(); MCkaonStarCh->clear();
     MCPx->clear(); MCPy->clear(); MCPz->clear();
@@ -2143,6 +2146,7 @@ void MuMuPiKPAT::beginJob()
     Z_One_Tree_->Branch("MCmumPx",&MCmumPx); Z_One_Tree_->Branch("MCmumPy",&MCmumPy); Z_One_Tree_->Branch("MCmumPz",&MCmumPz);
     Z_One_Tree_->Branch("MCpionPx",&MCpionPx); Z_One_Tree_->Branch("MCpionPy",&MCpionPy); Z_One_Tree_->Branch("MCpionPz",&MCpionPz); Z_One_Tree_->Branch("MCpionCh",&MCpionCh);
     Z_One_Tree_->Branch("MCkaonPx",&MCkaonPx); Z_One_Tree_->Branch("MCkaonPy",&MCkaonPy); Z_One_Tree_->Branch("MCkaonPz",&MCkaonPz); Z_One_Tree_->Branch("MCkaonCh",&MCkaonCh);
+    Z_One_Tree_->Branch("MCkaonStarId",&MCkaonStarId);
     Z_One_Tree_->Branch("MCkaonStarPx",&MCkaonStarPx); Z_One_Tree_->Branch("MCkaonStarPy",&MCkaonStarPy); Z_One_Tree_->Branch("MCkaonStarPz",&MCkaonStarPz); Z_One_Tree_->Branch("MCkaonStarCh",&MCkaonStarCh); Z_One_Tree_->Branch("MCkaonStarMass",&MCkaonStarMass);
     Z_One_Tree_->Branch("MCPx", &MCPx);
     Z_One_Tree_->Branch("MCPy", &MCPy);

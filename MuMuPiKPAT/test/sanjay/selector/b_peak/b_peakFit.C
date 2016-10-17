@@ -32,20 +32,22 @@ void b_peakFit() {
   gStyle->SetLabelSize(0.04) ;
   TGaxis::SetMaxDigits(3) ;
 
-  //TFile *f = TFile::Open("../26Jan_histos.root");
-  TFile *f = TFile::Open("../HLT5_full.root");
-  //TH1F* hmyPsiPKPiMassSelAltZoom = (TH1F*) f->Get("myPsiPKPiMassSelAltZoom") ;
-  TH1F* hmyPsiPKPiMassSelAltZoom = (TH1F*) f->Get("B0Mass_1B0") ;
+  TString fileName = "26Jan_histos.root"; fileName = "HLT5_full.root"; fileName = "HLT5.root"; 
+  TFile *f = TFile::Open("../"+fileName);
+
+  TString histName = "myPsiPKPiMassAltZoom"; histName = "B0Mass_1B0"; histName = "myPsiPKPiMassNairitSelAlt";
+  TH1F* histB0 = (TH1F*) f->Get(histName) ;
   
   TCanvas *Bpeak_C = new TCanvas("Bpeak_C","Bpeak_C", 800, 600) ;  
 
-  Double_t xMin = hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetXmin();
-  Double_t xMax = hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetXmax();
-  Int_t nBins = hmyPsiPKPiMassSelAltZoom->GetNbinsX();
+  Double_t xMin = histB0->GetXaxis()->GetXmin();
+  Double_t xMax = histB0->GetXaxis()->GetXmax();
+  Int_t nBins = histB0->GetNbinsX();
   Double_t bin_width = (xMax-xMin)/nBins ;
   
-  RooRealVar xVar("xVar", hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetTitle(), xMin, xMax) ;  xVar.setBins(nBins) ;  
-  RooDataHist *MuMuPiKHist = new RooDataHist("MuMuPi_hist", hmyPsiPKPiMassSelAltZoom->GetTitle(), RooArgSet(xVar), Import(*hmyPsiPKPiMassSelAltZoom, kFALSE)) ;
+  RooRealVar xVar("xVar", histB0->GetXaxis()->GetTitle(), xMin, xMax) ;  xVar.setBins(nBins) ;  
+  RooDataHist *MuMuPiKHist = new RooDataHist(histB0->GetName(), histB0->GetTitle(), RooArgSet(xVar), Import(*histB0, kFALSE)) ;
+  RooConstVar nEntries("Entries", "Total number of entries", histB0->Integral()) ;
   
   Double_t fitMax = xMax, fitMin = xMin ;
 
@@ -67,8 +69,7 @@ void b_peakFit() {
   //RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), RooArgList(nSig1, nSig2)) ;
   RooGaussian sigPDF("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
   
-  RooConstVar nEntries("Entries", "Total number of entries", hmyPsiPKPiMassSelAltZoom->Integral()) ;
-  RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+3, 1e+5);
+  RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+5);
   //RooFormulaVar nSig("N_{Sig}", "Number of signal candidates", "@0+@1", RooArgList(nSig1, nSig2));
   /*// not with Kai BF
   RooGaussian bumpPDF("bumpPDF", "Bump", xVar, mean3, sigma3);
@@ -116,7 +117,18 @@ void b_peakFit() {
   //totalPDF->plotOn(xframe, Components(RooArgSet(bumpPDF)), LineColor(kGreen));  // not with Kai BF 
   totalPDF->plotOn(xframe, Components(RooArgSet(bkgPDF)), LineColor(kBlue), LineStyle(2));  // with Kai BF
 
-  totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9)) ;
+  // Purity
+  cout <<"\nGaussian mean = " <<mean.getVal() <<endl;
+  cout <<"Gaussian sigma = " <<sigma1.getVal() <<endl;
+  cout <<"\nDefining the signal region as mean +/-" <<nSigma <<" sigma:" <<endl;
+  Double_t tot_sigRange_val = tot_sigRange->getVal() ; // compute integral
+  cout <<"\nIntegral of total PDF in signal region = " << nEntries.getVal()*tot_sigRange_val << endl;
+  cout <<"\nIntegral of signal PDF in signal region = " << nSig.getVal()*(sig_sigRange->getVal()) << endl;
+  cout <<"\nBackground events in signal region = " << nEntries.getVal()*tot_sigRange_val << " - " << nSig.getVal()*(sig_sigRange->getVal()) << " = " << nEntries.getVal()*tot_sigRange_val - nSig.getVal()*(sig_sigRange->getVal()) << endl;
+  Double_t purity = 100 * nSig.getVal()*(sig_sigRange->getVal()) / (nEntries.getVal()*tot_sigRange_val);
+  cout <<"Purity is = " << purity <<"%" << endl;
+
+  totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Label(TString::Format("Purity in +/-%.1f#sigma: %.1f%%", nSigma, purity)), Layout(0.55,0.9,0.9)) ;
   //totalPDF->paramOn(xframe, Parameters(RooArgSet(mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
   /*
   if (fitMin < 4.8) {
@@ -133,25 +145,15 @@ void b_peakFit() {
 
   xframe->Draw();
   
-  //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/b_peak/plots/"+trigger+"_"+data+fixedMassWind+".png");
-  //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/b_peak/plots/twoGauss/"+trigger+"_"+data+fixedMassWind+".png");
-  //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/"+trigger+"_"+data+fixedMassWind+".png");
-  //
   //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/fromKstar.png");
   //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/fromKstar_ex.png");
   //Bpeak_C->SaveAs("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/selector/b_peak/plots/twoGauss/Bplus.png");
-  Bpeak_C->SaveAs("plots/B0mass_full.png");
-
-  Double_t tot_sigRange_val = tot_sigRange->getVal() ; // compute integral
-  cout <<"\nIntegral of total PDF in signal region = " << nEntries.getVal()*tot_sigRange_val << endl;
-  cout <<"\nIntegral of signal PDF in signal region = " << nSig.getVal()*(sig_sigRange->getVal()) << endl;
-  cout <<"\nBackground events in signal region = " << nEntries.getVal()*tot_sigRange_val << " - " << nSig.getVal()*(sig_sigRange->getVal()) << " = " << nEntries.getVal()*tot_sigRange_val - nSig.getVal()*(sig_sigRange->getVal()) << endl;
-  cout <<"Purity is = " << 100 * nSig.getVal()*(sig_sigRange->getVal()) / (nEntries.getVal()*tot_sigRange_val) <<"%" << endl;
+  Bpeak_C->SaveAs("plots/"+histName+".png");
 
   ////////// removing twins //////////
   /*
   TH1F* hB0Mass_twins = (TH1F*) f->Get("B0Mass_twins") ;
-  TH1F* diff_hist = (TH1F*) hmyPsiPKPiMassSelAltZoom->Clone("diff_hist"); diff_hist->Sumw2();
+  TH1F* diff_hist = (TH1F*) histB0->Clone("diff_hist"); diff_hist->Sumw2();
   diff_hist->Add(hB0Mass_twins, -1);
 
   RooDataHist *diff_RooHist = new RooDataHist("diff_RooHist", "B^{0} mass without twins", RooArgSet(xVar), Import(*diff_hist, kFALSE)) ;

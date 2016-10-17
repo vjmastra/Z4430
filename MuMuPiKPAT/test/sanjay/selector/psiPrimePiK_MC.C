@@ -33,14 +33,19 @@
 // one of the 2 above lines need to be executed interactively before following includes:
 #include <RooRealVar.h>
 #include <RooDataHist.h>
-#include <RooGaussian.h>
 #include <RooConstVar.h>
+#include <RooGaussian.h>
 #include <RooChebychev.h>
 #include <RooAddPdf.h>
 #include <RooAbsReal.h>
 #include <RooPlot.h>
 
 #include <TColor.h>
+#include <TLine.h>
+#include <TPaveText.h>
+#include <TLegend.h>
+
+#include </lustrehome/cristella/work/Z_analysis/AA_fit/utilities.h>
 
 using namespace RooFit; // needed even without .C+
 
@@ -52,97 +57,116 @@ void psiPrimePiK_MC::Begin(TTree * /*tree*/)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
-   if (option == "MC" || option == "officialMC") {
+   cout <<"Running Begin with option \"" <<option <<"\"" <<endl;
+   if (option.Contains("MC")) {
      MC = kTRUE ;
-     if (option == "officialMC")
+     if (option.Contains("officialMC"))
        officialMC = kTRUE ;
    } else {
      MC = kFALSE ; 
      officialMC = kFALSE ;  
    }
+
    // need to reinitialize variables used in Terminate
    muon_mass = 0.1056583715;
    // phi_mass = 1.019455;
-   // jpsi_mass = 3.0967;
+   jpsi_mass = 3.0967;
    psi2S_mass = 3.686109 ;
    pionCh_mass = 0.13957018;
    kaonCh_mass = 0.493677 ; 
+   Kstar0_mass = 0.8961; // from evt.pdl
    // Bplus_mass = 5.27925;
    B0_mass = 5.27958;
+   //
+   phi_left = 1.01; phi_right = 1.03;
+   Bs_left = 5.3; Bs_right = 5.43;
+
+   if (option.Contains("psi2S"))
+     mumu_mass = psi2S_mass;
+   else if (option.Contains("JPsi"))
+     mumu_mass = jpsi_mass;
 
 }
 
 void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
 {
-   // The SlaveBegin() function is called after the Begin() function.
-   // When running with PROOF SlaveBegin() is called on each slave server.
-   // The tree argument is deprecated (on PROOF 0 is passed).
+  // The SlaveBegin() function is called after the Begin() function.
+  // When running with PROOF SlaveBegin() is called on each slave server.
+  // The tree argument is deprecated (on PROOF 0 is passed).
+  
+  TString option = GetOption();
+  if ( option.Contains("MC") ) {
+    MC = kTRUE ;
+    if ( option.Contains("officialMC") )
+      officialMC = kTRUE ;
+  } else {
+    MC = kFALSE ; 
+    officialMC = kFALSE ;  
+  }
+  /////////////////////////////////////////////////////////////////
+  
+  newSoftMuonID = kFALSE ; //newSoftMuonID = kTRUE ;
+  only1psiPrime = kFALSE ; //  only1psiPrime = kTRUE ;
+  Kai_cuts = kFALSE ;      //  Kai_cuts = kTRUE ; // Kai stands for 2011+2012
+  HLT_Displaced = kFALSE ; // HLT_Displaced = kTRUE ;
+  fixedMassWind = kFALSE ; // fixedMassWind = kTRUE ;
+  sideband = kFALSE ;      // sideband = kTRUE ;
+  
+  B0_signal = 2.;
+  //innerSB = 5. ; outerSB = 9.;
+  innerSB = 4. ; outerSB = 6.;
+  TString B0limits = TString::Format("%.1fSig_%.1fto%.1fSB",B0_signal,innerSB,outerSB);
+  B0limits.ReplaceAll(".","p") ;
 
-   TString option = GetOption();
-   if (option == "MC" || option == "officialMC") {
-     MC = kTRUE ;
-     if (option == "officialMC")
-       officialMC = kTRUE ;
-   } else {
-     MC = kFALSE ; 
-     officialMC = kFALSE ;  
-   }
-   /////////////////////////////////////////////////////////////////
+  OutFile = 0;
+  if ( MC ) {
+    //OutFile = new TProofOutputFile( option+"_Bd2Psi2SKpi.root" ); 
+    OutFile = new TProofOutputFile( option+"_Bd2MuMuKPi_"+B0limits+".root" );
+  } else {
+    OutFile = new TProofOutputFile( option+"_"+B0limits+".root" ); // comment this line to not create this file
+    /*
+    if (!HLT_Displaced) {
+      if (!Kai_cuts) { // kai stands for 2011+2012
+	if (!newSoftMuonID) {
+	  if (!only1psiPrime) {
+	    if (!fixedMassWind)
+	      OutFile = new TProofOutputFile( "HLT5.root" );
+	    else if (fixedMassWind)
+	      OutFile = new TProofOutputFile( "HLT5_fixedMassWind.root" );
+	  } else if (only1psiPrime) {
+	    if (!fixedMassWind)
+	      OutFile = new TProofOutputFile( "HLT5_onePsiPrime.root" );
+	    else if (fixedMassWind)
+	      OutFile = new TProofOutputFile( "HLT5_onePsiPrime_fixedMassWind.root" );
+	  }
+	} else if (!only1psiPrime) {
+	  //OutFile = new TProofOutputFile( "HLT5_newSoftMuon.root" );
+	  OutFile = new TProofOutputFile( "HLT5_newSoftMuon_alsoInPsiPrimeWind.root" );
+	} else {
+	  //OutFile = new TProofOutputFile( "HLT5_only1psiPrime.root" );
+	  //OutFile = new TProofOutputFile( "HLT5_onePsiPrime.root" );
+	  OutFile = new TProofOutputFile( "HLT5_onePsiPrime_check.root" );
+	}
+      } else { // include newSoftMuonID  // kai stands for 2011+2012
+	if (!fixedMassWind) {
+	  if (!sideband) {
+	    //OutFile = new TProofOutputFile( "2011.root" );
+	    OutFile = new TProofOutputFile( "kai_onePsiPrime.root" ); // kai stands for 2011+2012
+	  } else {
+	    OutFile = new TProofOutputFile( "kai_onePsiPrime_sb.root" ); } // kai stands for 2011+2012
+	} else {
+	  OutFile = new TProofOutputFile( "fixedMassWind.root" ); }
+	//OutFile = new TProofOutputFile( "fixedMassWind_test.root" ); }
+      }
+    } else
+      if (!fixedMassWind)
+	OutFile = new TProofOutputFile( "hlt3p5_displaced.root" );
+      else
+	OutFile = new TProofOutputFile( "hlt3p5_displaced_fixedMassWind.root" );
+    */
+  }
 
-   newSoftMuonID = kFALSE ; //newSoftMuonID = kTRUE ;
-   only1psiPrime = kFALSE ; //  only1psiPrime = kTRUE ;
-   Kai_cuts = kFALSE ;      //  Kai_cuts = kTRUE ; // Kai stands for 2011+2012
-   HLT_Displaced = kFALSE ; // HLT_Displaced = kTRUE ;
-   fixedMassWind = kFALSE ; // fixedMassWind = kTRUE ;
-   sideband = kFALSE ;      // sideband = kTRUE ;
-
-   if ( MC ) {
-     if ( !officialMC )
-       OutFile = new TProofOutputFile( "MC_Bd2Psi2SKpi.root" );
-     else
-       OutFile = new TProofOutputFile( "officialMC_Bd2Psi2SKpi.root" );
-   } else {
-     if (!HLT_Displaced) {
-       if (!Kai_cuts) { // kai stands for 2011+2012
-	 if (!newSoftMuonID) {
-	   if (!only1psiPrime) {
-	     if (!fixedMassWind)
-	       OutFile = new TProofOutputFile( "HLT5.root" );
-	     else if (fixedMassWind)
-	       OutFile = new TProofOutputFile( "HLT5_fixedMassWind.root" );
-	   } else if (only1psiPrime) {
-	     if (!fixedMassWind)
-	       OutFile = new TProofOutputFile( "HLT5_onePsiPrime.root" );
-	     else if (fixedMassWind)
-	       OutFile = new TProofOutputFile( "HLT5_onePsiPrime_fixedMassWind.root" );
-	   }
-	 } else if (!only1psiPrime) {
-	   //OutFile = new TProofOutputFile( "HLT5_newSoftMuon.root" );
-	   OutFile = new TProofOutputFile( "HLT5_newSoftMuon_alsoInPsiPrimeWind.root" );
-	 } else {
-	   //OutFile = new TProofOutputFile( "HLT5_only1psiPrime.root" );
-	   //OutFile = new TProofOutputFile( "HLT5_onePsiPrime.root" );
-	   OutFile = new TProofOutputFile( "HLT5_onePsiPrime_check.root" );
-	 }
-       } else { // include newSoftMuonID  // kai stands for 2011+2012
-	 if (!fixedMassWind) {
-	   if (!sideband) {
-	     //OutFile = new TProofOutputFile( "2011.root" );
-	     OutFile = new TProofOutputFile( "kai_onePsiPrime.root" ); // kai stands for 2011+2012
-	   } else {
-	     OutFile = new TProofOutputFile( "kai_onePsiPrime_sb.root" ); } // kai stands for 2011+2012
-	 } else {
-	   OutFile = new TProofOutputFile( "fixedMassWind.root" ); }
-	 //OutFile = new TProofOutputFile( "fixedMassWind_test.root" ); }
-       }
-     } else
-       if (!fixedMassWind)
-	 OutFile = new TProofOutputFile( "hlt3p5_displaced.root" );
-       else
-	 OutFile = new TProofOutputFile( "hlt3p5_displaced_fixedMassWind.root" );
-   }
-
-   /*
+  /*
   fOut = OutFile->OpenFile("RECREATE");
   SaraOut = SaraFile->OpenFile("RECREATE");
   if ( MC )
@@ -151,114 +175,157 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
 
   // Open the files
 
-  if ( !(fOut = OutFile->OpenFile("RECREATE")) )
-    Warning("SlaveBegin", "problems opening file: %s/%s", OutFile->GetDir(), OutFile->GetFileName());
+  if (OutFile) {
+    if ( !(fOut = OutFile->OpenFile("RECREATE")) ) {
+      Warning("SlaveBegin", "problems opening file: %s/%s", OutFile->GetDir(), OutFile->GetFileName());
+      fOut = 0;
+    }
+  } else fOut = 0 ;
 
-  //SaraFile = new TProofOutputFile( "Sara_histos.root" );
-  //if ( !(SaraOut = SaraFile->OpenFile("RECREATE")) )
-    //Warning("SlaveBegin", "problems opening file: %s/%s", SaraFile->GetDir(), SaraFile->GetFileName());
-  SaraOut = 0 ; // disable Sara's histos
+  SaraFile = 0 ; 
+  //SaraFile = new TProofOutputFile( "Sara_histos.root" ); // comment this line to disable Sara's histos
+  if (SaraFile) {
+    if ( !(SaraOut = SaraFile->OpenFile("RECREATE")) ) {
+      Warning("SlaveBegin", "problems opening file: %s/%s", SaraFile->GetDir(), SaraFile->GetFileName());
+      SaraOut = 0 ;
+    }
+  } else SaraOut = 0 ;
 
   if ( MC ) {
-     if ( !officialMC )
-       AlexisFile = new TProofOutputFile( "26Jan_histos.root" );
-     else
-       AlexisFile = new TProofOutputFile( "26Jan_histos.root" );
-     //
-     if ( !(AlexisOut = AlexisFile->OpenFile("RECREATE")) ) 
-       Warning("SlaveBegin", "problems opening file: %s/%s", AlexisFile->GetDir(), AlexisFile->GetFileName());
-  } else
-    AlexisOut = 0 ;
-    
-  if ( !officialMC )
-    tightCutsFile = new TProofOutputFile( "TightCuts_histos.root" );
-  else
-    tightCutsFile = new TProofOutputFile( "TightCuts_histos.root" );
-  //
-  if ( !(tightCutsOut = tightCutsFile->OpenFile("RECREATE")) )
-    Warning("SlaveBegin", "problems opening file: %s/%s", tightCutsFile->GetDir(), tightCutsFile->GetFileName());
+    AlexisFile = 0 ; 
+    //AlexisFile = new TProofOutputFile( "26Jan2015_histos_"+B0limits+".root" ); // comment this line to not create this file
+    if (AlexisFile) {
+      if ( !(AlexisOut = AlexisFile->OpenFile("RECREATE")) ) {
+	Warning("SlaveBegin", "problems opening file: %s/%s", AlexisFile->GetDir(), AlexisFile->GetFileName());
+	AlexisOut = 0 ;
+      }
+    } else AlexisOut = 0 ;
+  }
 
+  tightCutsFile = 0;
+  if (!OutFile) // otherwise "Fatal in <TFileMerger::RecursiveRemove>: Output file of the TFile Merger (targeting officialMC_JPsi_Bd2MuMuKPi_2p0Sig_4p0to6p0SB.root) has been deleted (likely due to a TTree larger than 100Gb). aborting"
+    tightCutsFile = new TProofOutputFile( option+"_tightCuts_"+B0limits+".root" ); // comment this line to not create this file
+  if (tightCutsFile) { 
+    if ( !(tightCutsOut = tightCutsFile->OpenFile("RECREATE")) ) {
+      Warning("SlaveBegin", "problems opening file: %s/%s", tightCutsFile->GetDir(), tightCutsFile->GetFileName());
+      tightCutsOut = 0;
+    } //else Warning("SlaveBegin", "problems creating new TProofOuyputFile \"%s_tightCuts.root\"", option.Data());
+  } else tightCutsOut = 0 ;
+
+  TTree::SetMaxTreeSize(250000000000);
+
+  //_nt = new TNtupleD("AAVars","AA variables","runNum:evtNum:B0_mass:KPi_mass:Jpsi_mass:JpsiPi_mass:B0_3mom:KPi_3mom:Jpsi_3mom:K_3mom:Pi_3mom:Theta_Kstar:Theta_Jpsi:Phi");
+  _nt = new TNtupleD("AAVars","AA variables","runNum:evtNum:B0beauty:massKPi:massMuMuPi:cosMuMu:phi");
+  // MVA trees (must be created after TFiles)
+  mva_variables_sig = new TTree("mva_variables_sig","MVA signal variables");
+  mva_variables_bkg = new TTree("mva_variables_bkg","MVA background variables");
+  mva_variables_all = new TTree("mva_variables_all","MVA variables");
   //////// HISTOGRAMS
   // put them here:
   //
   Float_t MuMuMass_low = 3.4, MuMuMass_high = 4. ;  Int_t MuMuMass_bins = 120 ;
   Float_t MuMuPiMass_low = 3.8, MuMuPiMass_high = 5.5 ;  Int_t MuMuPiMass_bins = 136 ;
-  Float_t MuMuKPiMass_low = 5.15, MuMuKPiMass_high = 5.45 ;  Int_t MuMuKPiMass_bins = 100 ;
-  myInclusiveMuMuMass = new TH1F("myInclusiveMuMuMass","myInclusiveMuMuMass;m(#mu^{+}#mu^{-}) [GeV]; Candidates / 5 MeV",MuMuMass_bins,MuMuMass_low,MuMuMass_high); // 200,2.5,4.5
+  TString mumu_label = "#psi'" ;
+  Float_t KPiMass2_low = 0., KPiMass2_high = 3. ; Int_t KPiMass2_bins = 2*15 ; 
+  Float_t MuMuPiMass2_low = 13., MuMuPiMass2_high = 25. ; Int_t MuMuPiMass2_bins = 2*24 ; 
+  if (option.Contains("JPsi")) {
+    MuMuMass_low -= 0.6; MuMuMass_high -= 0.6;
+    MuMuPiMass_low -= 0.6; MuMuPiMass_high -= 0.6;
+    mumu_label = "J/#psi";
+    KPiMass2_low = 0.; KPiMass2_high = 5.;        KPiMass2_bins = 2*25 ;    KPiMass2_bins = 40 ; 
+    MuMuPiMass2_low = 9.; MuMuPiMass2_high = 25.; MuMuPiMass2_bins = 2*32 ; MuMuPiMass2_bins = 40 ;
+  }
+  //
+  Float_t cos_limit = 1.02; Float_t cos_margin = 0.04;
+  cos_limit = 1.05; cos_margin = 0.05;
+  Int_t cos_bins = 2*cos_limit/cos_margin;
+  Float_t phi_limit = 3.2; Float_t phi_margin = 0.05;
+  phi_limit = 3.3; phi_margin = 0.1;
+  Int_t phi_bins = 2*phi_limit/phi_margin;
+  //
+  Float_t MuMuKPiMass_low = 5.15, MuMuKPiMass_high = 5.45 ;  Int_t MuMuKPiMass_bins = 100 ; // 200,2.5,4.5
+  TString XY_titles = TString::Format("m(#mu^{+}#mu^{-}) [GeV];Candidates / %.0f MeV", ((MuMuKPiMass_high-MuMuKPiMass_low)/MuMuKPiMass_bins)*1000 ) ;
+  myInclusiveMuMuMass = new TH1F("myInclusiveMuMuMass","myInclusiveMuMuMass;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
   myInclusiveMuMuMass_noTrigg = new TH1F("myInclusiveMuMuMass_noTrigg","myInclusiveMuMuMass noTrigg",400,2.1,4.1);
   //
-  // HLT_0_v*
-  myInclusiveMuMuMass_HLT_0_v3 = new TH1F("myInclusiveMuMuMass_HLT_0_v3","myInclusiveMuMuMass_HLT_0_v3",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v3A = new TH1F("myInclusiveMuMuMass_HLT_0_v3A","myInclusiveMuMuMass_HLT_0_v3A",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v3B = new TH1F("myInclusiveMuMuMass_HLT_0_v3B","myInclusiveMuMuMass_HLT_0_v3B",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v4 = new TH1F("myInclusiveMuMuMass_HLT_0_v4","myInclusiveMuMuMass_HLT_0_v4",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v3Bv4 = new TH1F("myInclusiveMuMuMass_HLT_0_v3Bv4","myInclusiveMuMuMass_HLT_0_v3Bv4",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v5 = new TH1F("myInclusiveMuMuMass_HLT_0_v5","myInclusiveMuMuMass_HLT_0_v5",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v6 = new TH1F("myInclusiveMuMuMass_HLT_0_v6","myInclusiveMuMuMass_HLT_0_v6",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v6C = new TH1F("myInclusiveMuMuMass_HLT_0_v6C","myInclusiveMuMuMass_HLT_0_v6C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v5v6C = new TH1F("myInclusiveMuMuMass_HLT_0_v5v6C","myInclusiveMuMuMass_HLT_0_v5v6C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_0_v6D = new TH1F("myInclusiveMuMuMass_HLT_0_v6D","myInclusiveMuMuMass_HLT_0_v6D",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  // HLT_5_v*
-  myInclusiveMuMuMass_HLT_5_v3 = new TH1F("myInclusiveMuMuMass_HLT_5_v3","myInclusiveMuMuMass_HLT_5_v3",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v3A = new TH1F("myInclusiveMuMuMass_HLT_5_v3A","myInclusiveMuMuMass_HLT_5_v3A",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v3B = new TH1F("myInclusiveMuMuMass_HLT_5_v3B","myInclusiveMuMuMass_HLT_5_v3B",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v4 = new TH1F("myInclusiveMuMuMass_HLT_5_v4","myInclusiveMuMuMass_HLT_5_v4",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v3Bv4 = new TH1F("myInclusiveMuMuMass_HLT_5_v3Bv4","myInclusiveMuMuMass_HLT_5_v3Bv4",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v5 = new TH1F("myInclusiveMuMuMass_HLT_5_v5","myInclusiveMuMuMass_HLT_5_v5",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v6 = new TH1F("myInclusiveMuMuMass_HLT_5_v6","myInclusiveMuMuMass_HLT_5_v6",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v6C = new TH1F("myInclusiveMuMuMass_HLT_5_v6C","myInclusiveMuMuMass_HLT_5_v6C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v5v6C = new TH1F("myInclusiveMuMuMass_HLT_5_v5v6C","myInclusiveMuMuMass_HLT_5_v5v6C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_5_v6D = new TH1F("myInclusiveMuMuMass_HLT_5_v6D","myInclusiveMuMuMass_HLT_5_v6D",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  // HLT_7_v*
-  myInclusiveMuMuMass_HLT_7_v1 = new TH1F("myInclusiveMuMuMass_HLT_7_v1","myInclusiveMuMuMass_HLT_7_v1",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_7_v2 = new TH1F("myInclusiveMuMuMass_HLT_7_v2","myInclusiveMuMuMass_HLT_7_v2",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_7_v3 = new TH1F("myInclusiveMuMuMass_HLT_7_v3","myInclusiveMuMuMass_HLT_7_v3",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_7_v3C = new TH1F("myInclusiveMuMuMass_HLT_7_v3C","myInclusiveMuMuMass_HLT_7_v3C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_7_v2v3C = new TH1F("myInclusiveMuMuMass_HLT_7_v2v3C","myInclusiveMuMuMass_HLT_7_v2v3C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_HLT_7_v3D = new TH1F("myInclusiveMuMuMass_HLT_7_v3D","myInclusiveMuMuMass_HLT_7_v3D",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  // psi(2S) HLT_0_v*
+  myInclusiveMuMuMass_HLT_0_v3 = new TH1F("myInclusiveMuMuMass_HLT_0_v3","myInclusiveMuMuMass_HLT_0_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v3A = new TH1F("myInclusiveMuMuMass_HLT_0_v3A","myInclusiveMuMuMass_HLT_0_v3A;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v3B = new TH1F("myInclusiveMuMuMass_HLT_0_v3B","myInclusiveMuMuMass_HLT_0_v3B;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v4 = new TH1F("myInclusiveMuMuMass_HLT_0_v4","myInclusiveMuMuMass_HLT_0_v4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v3Bv4 = new TH1F("myInclusiveMuMuMass_HLT_0_v3Bv4","myInclusiveMuMuMass_HLT_0_v3Bv4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v5 = new TH1F("myInclusiveMuMuMass_HLT_0_v5","myInclusiveMuMuMass_HLT_0_v5;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v6 = new TH1F("myInclusiveMuMuMass_HLT_0_v6","myInclusiveMuMuMass_HLT_0_v6;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v6C = new TH1F("myInclusiveMuMuMass_HLT_0_v6C","myInclusiveMuMuMass_HLT_0_v6C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v5v6C = new TH1F("myInclusiveMuMuMass_HLT_0_v5v6C","myInclusiveMuMuMass_HLT_0_v5v6C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_0_v6D = new TH1F("myInclusiveMuMuMass_HLT_0_v6D","myInclusiveMuMuMass_HLT_0_v6D;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  // psi(2S) HLT_5_v*
+  myInclusiveMuMuMass_HLT_5_v3 = new TH1F("myInclusiveMuMuMass_HLT_5_v3","myInclusiveMuMuMass_HLT_5_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v3A = new TH1F("myInclusiveMuMuMass_HLT_5_v3A","myInclusiveMuMuMass_HLT_5_v3A;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v3B = new TH1F("myInclusiveMuMuMass_HLT_5_v3B","myInclusiveMuMuMass_HLT_5_v3B;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v4 = new TH1F("myInclusiveMuMuMass_HLT_5_v4","myInclusiveMuMuMass_HLT_5_v4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v3Bv4 = new TH1F("myInclusiveMuMuMass_HLT_5_v3Bv4","myInclusiveMuMuMass_HLT_5_v3Bv4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v5 = new TH1F("myInclusiveMuMuMass_HLT_5_v5","myInclusiveMuMuMass_HLT_5_v5;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v6 = new TH1F("myInclusiveMuMuMass_HLT_5_v6","myInclusiveMuMuMass_HLT_5_v6;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v6C = new TH1F("myInclusiveMuMuMass_HLT_5_v6C","myInclusiveMuMuMass_HLT_5_v6C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v5v6C = new TH1F("myInclusiveMuMuMass_HLT_5_v5v6C","myInclusiveMuMuMass_HLT_5_v5v6C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_5_v6D = new TH1F("myInclusiveMuMuMass_HLT_5_v6D","myInclusiveMuMuMass_HLT_5_v6D;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  // psi(2S) HLT_7_v*
+  myInclusiveMuMuMass_HLT_7_v1 = new TH1F("myInclusiveMuMuMass_HLT_7_v1","myInclusiveMuMuMass_HLT_7_v1;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_7_v2 = new TH1F("myInclusiveMuMuMass_HLT_7_v2","myInclusiveMuMuMass_HLT_7_v2;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_7_v3 = new TH1F("myInclusiveMuMuMass_HLT_7_v3","myInclusiveMuMuMass_HLT_7_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_7_v3C = new TH1F("myInclusiveMuMuMass_HLT_7_v3C","myInclusiveMuMuMass_HLT_7_v3C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_7_v2v3C = new TH1F("myInclusiveMuMuMass_HLT_7_v2v3C","myInclusiveMuMuMass_HLT_7_v2v3C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_7_v3D = new TH1F("myInclusiveMuMuMass_HLT_7_v3D","myInclusiveMuMuMass_HLT_7_v3D;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  // J/psi HLT_8_v*
+  myInclusiveMuMuMass_HLT_8_v3 = new TH1F("myInclusiveMuMuMass_HLT_8_v3","myInclusiveMuMuMass_HLT_8_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_8_v4 = new TH1F("myInclusiveMuMuMass_HLT_8_v4","myInclusiveMuMuMass_HLT_8_v4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_8_v5 = new TH1F("myInclusiveMuMuMass_HLT_8_v5","myInclusiveMuMuMass_HLT_8_v5;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_8_v6 = new TH1F("myInclusiveMuMuMass_HLT_8_v6","myInclusiveMuMuMass_HLT_8_v6;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_HLT_8_v7 = new TH1F("myInclusiveMuMuMass_HLT_8_v7","myInclusiveMuMuMass_HLT_8_v7;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
   // datasets
-  myInclusiveMuMuMass_12A = new TH1F("myInclusiveMuMuMass_12A","myInclusiveMuMuMass_12A",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12A_HLT_0_v3 = new TH1F("myInclusiveMuMuMass_12A_HLT_0_v3","myInclusiveMuMuMass_12A_HLT_0_v3",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12A_HLT_5_v3 = new TH1F("myInclusiveMuMuMass_12A_HLT_5_v3","myInclusiveMuMuMass_12A_HLT_5_v3",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12A_HLT_9_v9 = new TH1F("myInclusiveMuMuMass_12A_HLT_9_v9","myInclusiveMuMuMass_12A_HLT_9_v9",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12A = new TH1F("myInclusiveMuMuMass_12A","myInclusiveMuMuMass_12A;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12A_HLT_0_v3 = new TH1F("myInclusiveMuMuMass_12A_HLT_0_v3","myInclusiveMuMuMass_12A_HLT_0_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12A_HLT_5_v3 = new TH1F("myInclusiveMuMuMass_12A_HLT_5_v3","myInclusiveMuMuMass_12A_HLT_5_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12A_HLT_9_v9 = new TH1F("myInclusiveMuMuMass_12A_HLT_9_v9","myInclusiveMuMuMass_12A_HLT_9_v9;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
   //
-  myInclusiveMuMuMass_12B = new TH1F("myInclusiveMuMuMass_12B","myInclusiveMuMuMass_12B",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12B_HLT_0_v3v4 = new TH1F("myInclusiveMuMuMass_12B_HLT_0_v3v4","myInclusiveMuMuMass_12B_HLT_0_v3v4",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12B_HLT_5_v3v4 = new TH1F("myInclusiveMuMuMass_12B_HLT_5_v3v4","myInclusiveMuMuMass_12B_HLT_5_v3v4",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12B_HLT_7_v1_9_v9 = new TH1F("myInclusiveMuMuMass_12B_HLT_7_v1_9_v9","myInclusiveMuMuMass_12B_HLT_7_v1_9_v9",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12B = new TH1F("myInclusiveMuMuMass_12B","myInclusiveMuMuMass_12B;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12B_HLT_0_v3v4 = new TH1F("myInclusiveMuMuMass_12B_HLT_0_v3v4","myInclusiveMuMuMass_12B_HLT_0_v3v4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12B_HLT_5_v3v4 = new TH1F("myInclusiveMuMuMass_12B_HLT_5_v3v4","myInclusiveMuMuMass_12B_HLT_5_v3v4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12B_HLT_7_v1_9_v9 = new TH1F("myInclusiveMuMuMass_12B_HLT_7_v1_9_v9","myInclusiveMuMuMass_12B_HLT_7_v1_9_v9;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
 
-  myInclusiveMuMuMass_12C = new TH1F("myInclusiveMuMuMass_12C","myInclusiveMuMuMass_12C",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12C_HLT_0_v5 = new TH1F("myInclusiveMuMuMass_12C_HLT_0_v5","myInclusiveMuMuMass_12C_HLT_0_v5",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12C_HLT_5_v5 = new TH1F("myInclusiveMuMuMass_12C_HLT_5_v5","myInclusiveMuMuMass_12C_HLT_5_v5",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12C_HLT_7_v2 = new TH1F("myInclusiveMuMuMass_12C_HLT_7_v2","myInclusiveMuMuMass_12C_HLT_7_v2",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2 = new TH1F("myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2","myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12C = new TH1F("myInclusiveMuMuMass_12C","myInclusiveMuMuMass_12C;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12C_HLT_0_v5 = new TH1F("myInclusiveMuMuMass_12C_HLT_0_v5","myInclusiveMuMuMass_12C_HLT_0_v5;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12C_HLT_5_v5 = new TH1F("myInclusiveMuMuMass_12C_HLT_5_v5","myInclusiveMuMuMass_12C_HLT_5_v5;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12C_HLT_7_v2 = new TH1F("myInclusiveMuMuMass_12C_HLT_7_v2","myInclusiveMuMuMass_12C_HLT_7_v2;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2 = new TH1F("myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2","myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
   //
-  myInclusiveMuMuMass_12D = new TH1F("myInclusiveMuMuMass_12D","myInclusiveMuMuMass_12D",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12D_HLT_0_v6 = new TH1F("myInclusiveMuMuMass_12D_HLT_0_v6","myInclusiveMuMuMass_12D_HLT_0_v6",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12D_HLT_5_v6 = new TH1F("myInclusiveMuMuMass_12D_HLT_5_v6","myInclusiveMuMuMass_12D_HLT_5_v6",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
-  myInclusiveMuMuMass_12D_HLT_7_v3 = new TH1F("myInclusiveMuMuMass_12D_HLT_7_v3","myInclusiveMuMuMass_12D_HLT_7_v3",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12D = new TH1F("myInclusiveMuMuMass_12D","myInclusiveMuMuMass_12D;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12D_HLT_0_v6 = new TH1F("myInclusiveMuMuMass_12D_HLT_0_v6","myInclusiveMuMuMass_12D_HLT_0_v6;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12D_HLT_5_v6 = new TH1F("myInclusiveMuMuMass_12D_HLT_5_v6","myInclusiveMuMuMass_12D_HLT_5_v6;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_12D_HLT_7_v3 = new TH1F("myInclusiveMuMuMass_12D_HLT_7_v3","myInclusiveMuMuMass_12D_HLT_7_v3;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
   //
-  myInclusiveMuMuMass_out = new TH1F("myInclusiveMuMuMass_out","myInclusiveMuMuMass_out",MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myInclusiveMuMuMass_out = new TH1F("myInclusiveMuMuMass_out","myInclusiveMuMuMass_out;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
   //
   myMuMuMass = new TH1F("myMuMuMass", "myMuMuMass;m(#mu^{+}#mu^{-}) [GeV]", 200, 2.5, 4.5);
-  //myMuMuMass_test = new TH1F("myMuMuMass_test", "myMuMuMass_test;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_noMuID = new TH1F("myMuMuMass_noMuID", "myMuMuMass no MuID;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
-  myMuMuMass_Mu1ID = new TH1F("myMuMuMass_Mu1ID", "myMuMuMass Mu1ID;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
-  myMuMuMass_Mu2ID = new TH1F("myMuMuMass_Mu2ID", "myMuMuMass Mu2ID;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
-  myMuMuMass_MuID = new TH1F("myMuMuMass_MuID", "myMuMuMass MuID;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
+  //myMuMuMass_test = new TH1F("myMuMuMass_test", "myMuMuMass_test;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_noMuID = new TH1F("myMuMuMass_noMuID", "myMuMuMass no MuID;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
+  myMuMuMass_Mu1ID = new TH1F("myMuMuMass_Mu1ID", "myMuMuMass Mu1ID;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
+  myMuMuMass_Mu2ID = new TH1F("myMuMuMass_Mu2ID", "myMuMuMass Mu2ID;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
+  myMuMuMass_MuID = new TH1F("myMuMuMass_MuID", "myMuMuMass MuID;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
 
-  myMuMuMass_HLT = new TH1F("myMuMuMass_HLT", "myMuMuMass HLT;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high); // 200, 2.5, 4.5
-  myMuMuMass_HLT5_7comp = new TH1F("myMuMuMass_HLT5_7comp", "myMuMuMass HLT5 7comp;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT3p5 = new TH1F("myMuMuMass_HLT3p5", "myMuMuMass HLT 3.5 displaced;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  //myMuMuMass_HLT_yMu = new TH1F("myMuMuMass_HLT_yMu", "myMuMuMass HLT for y(#mu^{#pm}) > 2.4;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  //myMuMuMass_HLT_yMu_ypsi = new TH1F("psi2S_HLT_yMu_ypsi", "myMuMuMass HLT for y(#mu^{#pm}, #psi') > 2.4;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT_final = new TH1F("myMuMuMass_HLT_final", "myMuMuMass HLT all cuts;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT_max2psiPrime = new TH1F("myMuMuMass_HLT_max2psiPrime", "myMuMuMass HLT all cuts (##psi' #leq 2);m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high); // 400, 2.5, 4.5
-  myMuMuMass_HLT_2psiPrime = new TH1F("myMuMuMass_HLT_2psiPrime", "myMuMuMass HLT all cuts (##psi' = 2);m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT_1psiPrime = new TH1F("myMuMuMass_HLT_1psiPrime", "myMuMuMass HLT all cuts (##psi' = 1);m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT_VtxCLDiff_cut = new TH1F("myMuMuMass_HLT_VtxCLDiff_cut", "myMuMuMass HLT all cuts (|1^{st} - 2^{nd}| #psi' vertex CL < 0.3);m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT_DR1 = new TH1F("myMuMuMass_HLT_DR1", "myMuMuMass HLT for #DeltaR(#mu^{+}, #mu^{-})<1;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  myMuMuMass_HLT7 = new TH1F("myMuMuMass_HLT7", "myMuMuMass HLT7;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high); // 200, 2.5, 4.5
+  myMuMuMass_HLT = new TH1F("myMuMuMass_HLT", "myMuMuMass HLT;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); // 200, 2.5, 4.5
+  myMuMuMass_HLT5_7comp = new TH1F("myMuMuMass_HLT5_7comp", "myMuMuMass HLT5 7comp;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT3p5 = new TH1F("myMuMuMass_HLT3p5", "myMuMuMass HLT 3.5 displaced;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  //myMuMuMass_HLT_yMu = new TH1F("myMuMuMass_HLT_yMu", "myMuMuMass HLT for y(#mu^{#pm}) > 2.4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  //myMuMuMass_HLT_yMu_ypsi = new TH1F("psi2S_HLT_yMu_ypsi", "myMuMuMass HLT for y(#mu^{#pm}, "+mumu_label+") > 2.4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT_final = new TH1F("myMuMuMass_HLT_final", "myMuMuMass HLT all cuts;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT_max2psiPrime = new TH1F("myMuMuMass_HLT_max2psiPrime", "myMuMuMass HLT all cuts (#"+mumu_label+" #leq 2);"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); // 400, 2.5, 4.5
+  myMuMuMass_HLT_2psiPrime = new TH1F("myMuMuMass_HLT_2psiPrime", "myMuMuMass HLT all cuts (#"+mumu_label+" = 2);"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT_1psiPrime = new TH1F("myMuMuMass_HLT_1psiPrime", "myMuMuMass HLT all cuts (#"+mumu_label+" = 1);"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT_VtxCLDiff_cut = new TH1F("myMuMuMass_HLT_VtxCLDiff_cut", "myMuMuMass HLT all cuts (|1^{st} - 2^{nd}| "+mumu_label+" vertex CL < 0.3);"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT_DR1 = new TH1F("myMuMuMass_HLT_DR1", "myMuMuMass HLT for #DeltaR(#mu^{+}, #mu^{-})<1;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  myMuMuMass_HLT7 = new TH1F("myMuMuMass_HLT7", "myMuMuMass HLT7;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); // 200, 2.5, 4.5
   //
   myMuMuKMass = new TH1F("myMuMuKMass", "myMuMuKMass;m(#mu^{+}#mu^{-}K^{+}) [GeV]", 200, 0.0, 10.0);
   // Z histos
@@ -268,15 +335,15 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   myMuMuPiMass_pr_Dz01 = new TH1F("myMuMuPiMass_pr_Dz01", "myMuMuPiMass prompt d_{z}(#pi^{+})<1;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
   myMuMuPiMass_quasipr = new TH1F("myMuMuPiMass_quasipr", "myMuMuPiMass quasi prompt;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
   myMuMuPiMass_nonpr = new TH1F("myMuMuPiMass_nonpr", "myMuMuPiMass non prompt;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_DeltaR0p1_nonpr5 = new TH1F("myMuMuPiMass_DeltaR0p1_nonpr5", "myMuMuPiMass non prompt 5, #DeltaR(#psi',#pi^{+}) < 0.1;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_DeltaR0p2_nonpr5 = new TH1F("myMuMuPiMass_DeltaR0p2_nonpr5", "myMuMuPiMass non prompt 5, #DeltaR(#psi',#pi^{+}) < 0.2;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_DeltaR0p1_nonpr8 = new TH1F("myMuMuPiMass_DeltaR0p1_nonpr8", "myMuMuPiMass non prompt 8, #DeltaR(#psi',#pi^{+}) < 0.1;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_DeltaR0p2_nonpr8 = new TH1F("myMuMuPiMass_DeltaR0p2_nonpr8", "myMuMuPiMass non prompt 8, #DeltaR(#psi',#pi^{+}) < 0.2;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_DeltaR0p1_nonpr5 = new TH1F("myMuMuPiMass_DeltaR0p1_nonpr5", "myMuMuPiMass non prompt 5, #DeltaR("+mumu_label+",#pi^{+}) < 0.1;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_DeltaR0p2_nonpr5 = new TH1F("myMuMuPiMass_DeltaR0p2_nonpr5", "myMuMuPiMass non prompt 5, #DeltaR("+mumu_label+",#pi^{+}) < 0.2;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_DeltaR0p1_nonpr8 = new TH1F("myMuMuPiMass_DeltaR0p1_nonpr8", "myMuMuPiMass non prompt 8, #DeltaR("+mumu_label+",#pi^{+}) < 0.1;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_DeltaR0p2_nonpr8 = new TH1F("myMuMuPiMass_DeltaR0p2_nonpr8", "myMuMuPiMass non prompt 8, #DeltaR("+mumu_label+",#pi^{+}) < 0.2;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
   myMuMuPiMass_nonpr_Dz1inf = new TH1F("myMuMuPiMass_nonpr_Dz1inf", "myMuMuPiMass non prompt d_{z}(#pi^{+})>1;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_barrel = new TH1F("myMuMuPiMass_barrel", "myMuMuPiMass for #psi' in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_barrel_pr = new TH1F("myMuMuPiMass_barrel_pr", "myMuMuPiMass prompt for #psi' in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_nonBarrel_pr = new TH1F("myMuMuPiMass_nonBarrel_pr", "myMuMuPiMass prompt for #psi' not in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
-  myMuMuPiMass_barrel_nonpr = new TH1F("myMuMuPiMass_barrel_nonpr", "myMuMuPiMass non prompt for #psi' in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_barrel = new TH1F("myMuMuPiMass_barrel", "myMuMuPiMass for "+mumu_label+" in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_barrel_pr = new TH1F("myMuMuPiMass_barrel_pr", "myMuMuPiMass prompt for "+mumu_label+" in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_nonBarrel_pr = new TH1F("myMuMuPiMass_nonBarrel_pr", "myMuMuPiMass prompt for "+mumu_label+" not in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
+  myMuMuPiMass_barrel_nonpr = new TH1F("myMuMuPiMass_barrel_nonpr", "myMuMuPiMass non prompt for "+mumu_label+" in barrel;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
   myMuMuPiMass->SetLineWidth(2) ; myMuMuPiMass_pr->SetLineWidth(2) ; myMuMuPiMass_quasipr->SetLineWidth(2) ; myMuMuPiMass_nonpr->SetLineWidth(2) ; myMuMuPiMass_DeltaR0p1_nonpr5->SetLineWidth(2) ; myMuMuPiMass_DeltaR0p2_nonpr5->SetLineWidth(2) ; myMuMuPiMass_DeltaR0p1_nonpr8->SetLineWidth(2) ; myMuMuPiMass_DeltaR0p2_nonpr8->SetLineWidth(2) ;
   myMuMuPiMass_Kai = new TH1F("myMuMuPiMass_Kai", "myMuMuPiMass Kai cuts;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);  myMuMuPiMass_Kai->SetLineWidth(2) ;
   myMuMuPiMass_Kai_HLT7 = new TH1F("myMuMuPiMass_Kai_HLT7", "myMuMuPiMass Kai cuts HLT7;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
@@ -286,11 +353,11 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   myMuMuKMass_HLT3p5_allCuts = new TH1F("myMuMuKMass_HLT3p5_allCuts", "myMuMuKMass HLT 3.5 displaced all cuts reproduced;m(#mu^{+}#mu^{-}K^{+}) [GeV];Candidates / 5 MeV", MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
 
   myMuMuKMass_Kai = new TH1F("myMuMuKMass_Kai", "myMuMuKMass Kai cuts;m(#mu^{+}#mu^{-}K^{+}) [GeV]", MuMuPiMass_bins, MuMuPiMass_low, MuMuPiMass_high);
-  myMuMuMass_noMuID_KaiBF = new TH1F("myMuMuMass_noMuID_KaiBF", "myMuMuMass no MuID;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
-  myMuMuMass_MuID_KaiBF = new TH1F("myMuMuMass_MuID_KaiBF", "myMuMuMass MuID;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
-  myMuMuMass_KaiBF = new TH1F("myMuMuMass_KaiBF", "myMuMuMass Kai BF cuts;m(#mu^{+}#mu^{-}) [GeV]", MuMuMass_bins, MuMuMass_low, MuMuMass_high); 
+  myMuMuMass_noMuID_KaiBF = new TH1F("myMuMuMass_noMuID_KaiBF", "myMuMuMass no MuID;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
+  myMuMuMass_MuID_KaiBF = new TH1F("myMuMuMass_MuID_KaiBF", "myMuMuMass MuID;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
+  myMuMuMass_KaiBF = new TH1F("myMuMuMass_KaiBF", "myMuMuMass Kai BF cuts;m(#mu^{+}#mu^{-}) [GeV];"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high); 
   myMuMuKMass_KaiBF = new TH1F("myMuMuKMass_KaiBF", "myMuMuKMass Kai BF cuts;m(#mu^{+}#mu^{-}K^{+}) [GeV]", 520, 5.15, 5.41); 
-  dEdx_vs_p_Bplus = new TH2F("dEdx_vs_p_KFromBplus", "dE/dx vs p for K^{+} from B^{+};p(K^{+}) [GeV];dE/dx [MeV/cm]", 200,0,5, 200, 0, 10) ;
+  dEdx_vs_p_Bplus = new TH2F("dEdx_vs_p_KFromBplus", "dE/dx vs p for K^{+} from B^{+};p(K^{+}) [GeV];dE/dx [MeV/cm]", 200,0,5, 200,0,10) ;
 
   
   // Sara plots
@@ -341,27 +408,113 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   myExclusiveMuMuKPiMass = new TH1F("myExclusiveMuMuKPiMass","MuMuKPiMass with HLT5 and nB0.gt.0 BEFORE selection",100, 4.8, 5.8);
   kaonP_vs_pionP = new TH2F("kaonP_vs_pionP","p(K^{+}) vs p(#pi^{-});p(#pi^{-}) [GeV];p(K^{+}) [GeV]",100,0.,10.,100,0.,10.) ;
   kaonPt_vs_pionPt = new TH2F("kaonPt_vs_pionPt","p_{T}(K^{+}) vs p_{T}(#pi^{-});p_{T}(#pi^{-}) [GeV];p_{T}(K^{+}) [GeV]",100,0.,10.,100,0.,10.) ;
+  kaonIdx_vs_pionIdx = new TH2I("kaonIdx_vs_pionIdx","Idx(K^{+}) vs Idx(#pi^{-});Idx(#pi^{-});Idx(K^{+})",100,0,100,100,0,100);
   trk_dxy = new TH1F("trk_Dxy", "trk d_{xy};d_{xy} [cm]", 400, -2, 2) ;
   trk_dz = new TH1F("trk_Dz", "trk d_{z};d_{z} [cm]", 300, -15, 15) ;
   // test
-  hmyPsiPKPiMass_B0pTtest = new TH1F("myPsiPKPiMass_B0pTtest","myPsiPKPiMass B0pTtest", 100, 4.8, 5.8);
+  hmyPsiPKPiMass_B0pTtest = new TH1F("myMuMuKPiMass_B0pTtest","myMuMuKPiMass B0pTtest", 100, 4.8, 5.8);
   hPionFromKstar_p = new TH1F("PionFromKstar_p","#pi^{-} from K*;p [GeV]", 100,0.,10.);
   hKaonFromKstar_p = new TH1F("KaonFromKstar_p","K^{+} from K*;p [GeV]", 100,0.,10.);
-  hmyPsiPKPiMass_B0cTautest = new TH1F("myPsiPKPiMass_B0cTautest","myPsiPKPiMass B0cTautest", 100, 4.8, 5.8);
-  hmyPsiPKPiMass_deltaRtest = new TH1F("myPsiPKPiMass_deltaRtest","myPsiPKPiMass deltaRtest", 100, 4.8, 5.8);
+  hmyPsiPKPiMass_B0cTautest = new TH1F("myMuMuKPiMass_B0cTautest","myMuMuKPiMass B0cTautest", 100, 4.8, 5.8);
+  hmyPsiPKPiMass_deltaRtest = new TH1F("myMuMuKPiMass_deltaRtest","myMuMuKPiMass deltaRtest", 100, 4.8, 5.8);
   //
-  hmyPsiPKPiMassBaseSelAlt = new TH1F("myPsiPKPiMassBaseSelAlt","myPsiPKPiMassSel BASELINE ALTERNATIVE", 100, 4.8, 5.8);
-  hPsiPrimefromBMassSel = new TH1F("PsiPrimefromBMassSel","PsiPrimefromBMassSel", 100, 3.45, 3.9); 
-  hmyPsiPMassSel = new TH1F("myPsiPMassSel","myPsiPMassSel;m(#mu^{+}#mu^{-}) [GeV]", 100, 3.45, 3.9); 
-  hmyPsiPKPiMassSelAlt = new TH1F("myPsiPKPiMassSelAlt","myPsiPKPiMassSel ALTERNATIVE", 100, 4.8, 5.8); 
-  hmyPsiPKPiMassSelAltZoom = new TH1F("myPsiPKPiMassSelAltZoom","myPsiPKPiMassSel ALTERNATIVE ZOOM;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high);
-  hmyPsiPKPiMassSelZoom = new TH1F("myPsiPKPiMassSelZoom","myPsiPKPiMassSel ZOOM;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high);
-  psi2SPiSqMass_vs_KPiSqMass_AC = new TH2F("reco_psi2SPi_vs_KPi_dalitz","#psi'#pi^{-} vs K^{+}#pi^{-} reco;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 15*2,0.,3., 24*2,13.,25.) ;
+  hmyPsiPKPiMassBaseSelAlt = new TH1F("myMuMuKPiMassBaseSelAlt","myMuMuKPiMassSel BASELINE ALTERNATIVE", 100, 4.8, 5.8);
+  hmyPsiPKPiMassNairitSelAlt = new TH1F("myMuMuKPiMassNairitSelAlt","myMuMuKPiMassNairitSel ALTERNATIVE;m("+mumu_label+"K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high);
+  psi2SPiSqMass_vs_KPiSqMass_NairitPeak = new TH2F("MuMuPi_vs_KPi_dalitz_NairitPeak",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} from 2#sigma B^{0} peak;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  psi2SPiSqMass_vs_KPiSqMass_NairitSb = new TH2F("MuMuPi_vs_KPi_dalitz_NairitSb",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} from B^{0} sidebands;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  hPsiPrimefromBMassSel = new TH1F("MuMufromBMassSel","MuMufromBMassSel", 100, 3.45, 3.9); 
+  hmyPsiPMassSel = new TH1F("myMuMuMassSel","myMuMuMassSel;m(#mu^{+}#mu^{-}) [GeV]", 100, 3.45, 3.9); 
+  hmyPsiPKPiMassZoom = new TH1F("myMuMuKPiMassZoom","myMuMuKPiMassSel ZOOM;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high);
+  hmyPsiPKPiMassAlt = new TH1F("myMuMuKPiMassAlt","myMuMuKPiMassSel ALTERNATIVE;m("+mumu_label+"K^{+}#pi^{-}) [GeV]", 200, 4.7, 6.7); 
+  hmyPsiPKPiMassAltZoom = new TH1F("myMuMuKPiMassAltZoom","myMuMuKPiMassSel ALTERNATIVE ZOOM;m("+mumu_label+"K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high);
+  // Reflections
+  hmyPiPiMass = new TH1F("myPiPiMass","PiPi mass;m(#pi^{+}#pi^{-}) [GeV]", 220, 0., 2.2);
+  hmyPiKMass = new TH1F("myPiKMass","PiK mass;m(#pi^{+}K^{-}) [GeV]", 400, 0., 4.);
+  hmyKKMass = new TH1F("myKKMass","KK mass;m(K^{+}K^{-}) [GeV]", 400, 0., 4.);
+  hmyPsiPPiPiMass = new TH1F("myMuMuPiPiMass","MuMuPiPi mass;m("+mumu_label+"#pi^{+}#pi^{-}) [GeV]", 110, 4.7, 5.8);
+  hmyPsiPPiKMass = new TH1F("myMuMuPiKMass","MuMuPiK mass;m("+mumu_label+"#pi^{+}K^{-}) [GeV]", 110, 4.7, 5.8);
+  hmyPsiPPiKMass_zoom = new TH1F("myMuMuPiKMass_zoom","MuMuPiK mass;m("+mumu_label+"#pi^{+}K^{-}) [GeV]", 60, 5.15, 5.45);
+  hmyPsiPKKMass = new TH1F("myMuMuKKMass","MuMuKK mass;m("+mumu_label+"K^{+}K^{-}) [GeV]", 200, 4.7, 6.7);
+  hmyPsiPPhiMass = new TH1F("myMuMuPhiMass","MuMuPhi mass;m("+mumu_label+"#phi) [GeV]", 200, 4.7, 6.7);
+  hmyPsiPPiKMass_fromBs = new TH1F("myMuMuPiKMass_fromBs","MuMuPiK mass from B_{s} region;m("+mumu_label+"#pi^{+}K^{-}) [GeV]", 110, 4.7, 5.8);
+  hmyPsiPPiKMass_fromBs_zoom = new TH1F("myMuMuPiKMass_fromBs_zoom","MuMuPiK mass from B_{s} region;m("+mumu_label+"#pi^{+}K^{-}) [GeV]", 60, 5.15, 5.45);
+  hmyPiPiMass_vs_KKMass = new TH2F("myPiPiMass_vs_KKMass","PiPi vs KK mass;m(#pi^{+}#pi^{-});m(K^{+}K^{-}) [GeV]", 220,0.,2., 400,0.,4.);
+  hmyPsiPPiPiMass_vs_PiPiMass = new TH2F("myMuMuPiPiMass_vs_PiPiMass","MuMuPiPi vs PiPi mass;m("+mumu_label+"#pi^{+}#pi^{-});m(#pi^{+}#pi^{-}) [GeV]", 110,4.7,5.8, 220,0.,2.2);
+  hmyPsiPKKMass_vs_KKMass = new TH2F("myMuMuKKMass_vs_KKMass","MuMuKK vs KK mass;m("+mumu_label+"K^{+}K^{-});m(K*{+}K^{-}) [GeV]", 200,4.7,6.7, 500,0.,5.);
+  psi2SPiSqMass_vs_KPiSqMass_AC = new TH2F("reco_psi2SPi_vs_KPi_dalitz_AC",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} reco;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-}) [GeV]", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  // B0 peak
+  hPionPt_fromB0peak = new TH1F("pionPt_fromB0peak","p_{T}(#pi^{-}) from 2#sigma B^{0} peak;p_{T}(#pi^{-}) [GeV]", 100,0.,10.) ;
+  hKaonPt_fromB0peak = new TH1F("kaonPt_fromB0peak","p_{T}(K^{+}) from 2#sigma B^{0} peak;p_{T}(K^{+}) [GeV]", 100,0.,10.) ;
+  hPionPtPlusKaonPt_fromB0peak = new TH1F("pionPtPlusKaonPt_fromB0peak","p_{T}(#pi^{-}) + p_{T}(K^{+}) from 2#sigma B^{0} peak;p_{T}(#pi^{-}) + p_{T}(K^{+}) [GeV]", 100,0.,10.) ;
+  hLowerPt_fromB0peak = new TH1F("lowerPtTrk_fromB0peak","lower p_{T} track from 2#sigma B^{0} peak;p_{T}(soft track) [GeV]", 100,0.,10.) ;
+  hHigherPt_fromB0peak = new TH1F("higherPtTrk_fromB0peak","higher p_{T} track from 2#sigma B^{0} peak;p_{T}(hard track) [GeV]", 100,0.,10.) ;
+  hPsiDeltaRHigherPtTrk_fromB0peak = new TH1F("psiDeltaRHigherPtTrk_fromB0peak","#DeltaR("+mumu_label+",higher p_{T} track) from 2#sigma B^{0} peak;#DeltaR("+mumu_label+",higher p_{T} track)", 150,0,1.5);
+  hPsiDeltaRLowerPtTrk_fromB0peak = new TH1F("psiDeltaRLowerPtTrk_fromB0peak","#DeltaR("+mumu_label+",lower p_{T} track) from 2#sigma B^{0} peak;#DeltaR("+mumu_label+",lower p_{T} track)", 150,0,1.5);
+  hPionDeltaRKaon_fromB0peak = new TH1F("pionDeltaRKaon_fromB0peak","#DeltaR(#pi^{-},K^{+}) from 2#sigma B^{0} peak;#DeltaR(#pi^{-},K^{+})", 150,0,1.5);
+  hPsiDeltaRKPi_fromB0peak = new TH1F("psiDeltaRKPi_fromB0peak","#DeltaR("+mumu_label+",#pi^{-}K^{+}) from 2#sigma B^{0} peak;#DeltaR("+mumu_label+",#pi^{-}K^{+}", 150,0,1.5);
+  KPiMass_fromB0peak = new TH1F("KPiMass_fromB0peak","#pi^{-}K^{+} mass from 2#sigma B^{0} peak;m(#pi^{+}K^{-}) [GeV]", 400, 0., 4.);
+  hB0Pt_fromB0peak = new TH1F("B0Pt_fromB0peak","p_{T}(B^{0}) from 2#sigma B^{0} peak;p_{T}(B^{0}) [GeV]", 100, 8., 48.);
+  hB0VtxCL_fromB0peak = new TH1F("B0VtxCL_fromB0peak","B^{0} vtx CL from 2#sigma B^{0} peak;CL(B^{0} vtx)", 100, 0., 1.);
+  B0_PVCTau_fromB0peak = new TH1F("B0_PVCTau_fromB0peak", "B^{0} flight lenght signif. w.r.t PV from 2#sigma B^{0} peak;c*#tau_{PV} / #sigma(c*#tau_{PV})", 100,0,40) ;
+  B0_BSCTau_fromB0peak = new TH1F("B0_BSCTau_fromB0peak", "B^{0} flight lenght signif. w.r.t BS from 2#sigma B^{0} peak;c*#tau_{BS} / #sigma(c*#tau_{BS})", 100,0,40) ;
+  B0_pointingAnglePV_fromB0peak = new TH1F("B0_pointingAnglePV_fromB0peak", "B^{0} cos(#alpha) wrt PV from 2#sigma B^{0} peak;cos(#alpha_{PV})", 100, 0.995, 1.);
+  // B0 sideband
+  hPionPt_fromB0sb = new TH1F("pionPt_fromB0sb","p_{T}(#pi^{-}) from B^{0} sidebands;p_{T}(#pi^{-}) [GeV]", 100,0.,10.) ;
+  hKaonPt_fromB0sb = new TH1F("kaonPt_fromB0sb","p_{T}(K^{+}) from B^{0} sidebands;p_{T}(K^{+}) [GeV]", 100,0.,10.) ;
+  hPionPtPlusKaonPt_fromB0sb = new TH1F("pionPtPlusKaonPt_fromB0sb","p_{T}(#pi^{-}) + p_{T}(K^{+}) from 2#sigma B^{0} sidebands;p_{T}(#pi^{-}) + p_{T}(K^{+}) [GeV]", 100,0.,10.) ;
+  hLowerPt_fromB0sb = new TH1F("lowerPtTrk_fromB0sb","lower p_{T} track from 2#sigma B^{0} sidebands;p_{T}(soft track) [GeV]", 100,0.,10.) ;
+  hHigherPt_fromB0sb = new TH1F("higherPtTrk_fromB0sb","higher p_{T} track from 2#sigma B^{0} sidebands;p_{T}(hard track) [GeV]", 100,0.,10.) ;
+  hPsiDeltaRHigherPtTrk_fromB0sb = new TH1F("psiDeltaRHigherPtTrk_fromB0sb","#DeltaR("+mumu_label+",higher p_{T} track) from 2#sigma B^{0} sidebands;#DeltaR("+mumu_label+",higher p_{T} track)", 150,0,1.5);
+  hPsiDeltaRLowerPtTrk_fromB0sb = new TH1F("psiDeltaRLowerPtTrk_fromB0sb","#DeltaR("+mumu_label+",lower p_{T} track) from 2#sigma B^{0} sidebands;#DeltaR("+mumu_label+",lower p_{T} track)", 150,0,1.5);
+  hPionDeltaRKaon_fromB0sb = new TH1F("pionDeltaRKaon_fromB0sb","#DeltaR(#pi^{-},K^{+}) from 2#sigma B^{0} sidebands;#DeltaR(#pi^{-},K^{+})", 150,0,1.5);
+  hPsiDeltaRKPi_fromB0sb = new TH1F("psiDeltaRKPi_fromB0sb","#DeltaR("+mumu_label+",#pi^{-}K^{+}) from 2#sigma B^{0} sidebands;#DeltaR("+mumu_label+",#pi^{-}K^{+}", 150,0,1.5);
+  KPiMass_fromB0sb = new TH1F("KPiMass_fromB0sb","#pi^{-}K^{+} mass from 2#sigma B^{0} sidebands;m(#pi^{+}K^{-}) [GeV]", 400, 0., 4.);
+  hB0Pt_fromB0sb = new TH1F("B0Pt_fromB0sb","p_{T}(B^{0}) from B^{0} sidebands;p_{T}(B^{0}) [GeV]", 100, 8., 48.);
+  hB0VtxCL_fromB0sb = new TH1F("B0VtxCL_fromB0sb","B^{0} vtx CL from B^{0} sidebands;CL(B^{0} vtx)", 100, 0., 1.);
+  B0_PVCTau_fromB0sb = new TH1F("B0_PVCTau_fromB0sb", "B^{0} flight lenght signif. w.r.t PV from B^{0} sidebands;c*#tau_{PV} / #sigma(c*#tau_{PV})", 100,0,40) ;
+  B0_BSCTau_fromB0sb = new TH1F("B0_BSCTau_fromB0sb", "B^{0} flight lenght signif. w.r.t BS from B^{0} sidebands;c*#tau_{BS} / #sigma(c*#tau_{BS})", 100,0,40) ;
+  B0_pointingAnglePV_fromB0sb = new TH1F("B0_pointingAnglePV_fromB0sb", "B^{0} cos(#alpha) wrt PV from B^{0} sidebands;cos(#alpha_{PV})", 100, 0.995, 1.);
+  // MVA
+  vector< TString > mva_vars_name; // always keep the following list order syncronized with Float_t mva_values[] = { ... } and with the corresponding histograms (...fromB0peak)
+  mva_vars_name.push_back("pionPt"); mva_vars_name.push_back("kaonPt"); mva_vars_name.push_back("B0Pt");
+  mva_vars_name.push_back("higherPtTrk"); mva_vars_name.push_back("lowerPtTrk"); mva_vars_name.push_back("PionPtPlusKaonPt"); 
+  mva_vars_name.push_back("PsiDeltaRHigherPtTrk"); mva_vars_name.push_back("PsiDeltaRLowerPtTrk"); mva_vars_name.push_back("PsiDeltaRKPi"); mva_vars_name.push_back("PionDeltaRKaon"); 
+  mva_vars_name.push_back("B0VtxCL"); mva_vars_name.push_back("B0_PVCTau"); //mva_vars_name.push_back("B0_BSCTau");
+  mva_vars_name.push_back("B0_pointingAnglePV");
+  mva_vars_name.push_back("B0_mass"); mva_vars_name.push_back("B0_multiplicity");
+  // AA vars
+  mva_vars_name.push_back("KPi_mass"); mva_vars_name.push_back("PsiPi_mass"); mva_vars_name.push_back("cosTheta_psi"); mva_vars_name.push_back("phi");
+  // reflection check
+  mva_vars_name.push_back("PiPi_mass"); mva_vars_name.push_back("MuMuPiPi_mass");
+  mva_vars_name.push_back("KK_mass"); mva_vars_name.push_back("PsiKK_mass");
+  // for efficiency: AA vars_gen
+  mva_vars_name.push_back("KPi_mass_gen"); mva_vars_name.push_back("PsiPi_mass_gen"); mva_vars_name.push_back("cosTheta_psi_gen"); mva_vars_name.push_back("phi_gen");
+  // let's keep the truth matching as the last var
+  mva_vars_name.push_back("B0_matched");
+  Int_t mva_vars_n = mva_vars_name.size();
+  mva_vars_sig.resize(mva_vars_n, 0.); // this works for all of the variables, instead the line two lines below for only a few of them
+  mva_vars_bkg.resize(mva_vars_n, 0.); // this works for all of the variables, instead the line two lines below for only a few of them
+  mva_vars_all.resize(mva_vars_n, 0.); // this works for all of the variables, instead the line two lines below for only a few of them
+  for (Int_t i = 0; i < mva_vars_n; ++i) {
+    //mva_vars.push_back(0.); // this works for only a few variables
+    //if ( !(mva_vars_name[i].Contains("multiplicity")) ) {
+    if ( kTRUE ) {
+      mva_variables_sig->Branch(mva_vars_name[i], &mva_vars_sig[i], mva_vars_name[i]+"/F" );
+      mva_variables_bkg->Branch(mva_vars_name[i], &mva_vars_bkg[i], mva_vars_name[i]+"/F" );
+      mva_variables_all->Branch(mva_vars_name[i], &mva_vars_all[i], mva_vars_name[i]+"/F" );
+      //mva_variables_sig->Branch(mva_vars_name[i], &mva_vars_sig[i] );
+      //mva_variables_bkg->Branch(mva_vars_name[i], &mva_vars_bkg[i] );
+      //mva_variables_all->Branch(mva_vars_name[i], &mva_vars_all[i] );
+    } else {
+      mva_variables_sig->Branch(mva_vars_name[i], &mva_vars_sig[i], mva_vars_name[i]+"/I" );
+      mva_variables_bkg->Branch(mva_vars_name[i], &mva_vars_bkg[i], mva_vars_name[i]+"/I" );
+      mva_variables_all->Branch(mva_vars_name[i], &mva_vars_all[i], mva_vars_name[i]+"/I" );
+    }
+  }
   // tight cuts
   // single
   piPt_B0.push_back(0.5) ; piPt_B0.push_back(1.0) ; piPt_B0.push_back(1.5) ; piPt_B0.push_back(2.0) ; piPt_B0.push_back(2.5) ; piPt_B0.push_back(3.0) ; piPt_B0.push_back(3.5) ; piPt_B0.push_back(4.0) ; piPt_B0.push_back(4.5) ; piPt_B0.push_back(5.0) ;
-  //KPt_B0.push_back(1.) ; 
-  //KPt_B0.push_back( piPt_B0[i] ) ;
+  KPt_B0 = vector<float>( piPt_B0 ) ;
   vtxCL_B0.push_back(0.075) ; vtxCL_B0.push_back(0.1) ; vtxCL_B0.push_back(0.125) ; vtxCL_B0.push_back(0.15) ;
   cTau_B0.push_back(4.) ; cTau_B0.push_back(5.) ; cTau_B0.push_back(6.) ; cTau_B0.push_back(7.) ;
   // combined
@@ -372,9 +525,9 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
     TString title = TString::Format("myMuMuKPiMass with p_{T}(#pi^{-}) > %.1f GeV;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", piPt_B0[i] ) ; 
     myMuMuKPiMass_piPt.push_back( new TH1F(name, title, MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ) ; 
   }
-  //for (Int_t i = 0; i < abs(KPt_B0.size()); ++i) {
-  for (Int_t i = 0; i < abs(piPt_B0.size()); ++i) {
-    KPt_B0.push_back( piPt_B0[i] ) ;
+  for (Int_t i = 0; i < abs(KPt_B0.size()); ++i) {
+  //for (Int_t i = 0; i < abs(piPt_B0.size()); ++i) {
+    //KPt_B0.push_back( piPt_B0[i] ) ;
     TString name = TString::Format("myMuMuKPiMass_kPT_%.1f", KPt_B0[i] ) ; name.ReplaceAll(".","p") ;
     TString title = TString::Format("myMuMuKPiMass with p_{T}(K^{+}) > %.1f GeV;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", KPt_B0[i] ) ; 
     myMuMuKPiMass_KPt.push_back( new TH1F(name, title, MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ) ; 
@@ -399,7 +552,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   }
   //
   // PV matching
-  priVtx_deltaZ = new TH1F("priVtx_deltaZ", "#Deltaz(standard PV, B^{0}_cos(#alpha) PV);#Deltaz", 300, 0, 30) ;
+  priVtx_deltaZ = new TH1F("priVtx_deltaz", "#Deltaz(standard PV, B^{0}_cos(#alpha) PV);#Deltaz", 300, 0, 30) ;
   B0_pointingAngle_PVvsB0LessPV[0] = new TH2F("B0_cosAlpha_PVvsB0less_pT", "B^{0} cos(#alpha) wrt PV vs wrt B0LessPV (best #Sigma(p_{T}^{2}));B^{0} cos(#alpha) wrt PV;B^{0} cos(#alpha) wrt B^{0}LessPV", 1000, 0.995, 1., 1000, 0.995, 1.) ;
   B0_pointingAngle_PVvsB0LessPV[1] = new TH2F("B0_cosAlpha_PVvsB0less_cos", "B^{0} cos(#alpha) wrt PV vs wrt B0LessPV (best cos(#alpha));B^{0} cos(#alpha) wrt PV;B^{0} cos(#alpha) wrt B^{0}LessPV", 1000, 0.995, 1., 1000, 0.995, 1.) ; 
   z_PVvsB0LessPV[0] = new TH2F("z_PVvsB0less_pT", "z(PV) vs wrt z(B0LessPV) (best #Sigma(p_{T}^{2}));z(PV) [cm];z(B0LessPV) [cm]", 100,-25,25, 100,-25,25) ;
@@ -410,20 +563,20 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   B0_PVX3DCTau_h = new TH1F("B0_PVX3DCTau", "B^{0} flight lenght signif. w.r.t PVX3D;c*#tau_{PVX3D} / #sigma(c*#tau_{PVX3D})", 200,0,40) ;
   priVtx_matched = new TH1I("priVtx_matched", "standard PV matched with B^{0}_cos(#alpha) PV;n(PV matched)", 4, -1.5, 2.5) ;
   //
-  hmyPsiPKPiMass = new TH1F("myPsiPKPiMass","RECALCULATED B0Mass with HLT5 and nB0.gt.0 BEFORE selection", 100, 4.8, 5.8); //check
-  hmyPsiPKPiMass_KPiExchanged = new TH1F("myPsiPKPiMass_KPiExchanged","RECALCULATED B0Mass (with HLT5 and nB0.gt.0) BEF sel with inverted K-Pi mass hypotheses", 100, 4.8, 5.8); //check
-  hmyPsiPKPiMass_bothComb = new TH1F("myPsiPKPiMass_bothComb","myPsiPKPiMass_bothComb", 100, 4.8, 5.8); //check
+  hmyPsiPKPiMass = new TH1F("myMuMuKPiMass","RECALCULATED B0Mass with HLT5 and nB0.gt.0 BEFORE selection", 100, 4.8, 5.8); //check
+  hmyPsiPKPiMass_KPiExchanged = new TH1F("myMuMuKPiMass_KPiExchanged","RECALCULATED B0Mass (with HLT5 and nB0.gt.0) BEF sel with inverted K-Pi mass hypotheses", 100, 4.8, 5.8); //check
+  hmyPsiPKPiMass_bothComb = new TH1F("myMuMuKPiMass_bothComb","myMuMuKPiMass_bothComb", 100, 4.8, 5.8); //check
   //
-  hB0VtxCL = new TH1F("B0VtxCL","B0VtxCL", 200, 0., 1.);
-  hB0_Pt = new TH1F("B0_Pt","B0_Pt", 100, 0., 30.);
+  hB0VtxCL = new TH1F("B0VtxCL","B^{0} vtx CL;B^{0} vtx CL", 200, 0., 1.);
+  hB0Pt = new TH1F("B0Pt","p_{T}(B^{0});p_{T}(B^{0}) [GeV]", 100, 5., 55.);
   //
   hB0CTauPVSignif = new TH1F("B0CTauPVSignif","B0CTauPVSignif", 120, 0., 12.);
   hB0CTauPVXSignif = new TH1F("B0CTauPVXSignif","B0CTauPVXSignif", 120, 0., 12.);
-  hPsiPrimefromBMass = new TH1F("PsiPrimefromBMass","PsiPrimefromBMass", 100, 3.45, 3.9); 
-  hPsiPrime_fromB_Pt = new TH1F("PsiPrime_fromB_Pt","PsiPrime_fromB_Pt", 100, 0., 30.);
-  hmyPsiP_Pt = new TH1F("myPsiP_Pt","myPsiP_Pt", 100, 0., 30.);
-  hPionfromBpt = new TH1F("PionfromB_pT","#pi^{-} from B^{0};p_{T} [GeV]", 200,0.,10.);
-  hKaonfromBpt = new TH1F("KaonfromB_pT","K^{+} from B^{0};p_{T} [GeV]", 200,0.,10.);
+  hPsiPrimefromBMass = new TH1F("MuMufromBMass","MuMufromBMass", 100, 3.45, 3.9); 
+  hPsiPrime_fromB_Pt = new TH1F("MuMu_fromB_Pt","MuMu_fromB_Pt", 100, 0., 30.);
+  hmyPsiP_Pt = new TH1F("myMuMu_Pt","myMuMu_Pt", 100, 0., 30.);
+  hPionfromB0pt = new TH1F("PionfromB0_pT","#pi^{-} from B^{0};p_{T} [GeV]", 200,0.,10.);
+  hKaonfromB0pt = new TH1F("KaonfromB0_pT","K^{+} from B^{0};p_{T} [GeV]", 200,0.,10.);
   hPionFromKstar_pT = new TH1F("PionFromKstar_pT","#pi^{-} from K*;p_{T} [GeV]", 100, 0., 10.);
   hKaonFromKstar_pT = new TH1F("KaonFromKstar_pT","K^{+} from K*;p_{T} [GeV]", 100, 0., 10.);
   hPionFromKstar_ex_pT = new TH1F("PionFromKstar_ex_pT","#pi^{-} from K* exchanged;p_{T} [GeV]", 100, 0., 10.);
@@ -432,8 +585,9 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   hKaonFromKstar_sb_pT = new TH1F("KaonFromKstar_sb_pT","K^{+} from K* sidebands;p_{T} [GeV]", 100, 0., 10.);
   //
   myExclMuMuKPiMassSel = new TH1F("myExclMuMuKPiMassSel","MuMuKPiMass  AFTER selection",100, 4.8, 5.8);
-  hmyPsiPKPiMass_bothCombSel = new TH1F("myPsiPKPiMass_bothCombSel","myPsiPKPiMass_bothCombSel",100, 4.8, 5.8); //check
-  psi2SPiSqMass_vs_KPiSqMass_ABaseC = new TH2F("reco_psi2SPi_vs_KPi_dalitz","#psi'#pi^{-} vs K^{+}#pi^{-} reco;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 45,0.2,3.8, 56,12.3,36.3) ;
+  hmyPsiPKPiMass_bothCombSel = new TH1F("myMuMuKPiMass_bothCombSel","myMuMuKPiMass_bothCombSel",100, 4.8, 5.8); //check
+  psi2SPiSqMass_vs_KPiSqMass_ABaseC = new TH2F("reco_psi2SPi_vs_KPi_dalitz_ABaseC",mumu_label+"#pi^{-} vs K^{+}#pi^{-} reco;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  psi2SPiSqMass_vs_KPiSqMass_B0constr_ABaseC = new TH2F("reco_psi2SPi_vs_KPi_dalitz_B0constr_ABaseC",psi2SPiSqMass_vs_KPiSqMass_ABaseC->GetTitle(), KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
   hmyKPiMass = new TH1F("myKPiMass","K*;m(K^{+}#pi^{-}) [GeV]", 120,0.6,1.8) ;
   hmyKPiMass_ex = new TH1F("myKPiMass_ex","K* exchanged;m(K^{+}#pi^{-}) [GeV]", 120,0.6,1.8) ;
   hmyKPiMass_sb = new TH1F("myKPiMass_sb","myKPiMass sidebands;m(K^{+}#pi^{-}) [GeV]", 200, 0., 2.) ;
@@ -445,14 +599,14 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   hmyKPiMass_KpTcut_HP = new TH1F("myKPiMass_KpTcut_HPTr","K* with p_{T}(K^{+}) < 1 GeV (HP tracks);m(K^{+}#pi^{-}) [GeV]", 120,0.6,1.8) ;
   hmyKPiMass_ex_KpTcut_HP = new TH1F("myKPiMass_ex_KpTcut_HPTr","K* exchanged with p_{T}(K^{+}) < 1 GeV (HP tracks);m(K^{+}#pi^{-}) [GeV]", 120,0.6,1.8) ;
   //
-  hmyPsiPKPiMass_fromKstar = new TH1F("myPsiPKPiMass_fromKstar","myPsiPKPiMass_fromKstar;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
-  hmyPsiPKPiMass_fromKstar_ex_noRange = new TH1F("myPsiPKPiMass_fromKstar_ex_noRange","myPsiPKPiMass_fromKstar exchanged;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]",160,4.8,5.6);
-  hmyPsiPKPiMass_fromKstar_diff = new TH1F("myPsiPKPiMass_fromKstar_ex_diff","myPsiPKPiMass_fromKstar diff;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) - m(#mu^{+}#mu^{-}K^{-}#pi^{+}) [GeV]",80,-0.4,0.4);
-  hmyPsiPKPiMass_fromKstar_ex = new TH1F("myPsiPKPiMass_fromKstar_ex","myPsiPKPiMass_fromKstar exchanged;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
-  hmyPsiPKPiMass_fromKstar_sb = new TH1F("myPsiPKPiMass_fromKstar_sb","myPsiPKPiMass_fromKstar sidebands;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
-  hpsiPK_vs_KPi = new TH2F("psiPK_vs_KPi","m(#psi'K^{+}) vs m(K^{+}#pi^{-}) from K*;m(K^{+}#pi^{-}) [GeV];m(#psi'K^{+}) [GeV]", 120,0.6,1.8, 200,3.6,6.) ;
-  hpsiPK_vs_KPi_ex = new TH2F("psiPK_vs_KPi_ex","m(#psi'K^{+}) vs m(K^{+}#pi^{-}) from K* exchanged;m(K^{+}#pi^{-}) [GeV];m(#psi'K^{+}) [GeV]", 120,0.6,1.8, 200,3.6,6.);
-  hpsiPK_vs_KPi_sb = new TH2F("psiPK_vs_KPi_sb","m(#psi'K^{+}) vs m(K^{+}#pi^{-}) from K* sidebands;m(K^{+}#pi^{-}) [GeV];m(#psi'K^{+}) [GeV]", 130,0.7,2.0, 200,3.6,6.);
+  hmyPsiPKPiMass_fromKstar = new TH1F("myMuMuKPiMass_fromKstar","myMuMuKPiMass_fromKstar;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
+  hmyPsiPKPiMass_fromKstar_ex_noRange = new TH1F("myMuMuKPiMass_fromKstar_ex_noRange","myMuMuKPiMass_fromKstar exchanged;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]",160,4.8,5.6);
+  hmyPsiPKPiMass_fromKstar_diff = new TH1F("myMuMuKPiMass_fromKstar_ex_diff","myMuMuKPiMass_fromKstar diff;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) - m(#mu^{+}#mu^{-}K^{-}#pi^{+}) [GeV]",80,-0.4,0.4);
+  hmyPsiPKPiMass_fromKstar_ex = new TH1F("myMuMuKPiMass_fromKstar_ex","myMuMuKPiMass_fromKstar exchanged;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
+  hmyPsiPKPiMass_fromKstar_sb = new TH1F("myMuMuKPiMass_fromKstar_sb","myMuMuKPiMass_fromKstar sidebands;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
+  hpsiPK_vs_KPi = new TH2F("psiPK_vs_KPi","m("+mumu_label+"K^{+}) vs m(K^{+}#pi^{-}) from K*;m(K^{+}#pi^{-}) [GeV];m("+mumu_label+"K^{+}) [GeV]", 120,0.6,1.8, 200,3.6,6.) ;
+  hpsiPK_vs_KPi_ex = new TH2F("psiPK_vs_KPi_ex","m("+mumu_label+"K^{+}) vs m(K^{+}#pi^{-}) from K* exchanged;m(K^{+}#pi^{-}) [GeV];m("+mumu_label+"K^{+}) [GeV]", 120,0.6,1.8, 200,3.6,6.);
+  hpsiPK_vs_KPi_sb = new TH2F("psiPK_vs_KPi_sb","m("+mumu_label+"K^{+}) vs m(K^{+}#pi^{-}) from K* sidebands;m(K^{+}#pi^{-}) [GeV];m("+mumu_label+"K^{+}) [GeV]", 130,0.7,2.0, 200,3.6,6.);
   dEdx_vs_pT_Kstar = new TH2F("dEdx_vs_pT_Kstar", "dE/dx vs p_{T} for K* decay;p_{T} [GeV];dE/dx [MeV/cm]", 200,0,5, 200, 0, 10) ;
   dEdx_vs_p_Kstar = new TH2F("dEdx_vs_p_Kstar", "dE/dx vs p for K* decay;p [GeV];dE/dx [MeV/cm]", 200,0,5, 200, 0, 10) ;
   dEdx_vs_pT_piFromKstar = new TH2F("dEdx_vs_pT_piFromKstar", "dE/dx vs p_{T} for #pi^{-} from K*;p_{T}(#pi^{-}) [GeV];dE/dx [MeV/cm]", 200,0,5, 200, 0, 10) ;
@@ -517,12 +671,12 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
     Z_cosPA[i]->SetLineWidth(2) ;
 
     TString name_DeltaR = TString::Format("psi2S_DeltaR_pi_%s", mode[i].Data()) ; name_DeltaR.ReplaceAll(".","p") ;
-    TString title_DeltaR = TString::Format("#DeltaR(#psi',#pi^{+}) %s;#DeltaR(#psi',#pi^{+})", mode[i].Data()) ; 
+    TString title_DeltaR = TString::Format("#DeltaR("+mumu_label+",#pi^{+}) %s;#DeltaR("+mumu_label+",#pi^{+})", mode[i].Data()) ; 
     psi2S_DeltaR_pi_h.push_back( new TH1F(name_DeltaR, title_DeltaR, 110, 0, 1.1) ) ; // 160, 0, 1.6
     psi2S_DeltaR_pi_h[i]->SetLineWidth(2) ;
 
     TString name_DeltaR_vs_cosPA = TString::Format("psi2S_DeltaR_pi_vs_Z_cosAlpha_%s", mode[i].Data()) ; name_DeltaR_vs_cosPA.ReplaceAll(".","p") ;
-    TString title_DeltaR_vs_cosPA = TString::Format("#DeltaR(#psi',#pi^{+}) vs Z |cos(#alpha)| %s;Z |cos(#alpha)|;#DeltaR(#psi',#pi^{+})", mode[i].Data()) ; 
+    TString title_DeltaR_vs_cosPA = TString::Format("#DeltaR("+mumu_label+",#pi^{+}) vs Z |cos(#alpha)| %s;Z |cos(#alpha)|;#DeltaR("+mumu_label+",#pi^{+})", mode[i].Data()) ; 
     Z_DeltaR_vs_cosPA.push_back( new TH2F(name_DeltaR_vs_cosPA, title_DeltaR_vs_cosPA, 100, cosAlpha_cut2, Z_cosPA_max, 110, 0, 1.1) ) ;
     
 
@@ -535,7 +689,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
       for (Int_t j = 0; j < abs(pi_pT.size()); ++j) {
 	//TString nameTitle = TString::Format("myMuMuPiMass_pi%.1f_%s", pi_pT[j], mode[i].Data()) ; 
 	TString name = TString::Format("myMuMuPiMass_%s_pi%.1f_DeltaR%.1f", mode[i].Data(), pi_pT[j], deltaR_piPsi2S[k]) ; name.ReplaceAll(".","p") ;
-	TString title = TString::Format("myMuMuPiMass %s with p_{T}(#pi^{+}) > %.1f GeV, #DeltaR(#psi',#pi^{+}) < %.1f;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", mode[i].Data(), pi_pT[j], deltaR_piPsi2S[k] ) ; 
+	TString title = TString::Format("myMuMuPiMass %s with p_{T}(#pi^{+}) > %.1f GeV, #DeltaR("+mumu_label+",#pi^{+}) < %.1f;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", mode[i].Data(), pi_pT[j], deltaR_piPsi2S[k] ) ; 
 	//myMuMuPiMass_piPt[i][j] = new TH1F(nameTitle, nameTitle, MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high);
 	myMuMuPiMass_piPt[i][j].push_back( new TH1F(name, title, MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high) ) ; 
 	myMuMuPiMass_piPt[i][j][k]->SetLineWidth(2) ;
@@ -544,7 +698,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
       for (Int_t j = 0; j < abs(Z_pT.size()); ++j) {
 	//TString nameTitle = TString::Format("myMuMuPiMass_Z%.1f_%s", Z_pT[j], mode[i].Data()) ; 
 	TString name = TString::Format("myMuMuPiMass_%s_Z%.1f_DeltaR%.1f", mode[i].Data(), Z_pT[j], deltaR_piPsi2S[k]) ; name.ReplaceAll(".","p") ;
-	TString title = TString::Format("myMuMuPiMass %s with p_{T}(Z^{+}) > %.1f GeV, #DeltaR(#psi',#pi^{+}) < %.1f;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", mode[i].Data(), Z_pT[j], deltaR_piPsi2S[k] ) ; 
+	TString title = TString::Format("myMuMuPiMass %s with p_{T}(Z^{+}) > %.1f GeV, #DeltaR("+mumu_label+",#pi^{+}) < %.1f;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", mode[i].Data(), Z_pT[j], deltaR_piPsi2S[k] ) ; 
 	//myMuMuPiMass_ZPt[i][j] = new TH1F(nameTitle, nameTitle, MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high); 
 	myMuMuPiMass_ZPt[i][j].push_back( new TH1F(name, title, MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high) ) ; 
 	myMuMuPiMass_ZPt[i][j][k]->SetLineWidth(2) ;
@@ -553,14 +707,14 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
       for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j) {
 	//TString nameTitle = TString::Format("myMuMuPiMass_Z%.1f_%s", Z_pT[j], mode[i].Data()) ; 
 	TString name = TString::Format("myMuMuPiMass_%s_pi%.1f_Z%.1f_DeltaR%.1f", mode[i].Data(), piAndZ_pT[j].first, piAndZ_pT[j].second, deltaR_piPsi2S[k]) ; name.ReplaceAll(".","p") ;
-	TString title = TString::Format("myMuMuPiMass %s with p_{T}(#pi^{+},Z^{+}) > (%.1f,%.1f) GeV, #DeltaR(#psi',#pi^{+}) < %.1f;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", mode[i].Data(), piAndZ_pT[j].first, piAndZ_pT[j].second, deltaR_piPsi2S[k] ) ; 
+	TString title = TString::Format("myMuMuPiMass %s with p_{T}(#pi^{+},Z^{+}) > (%.1f,%.1f) GeV, #DeltaR("+mumu_label+",#pi^{+}) < %.1f;m(#mu^{+}#mu^{-}#pi^{+}) [GeV]", mode[i].Data(), piAndZ_pT[j].first, piAndZ_pT[j].second, deltaR_piPsi2S[k] ) ; 
 	//myMuMuPiMass_piAndZPt[i][j] = new TH1F(nameTitle, nameTitle, MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high); 
 	myMuMuPiMass_piAndZPt[i][j].push_back( new TH1F(name, title, MuMuPiMass_bins,MuMuPiMass_low,MuMuPiMass_high) ) ; 
 	myMuMuPiMass_piAndZPt[i][j][k]->SetLineWidth(2) ;
       }
     } // end DeltaR cuts loop
   } // end mode loop
-  psi2S_DeltaR_pi_vs_mumupiMass_nonpr = new TH2F("psi2S_DeltaR_pi_vs_myMuMuPiMass_nonpr", "#DeltaR(#psi',#pi^{+}) vs m(#mu^{+}#mu^{-}#pi^{+});m(#mu^{+}#mu^{-}#pi^{+}) [GeV];#DeltaR(#psi',#pi^{+})", MuMuPiMass_bins, MuMuPiMass_low, MuMuPiMass_high, 110, 0, 1.1) ;
+  psi2S_DeltaR_pi_vs_mumupiMass_nonpr = new TH2F("psi2S_DeltaR_pi_vs_myMuMuPiMass_nonpr", "#DeltaR("+mumu_label+",#pi^{+}) vs m(#mu^{+}#mu^{-}#pi^{+});m(#mu^{+}#mu^{-}#pi^{+}) [GeV];#DeltaR("+mumu_label+",#pi^{+})", MuMuPiMass_bins, MuMuPiMass_low, MuMuPiMass_high, 110, 0, 1.1) ;
 
   // psi' histos
   // need to initialize varables from .h here since this method is called before Init method in .h
@@ -573,11 +727,11 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
     Float_t bin_low = rapid_min + (rapid_max - rapid_min)/rapid_bins*i ;
     Float_t bin_high = bin_low + (rapid_max - rapid_min)/rapid_bins ;
     
-    TString psiPrimeMass_binName = TString::Format("PsiPrimeMass_bin%d", i+1) ; 
-    TString psiPrimeMass_binTitle = TString::Format("#psi' for y in [%.1f, %.1f];m(#mu^{+}#mu^{-}) [GeV]", bin_low, bin_high) ; 
+    TString psiPrimeMass_binName = TString::Format("MuMuMass_bin%d", i+1) ; 
+    TString psiPrimeMass_binTitle = TString::Format(""+mumu_label+" for y in [%.1f, %.1f];m(#mu^{+}#mu^{-}) [GeV]", bin_low, bin_high) ; 
     psiPrime_rapidBin[i] = new TH1F(psiPrimeMass_binName.Data(), psiPrimeMass_binTitle.Data(), psiPrimeMass_bins, psiPrimeMass_min, psiPrimeMass_max);
 
-    TString psiPrimeMass_2011_binName = TString::Format("PsiPrimeMass_2011_bin%d", i+1) ; 
+    TString psiPrimeMass_2011_binName = TString::Format("MuMuMass_2011_bin%d", i+1) ; 
     psiPrime_2011_rapidBin[i] = new TH1F(psiPrimeMass_2011_binName.Data(), psiPrimeMass_binTitle.Data(), psiPrimeMass_bins, psiPrimeMass_min, psiPrimeMass_max);
   }
   // selection variables
@@ -595,29 +749,52 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   hB0CTau_1B0 = new TH1F("B0CTau_1B0", "c*#tau of single B^{0} candidates;c*#tau(B^{0}_{reco}) [GeV]", 100,0,20) ;
   hB0CTau_1B0matched = new TH1F("B0CTau_1B0matched", "c*#tau of single matched B^{0} candidates;c*#tau(matched B^{0}_{reco}) [GeV]", 100,0,20) ;
   hB0Mass_noTwins_noSignalWinNotTwins = new TH1F("hB0Mass_noTwins_noSignalWinNotTwins", "mass of B^{0} candidates w/o (twins & both B^{0} in signal);m(B^{0}_{reco}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
-  psi2SPiSqMass_vs_KPiSqMass_1B0[0] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0","#psi'#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 2*15,0.,3., 2*24,13.,25.) ;
-  psi2S_helicityAngle = new TH1F("psi2S_helicityAngle","#psi' helicity angle reco;#theta_{#psi'}", 160, -0.03, 3.17) ;
-  cos_psi2S_helicityAngle = new TH1F("cos_psi2S_helicityAngle","cosine of #psi' helicity angle reco;cos #theta_{#psi'}", 102, -1.02, 1.02) ;
-  planesAngle = new TH1F("planesAngle","angle between K#pi and #mu#mu planes reco;#phi(#psi',K*)", 80, -0.03, 3.17) ;
+  psi2SPiSqMass_vs_KPiSqMass_1B0[0] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[0] = new TH2F("psi2SPi_vs_KPi_dalitz_B0constr_1B0",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates with B^{0} mass constraint;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  // angles
+  psi2S_helicityAngle = new TH1F("psi2S_helicityAngle",""+mumu_label+" helicity angle reco;#theta_{"+mumu_label+"}", 160, -0.03, 3.17) ;
+  cos_psi2S_helicityAngle = new TH1F("cos_psi2S_helicityAngle","cosine of "+mumu_label+" helicity angle reco;cos #theta_{"+mumu_label+"}", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngleLabB0peak = new TH1F("cos_psi2S_helicityAngleLabB0peak","cosine of "+mumu_label+" lab helicity angle reco in B^{0} peak;cos #theta_{"+mumu_label+"}", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngleLabB0sb = new TH1F("cos_psi2S_helicityAngleLabB0sb","cosine of "+mumu_label+" lab helicity angle reco in B^{0} sidebands;cos #theta_{"+mumu_label+"}", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngle_rot = new TH1F("cos_psi2S_helicityAngle_rot","cosine of "+mumu_label+" helicity angle with rotation;cos #theta_{"+mumu_label+"} rot", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngle_rotVSnotRot = new TH2F("cos_psi2S_helicityAngle_rotVSnotRot","cosine of "+mumu_label+" helicity angle rot VS notRot;cos #theta_{"+mumu_label+"} not rot;cos #theta_{"+mumu_label+"} rot", cos_bins,-cos_limit,cos_limit, cos_bins,-cos_limit,cos_limit) ;
+  cos_psi2S_helicityAngle_vs_KPiMass = new TH2F("cos_psi2S_helicityAngle_vs_KPi_1B0","cosine of "+mumu_label+" helicity angle vs m(K^{+}#pi^{-}) for single B^{0} candidates;m(K^{+}#pi^{-});cos #theta_{"+mumu_label+"}", 25,0.58,1.62, 42,-1.05,1.05) ;
+  //
+  cos_Kstar_helicityAngle = new TH1F("cos_Kstar_helicityAngle","cosine of K* helicity angle reco;cos #theta_{K*}", cos_bins, -cos_limit, cos_limit) ;
+  cosKstar_vs_cosPsi2S_helicityAngles = new TH2F("cosKstar_vs_cosPsi2S_helicityAngles","cosine of K* vs cosine of "+mumu_label+" helicity angles;cos #theta_{"+mumu_label+"};cos #theta_{K*}", cos_bins,-cos_limit,cos_limit, cos_bins,-cos_limit,cos_limit) ;
+  planesAngle = new TH1F("planesAngle","angle between K#pi and #mu#mu planes reco;#phi("+mumu_label+",K*)", phi_bins, -phi_limit, phi_limit) ; 
+  planesAngle_vs_cos_psi2S_helicityAngle = new TH2F("planesAngle_vs_cos_psi2S_helicityAngle_1B0","K#pi-#mu#mu planes angle vs cos("+mumu_label+" helicity angle) reco;cos #theta_{"+mumu_label+"};#phi("+mumu_label+",K*)", cos_bins,-cos_limit,cos_limit, phi_bins,-phi_limit,phi_limit) ;
+  //
   hB0Mass_2B0twin = new TH1F("B0Mass_2B0twin", "mass of 2 B^{0} twin;m(twin B^{0}_{reco}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high) ;
   // MC analysis
   nMCB0_BT_h = new TH1I("MC_B0_multiplicity_BT", "B^{0} MC multiplicity before trigger;B^{0} multiplicity;Events", 10, -0.5, 9.5) ;
-  psi2SPiSqMass_vs_KPiSqMass_BT_gen = new TH2F("gen_psi2SPi_vs_KPi_dalitz_BT","#psi'#pi^{-} vs K^{+}#pi^{-} gen before trigger;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 2*15,0.,3., 2*24,13.,25.) ;
-  KPiSqMass_vs_psi2SKSqMass_BT_gen = new TH2F("gen_KPi_vs_psi2SK_dalitz_BT","K^{+}#pi^{-} vs #psi'K^{+} gen before trigger;m^{2}(#psi'K^{+});m^{2}(K^{+}#pi^{-})", 2*24,13.,25., 2*15,0.,3.) ;
+  psi2SPiSqMass_vs_KPiSqMass_BT_gen = new TH2F("psi2SPi_vs_KPi_dalitz_BT_gen",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} GEN before trigger;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  KPiSqMass_vs_psi2SKSqMass_BT_gen = new TH2F("gen_KPi_vs_psi2SK_dalitz_BT","K^{+}#pi^{-} vs "+mumu_label+"K^{+} GEN before trigger;m^{2}("+mumu_label+"K^{+});m^{2}(K^{+}#pi^{-})", MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high, KPiMass2_bins,KPiMass2_low,KPiMass2_high) ;
   nMCB0_h = new TH1I("MC_B0_multiplicity", "B^{0} MC multiplicity;B^{0} multiplicity;Events", 10, -0.5, 9.5) ;
   B0_gen_p_h = new TH1F("B0_gen_p", "gen B^{0} p;p [GeV]", 200, 0, 40) ;
   B0_gen_pT_h = new TH1F("B0_gen_pT", "gen B^{0} p_{T};p_{T} [GeV]", 200, 0, 40) ;
-  psi2S_gen_p_h = new TH1F("psi2S_gen_p", "gen #psi' p;p [GeV]", 150, 0, 30) ;
-  psi2S_gen_pT_h = new TH1F("psi2S_gen_pT", "gen #psi' p_{T};p_{T} [GeV]", 150, 0, 30) ;
+  psi2S_gen_p_h = new TH1F("psi2S_gen_p", "gen "+mumu_label+" p;p [GeV]", 150, 0, 30) ;
+  psi2S_gen_pT_h = new TH1F("psi2S_gen_pT", "gen "+mumu_label+" p_{T};p_{T} [GeV]", 150, 0, 30) ;
   K_gen_p_h = new TH1F("K_gen_p", "gen K^{-} p;p [GeV]", 150, 0, 15) ;
   K_gen_pT_h = new TH1F("K_gen_pT", "gen K^{-} p_{T};p_{T} [GeV]", 150, 0, 15) ;
   pi_gen_p_h = new TH1F("pi_gen_p", "gen #pi^{+} p;p [GeV]", 150, 0, 15) ;
   pi_gen_pT_h = new TH1F("pi_gen_pT", "gen #pi^{+} p_{T};p_{T} [GeV]", 150, 0, 15) ;
   //
-  psi2SPiSqMass_vs_KPiSqMass_gen = new TH2F("gen_psi2SPi_vs_KPi_dalitz","#psi'#pi^{-} vs K^{+}#pi^{-} gen;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 2*15,0.,3., 2*24,13.,25.) ;
-  psi2S_helicityAngle_BT_gen = new TH1F("psi2S_helicityAngle_BT_gen","#psi' helicity angle gen;#theta_{#psi'}", 160, -0.03, 3.17) ;
-  cos_psi2S_helicityAngle_BT_gen = new TH1F("cos_psi2S_helicityAngle_BT_gen","cosine of #psi' helicity angle gen;cos #theta_{#psi'}", 102, -1.02, 1.02) ;
-  planesAngle_BT_gen = new TH1F("planesAngle_BT_gen","angle between K#pi and #mu#mu planes gen;#phi(#psi',K*)", 80, -0.03, 3.17) ;
+  psi2SPiSqMass_vs_KPiSqMass_gen = new TH2F("psi2SPi_vs_KPi_dalitz_gen",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} GEN;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  psi2S_vs_mu_pT = new TH2F("psi2S_vs_mu_pT","p_{T}(#psi(2S)) vs minimum p_{T}(#mu);p_{T}(#psi(2S));min p_{T}(#mu)",150, 0, 30, 150, 0, 30);
+  psi2S_helicityAngle_BT_gen = new TH1F("psi2S_helicityAngle_BT_gen",""+mumu_label+" helicity angle GEN;#theta_{"+mumu_label+"}", 160, -0.03, 3.17) ;
+  cos_psi2S_helicityAngle_BT_gen = new TH1F("cos_psi2S_helicityAngle_BT_gen","cosine of "+mumu_label+" helicity angle GEN;cos #theta_{"+mumu_label+"}", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngle_BT_gen_bias = new TH1F("cos_psi2S_helicityAngle_BT_gen_bias","cosine of "+mumu_label+" helicity angle GEN biased;cos #theta_{"+mumu_label+"}", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngle_BT_gen_rot = new TH1F("cos_psi2S_helicityAngle_BT_gen_rot","cosine of "+mumu_label+" helicity angle GEN with rotation;cos #theta_{"+mumu_label+"} rot", cos_bins, -cos_limit, cos_limit) ;
+  cos_psi2S_helicityAngle_BT_gen_rotVSnotRot = new TH2F("cos_psi2S_helicityAngle_BT_gen_rotVSnotRot","cosine of "+mumu_label+" helicity angle GEN rot VS notRot;cos #theta_{"+mumu_label+"} not rot;cos #theta_{"+mumu_label+"} rot", cos_bins,-cos_limit,cos_limit, cos_bins,-cos_limit,cos_limit) ;
+  cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen = new TH2F("cos_psi2S_helicityAngle_vs_psi2SPi_BT_gen","cosine of "+mumu_label+" helicity angle vs m("+mumu_label+"#pi^{-}) GEN;m("+mumu_label+"#pi^{-});cos #theta_{"+mumu_label+"}", 2*24,3.8,4.8, cos_bins,-cos_limit,cos_limit) ;
+  cos_psi2S_helicityAngle_vs_KPiMass_BT_gen = new TH2F("cos_psi2S_helicityAngle_vs_KPi_BT_gen","cosine of "+mumu_label+" helicity angle vs m(K^{+}#pi^{-}) GEN;m(K^{+}#pi^{-});cos #theta_{"+mumu_label+"}", 25,0.58,1.62, 42,-1.05,1.05) ;
+  cos_Kstar_helicityAngle_BT_gen = new TH1F("cos_Kstar_helicityAngle_BT_gen","cosine of K* helicity angle GEN;cos #theta_{K*}", cos_bins, -cos_limit, cos_limit) ;
+  cos_Kstar_helicityAngle_BT_gen_fromMasses = new TH1F("cos_Kstar_helicityAngle_BT_gen_fromMasses","cosine of K* helicity angle GEN from masses;cos #theta_{K*}", cos_bins, -cos_limit, cos_limit) ;
+  cosKstar_vs_cosPsi2S_helicityAngles_BT_gen = new TH2F("cosKstar_vs_cosPsi2S_helicityAngles_BT_gen","cosine of K* vs cosine of "+mumu_label+" helicity angles GEN;cos #theta_{"+mumu_label+"};cos #theta_{K*}", cos_bins,-cos_limit,cos_limit, cos_bins,-cos_limit,cos_limit) ;
+  planesAngle_BT_gen = new TH1F("planesAngle_BT_gen","angle between K#pi and #mu#mu planes GEN;#phi("+mumu_label+",K*)", phi_bins, -phi_limit, phi_limit) ;
+  planesAngle_BT_gen_bias = new TH1F("planesAngle_BT_gen_bias","angle between K#pi and #mu#mu planes GEN biased;#phi("+mumu_label+",K*)", phi_bins, -phi_limit, phi_limit) ;
+  planesAngle_vs_cos_psi2S_helicityAngle_BT_gen = new TH2F("planesAngle_vs_cos_psi2S_helicityAngle_BT_gen","K#pi-#mu#mu planes angle vs cos("+mumu_label+" helicity angle) GEN;cos #theta_{"+mumu_label+"};#phi("+mumu_label+",K*)", cos_bins,-cos_limit,cos_limit, phi_bins,-phi_limit,phi_limit) ;
   //
   B0CosAlpha_2Dvs3D[0] = new TH2F("PV_2Dvs3D", "B^{0}_cos(#alpha)_3D vs B^{0}_cos(#alpha)_2D wrt standard PV;B^{0} cos(#alpha) 2D;B^{0} cos(#alpha) 3D", 2000, 0.8, 1., 2000, 0.8, 1.) ;
   B0CosAlpha_2Dvs3D[1] = new TH2F("B0CosAlpha2D_vs_B0CosAlpha3D", "best B^{0}_cos(#alpha)_3D vs best B^{0}_cos(#alpha)_2D wrt standard PV;B^{0} cos(#alpha) 2D;B^{0} cos(#alpha) 3D", 2000, 0.8, 1., 2000, 0.8, 1.) ;
@@ -640,7 +817,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
 
   for (Int_t j=0; j<2; j++) {
     for (Int_t i=0; i<3; i++) {
-      priVtx_delta[j][i] = new TH1F(TString::Format("priVtx_delta%s%s", XYZ[i].Data(), zoom[j].Data()), TString::Format("#Delta%s(interaction PV, gen B^{0} PV);#Delta%s [cm]", xyz[i].Data(), xyz[i].Data()), nBins[j][i]*2, -binHigh_xyz[j][i]/10, binHigh_xyz[j][i]/10) ;
+      priVtx_delta[j][i] = new TH1F(TString::Format("priVtx_delta%s%s", XYZ[i].Data(), zoom[j].Data()), TString::Format("#Delta%s(interaction PV, GEN B^{0} PV);#Delta%s [cm]", xyz[i].Data(), xyz[i].Data()), nBins[j][i]*2, -binHigh_xyz[j][i]/10, binHigh_xyz[j][i]/10) ;
       priVtx_delta[j][i]->SetLineWidth(2) ; //priVtx_delta[j][i]->SetLineColor(1) ; 
       priVtx_B0_delta[j][i] = new TH1F(TString::Format("priVtx_B0_delta%s%s", XYZ[i].Data(), zoom[j].Data()), TString::Format("#Delta%s(interaction PV, standard PV);#Delta%s [cm]", xyz[i].Data(), xyz[i].Data()), nBins[j][i], -binHigh_xyz[j][i], binHigh_xyz[j][i]) ;
       priVtx_B0_delta[j][i]->SetLineColor(1) ; priVtx_B0_delta[j][i]->SetLineWidth(2) ;
@@ -666,11 +843,11 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
       dz_priB0Less_priB0LessB0CosAlpha[k][j] = new TH1F(TString::Format("priVtxB0Less_priVtxB0LessB0CosAlpha%s_deltaZ%s", dim[k].Data(), zoom[j].Data()), TString::Format("#Deltaz(best B^{0}_lessPV, best B^{0}_cos(#alpha_{%s}) B^{0}_lessPV);#Deltaz [cm]", dim[k].Data()), nBins[j][2], -30, 30) ;
     }
   }
-  priVtx_deltaX_test = new TH1F("priVtx_deltaX_test", "#Deltax(interaction PV, gen B^{0} PV) after #Deltaz matching;#Deltax [cm]", 100, -0.02, 0.02) ;
-  priVtx_deltaY_test = new TH1F("priVtx_deltaY_test", "#Deltay(interaction PV, gen B^{0} PV) after #Deltaz matching;#Deltay [cm]", 100, -0.02, 0.02) ;
+  priVtx_deltaX_test = new TH1F("priVtx_deltaX_test", "#Deltax(interaction PV, GEN B^{0} PV) after #Deltaz matching;#Deltax [cm]", 100, -0.02, 0.02) ;
+  priVtx_deltaY_test = new TH1F("priVtx_deltaY_test", "#Deltay(interaction PV, GEN B^{0} PV) after #Deltaz matching;#Deltay [cm]", 100, -0.02, 0.02) ;
   //
   B0_gen_mass_h = new TH1F("B0_gen_mass","gen B^{0} mass;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", MuMuKPiMass_bins, MuMuKPiMass_low, MuMuKPiMass_high);
-  piCh_vs_KCh_gen = new TH2F("gen_piCh_vs_KCh","gen K charge vs gen #pi charge;#pi charge;K charge", 5,-2.5,2.5, 5,-2.5,2.5) ;
+  piCh_vs_KCh_gen = new TH2F("gen_piCh_vs_KCh","gen K charge vs GEN #pi charge;#pi charge;K charge", 5,-2.5,2.5, 5,-2.5,2.5) ;
   hMCDeltaRK_fromTwins = new TH1F("MCDeltaRK_fromTwins", "#DeltaR for kaon from B^{0} twins;#DeltaR(K_{gen},K_{reco})",100, 0, 1);
   hMCPtRecoVsPtTrueK_fromTwins = new TH2F("MCPtRecoVsPtTrueK_fromTwins", "p_{T}(K_{reco}) vs p_{T}(K_{gen}) from B^{0} twins;p_{T}(K_{gen}) [GeV];p_{T}(K_{reco}) [GeV]", 80,0.,40., 80,0.,40.);
   hMCDeltaPtK_fromTwins = new TH1F("MCDeltaPtK_fromTwins", "#Deltap_{T}/p_{T} for K from B^{0} twins;|p_{T}(K^{+}_{gen}) - p_{T}(K^{+}_{reco})| / p_{T}(K^{+}_{gen})", 250,0,0.5) ;
@@ -678,7 +855,8 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   hMCpTTrueK_fromTwins = new TH1F("MCpTTrueK_fromTwins", "matched K p_{T} from B^{0} twins;p_{T}(K_{reco}) [GeV]", 150, 0, 15);
   //
   nB0ACInMC_h = new TH1I("B0_multiplicity_ACInMC", "B0 multiplicity AC in MC;B^{0} multiplicity;Events", 10, -0.5, 9.5) ;
-  psi2SPiSqMass_vs_KPiSqMass_1B0[1] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0_signalWin","#psi'#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates in signal;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 15,0.,3., 2*24,13.,25.) ;
+  psi2SPiSqMass_vs_KPiSqMass_1B0[1] = new TH2F("psi2SPi_vs_KPi_dalitz_1B0_signalWin",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates in signal;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
+  psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[1] = new TH2F("psi2SPi_vs_KPi_dalitz_B0constr_1B0_signalWin",""+mumu_label+"#pi^{-} vs K^{+}#pi^{-} of single B^{0} candidates in signal with B^{0} mass constraint;m^{2}(K^{+}#pi^{-});m^{2}("+mumu_label+"#pi^{-})", KPiMass2_bins,KPiMass2_low,KPiMass2_high, MuMuPiMass2_bins,MuMuPiMass2_low,MuMuPiMass2_high) ;
   hMCDeltaR_1B0 = new TH1F("MCDeltaR_1B0", "#DeltaR for 1 B^{0} candidates;#DeltaR(B^{0}_{gen},B^{0}_{reco})", 200, 0, 0.2) ;
   hMCDeltaPt_1B0 = new TH1F("MCDeltaPt_1B0", "#Deltap_{T}/p_{T} for 1 B^{0} candidates;|p_{T}(B^{0}_{gen}) - p_{T}(B^{0}_{reco})| / p_{T}(B^{0}_{gen})", 100, 0, 1) ;
   hMCTruthMatching_1B0[0][0] = new TH1I("MCTruthMatching_1B0", "MC matching for 1 B^{0} candidate;n(B^{0} matched);Events", 4, -1.5, 2.5) ;
@@ -792,9 +970,9 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   SpectrumFromBPlusCtaued = new TH1F("SpectrumFromBPlusCtaued", "SpectrumFromBPlusCtaued",120,3.6,4.0);
   
   // mumu matching
-  hMCDeltaRMuMuMatch = new TH1F("MCDeltaRMuMuMatch", "#DeltaR for #psi' matching;#DeltaR(#psi'_{gen},#psi'_{reco})",100, 0, 0.1);
-  hMCPtRecoVsPtTrueMuMuMatch = new TH2F("MCPtRecoVsPtTrueMuMuMatch", "p_{T}(#psi'_{reco}) vs p_{T}(#psi'_{gen});p_{T}(#psi'_{gen}) [GeV];p_{T}(#psi'_{reco}) [GeV]", 80,0.,40., 80,0.,40.);
-  hMCpTTrueMuMuMatch = new TH1F("MCpTTrueMuMuMatch", "matched #psi' p_{T};p_{T} [GeV]", 200, 0, 20);
+  hMCDeltaRMuMuMatch = new TH1F("MCDeltaRMuMuMatch", "#DeltaR for "+mumu_label+" matching;#DeltaR("+mumu_label+"_{gen},"+mumu_label+"_{reco})",100, 0, 0.1);
+  hMCPtRecoVsPtTrueMuMuMatch = new TH2F("MCPtRecoVsPtTrueMuMuMatch", "p_{T}("+mumu_label+"_{reco}) vs p_{T}("+mumu_label+"_{gen});p_{T}("+mumu_label+"_{gen}) [GeV];p_{T}("+mumu_label+"_{reco}) [GeV]", 80,0.,40., 80,0.,40.);
+  hMCpTTrueMuMuMatch = new TH1F("MCpTTrueMuMuMatch", "matched "+mumu_label+" p_{T};p_{T} [GeV]", 200, 0, 20);
   // pion matching
   hMCDeltaRPiMatch = new TH1F("MCDeltaRPiMatch", "#DeltaR for pion matching;#DeltaR(#pi_{gen},#pi_{reco})",100, 0, 1);
   hMCPtRecoVsPtTruePiMatch = new TH2F("MCPtRecoVsPtTruePiMatch", "p_{T}(#pi_{reco}) vs p_{T}(#pi_{gen});p_{T}(#pi_{gen}) [GeV];p_{T}(#pi_{reco}) [GeV]", 80,0.,40., 80,0.,40.);
@@ -838,15 +1016,15 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   //Z_vs_pi_pT_h[2] = new TH2F("Z_vs_pi_pT_quasipr", "Z vs #pi^{+} p_{T} quasi prompt", 200, 0, 40, 400, 0, 80) ;
   //Z_vs_pi_pT_h[3] = new TH2F("Z_vs_pi_pT_nonpr", "Z vs #pi^{+} p_{T} non prompt", 200, 0, 40, 400, 0, 80) ;
   // psi(2S) variables
-  psi2S_VtxCL_h = new TH1F("psi2S_vertexCL", "#psi' vertex CL;vtxCL(#psi')", 100, 0, 0.1) ;
-  psi2S_VtxCL_HLT5_h = new TH1F("psi2S_vertexCL_HLT5", "#psi' vertex CL HLT5;vtxCL(#psi')", 100, 0, 0.1) ;
-  psi2S_VtxCL_1_h = new TH1F("psi2S_vertexCL_1", "first #psi' vertex CL;vtxCL(1^{st}#psi')", 250, 0, 1) ;
-  psi2S_VtxCL_2_h = new TH1F("psi2S_vertexCL_2", "second #psi' vertex CL;vtxCL(2^{nd}#psi')", 250, 0, 1) ;
-  psi2S_VtxCL_diff_h = new TH1F("psi2S_vertexCL_diff", "|1^{st} - 2^{nd}| #psi' vertex CL;vtxCL(1^{st}#psi') - vtxCL(2^{nd}#psi')", 250, 0, 1) ;
-  psi2SMuonTrigMatch_h = new TH1I("psi2S_MuonTrigMatch", "#psi' trigger matching", 6, -2.5, 3.5) ;
-  psi2S_y_h = new TH1F("psi2S_y", "#psi' y;y", 66, -3.3, 3.3) ;
-  psi2S_HLT5_yMu_h = new TH1F("psi2S_HLT5_yMu", "#psi' HLT5 mass for y(#mu^{#pm}) > 2.4;m(#mu^{+}#mu^{-}) [GeV];Candidates / 5 MeV", MuMuMass_bins, MuMuMass_low, MuMuMass_high);
-  psi2S_pT_h = new TH1F("psi2S_pT", "#psi' p_{T};p_{T} [GeV]", 200, 0, 20) ;
+  psi2S_VtxCL_h = new TH1F("psi2S_vertexCL", ""+mumu_label+" vertex CL;vtxCL("+mumu_label+")", 100, 0, 0.1) ;
+  psi2S_VtxCL_HLT5_h = new TH1F("psi2S_vertexCL_HLT5", ""+mumu_label+" vertex CL HLT5;vtxCL("+mumu_label+")", 100, 0, 0.1) ;
+  psi2S_VtxCL_1_h = new TH1F("psi2S_vertexCL_1", "first "+mumu_label+" vertex CL;vtxCL(1^{st}"+mumu_label+")", 250, 0, 1) ;
+  psi2S_VtxCL_2_h = new TH1F("psi2S_vertexCL_2", "second "+mumu_label+" vertex CL;vtxCL(2^{nd}"+mumu_label+")", 250, 0, 1) ;
+  psi2S_VtxCL_diff_h = new TH1F("psi2S_vertexCL_diff", "|1^{st} - 2^{nd}| "+mumu_label+" vertex CL;vtxCL(1^{st}"+mumu_label+") - vtxCL(2^{nd}"+mumu_label+")", 250, 0, 1) ;
+  psi2SMuonTrigMatch_h = new TH1I("psi2S_MuonTrigMatch", ""+mumu_label+" trigger matching", 6, -2.5, 3.5) ;
+  psi2S_y_h = new TH1F("psi2S_y", ""+mumu_label+" y;y", 66, -3.3, 3.3) ;
+  psi2S_HLT5_yMu_h = new TH1F("psi2S_HLT5_yMu", ""+mumu_label+" HLT5 mass for y(#mu^{#pm}) > 2.4;"+XY_titles, MuMuMass_bins,MuMuMass_low,MuMuMass_high);
+  psi2S_pT_h = new TH1F("psi2S_pT", ""+mumu_label+" p_{T};p_{T} [GeV]", 200, 0, 20) ;
   psi2S_2011_pT.push_back( 7. ) ; psi2S_2011_pT.push_back( 9. ) ; psi2S_2011_pT.push_back( 11. ) ;
   psi2S_2011v_pT_h.resize(psi2S_2011_pT.size()) ; myInclusiveMuMuMass_2011_HLT.resize(psi2S_2011_pT.size()) ;
   HLT_v.resize(psi2S_2011_pT.size()) ;
@@ -856,31 +1034,31 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
 
   for (Int_t i = 0; i < abs(psi2S_2011_pT.size()); ++i) {
     TString name = TString::Format("psi2S_2011_HLT_%.0f", psi2S_2011_pT[i]) ; 
-    TString title = TString::Format("HLT_Dimuon%.0f_PsiPrime;p_{T} [GeV]", psi2S_2011_pT[i]) ;
+    TString title = TString::Format("HLT_Dimuon%.0f_MuMu;p_{T} [GeV]", psi2S_2011_pT[i]) ;
     psi2S_2011_pT_h.push_back( new TH1F(name, title, 200, 0, 20) ) ;
 
     for (Int_t j = 0; j < abs(HLT_v[i].size()); ++j) {
       TString namev = TString::Format("psi2S_2011_HLT_%.0f_%s", psi2S_2011_pT[i], HLT_v[i][j].Data()) ; 
-      TString titlev = TString::Format("HLT2011_Dimuon%.0f_PsiPrime_%s;p_{T} [GeV]", psi2S_2011_pT[i], HLT_v[i][j].Data()) ;
+      TString titlev = TString::Format("HLT2011_Dimuon%.0f_MuMu_%s;p_{T} [GeV]", psi2S_2011_pT[i], HLT_v[i][j].Data()) ;
       psi2S_2011v_pT_h[i].push_back( new TH1F(namev, titlev, 200, 0, 20) ) ;
 
       TString nameMass = TString::Format("myInclusiveMuMuMass_2011_HLT_%.0f_%s", psi2S_2011_pT[i], HLT_v[i][j].Data() ) ; 
-      TString titleMass = TString::Format("HLT2011_Dimuon%.0f_PsiPrime_%s;m(#mu^{+}#mu^{-}) [GeV]", psi2S_2011_pT[i], HLT_v[i][j].Data() ) ;
-      myInclusiveMuMuMass_2011_HLT[i].push_back( new TH1F(nameMass, titleMass, MuMuMass_bins, MuMuMass_low, MuMuMass_high) ) ;
+      TString titleMass = TString::Format("HLT2011_Dimuon%.0f_MuMu_%s;m(#mu^{+}#mu^{-}) [GeV]", psi2S_2011_pT[i], HLT_v[i][j].Data() ) ;
+      myInclusiveMuMuMass_2011_HLT[i].push_back( new TH1F(nameMass, titleMass, MuMuMass_bins,MuMuMass_low,MuMuMass_high) ) ;
     }
   }
 
   /*
-  psi2S_DeltaR_pi_h = new TH1F("psi2S_DeltaR_pi", "#DeltaR(#psi', #pi^{+})", 160, 0, 1.6) ;
-  psi2S_DeltaR_pi_pr_h = new TH1F("psi2S_DeltaR_pi_pr", "#DeltaR(#psi', #pi^{+}) prompt", 160, 0, 1.6) ;
-  psi2S_DeltaR_pi_quasipr_h = new TH1F("psi2S_DeltaR_pi_quasipr", "#DeltaR(#psi', #pi^{+}) quasi prompt", 160, 0, 1.6) ;
-  psi2S_DeltaR_pi_nonpr_h = new TH1F("psi2S_DeltaR_pi_nonpr", "#DeltaR(#psi', #pi^{+}) non prompt", 160, 0, 1.6) ;
+  psi2S_DeltaR_pi_h = new TH1F("psi2S_DeltaR_pi", "#DeltaR("+mumu_label+", #pi^{+})", 160, 0, 1.6) ;
+  psi2S_DeltaR_pi_pr_h = new TH1F("psi2S_DeltaR_pi_pr", "#DeltaR("+mumu_label+", #pi^{+}) prompt", 160, 0, 1.6) ;
+  psi2S_DeltaR_pi_quasipr_h = new TH1F("psi2S_DeltaR_pi_quasipr", "#DeltaR("+mumu_label+", #pi^{+}) quasi prompt", 160, 0, 1.6) ;
+  psi2S_DeltaR_pi_nonpr_h = new TH1F("psi2S_DeltaR_pi_nonpr", "#DeltaR("+mumu_label+", #pi^{+}) non prompt", 160, 0, 1.6) ;
   */
-  //psi2S_pointingAngle = new TH1F("psi2S_cosAlpha", "#psi' cos(#alpha)", 210, -1.05, 1.05) ; // empty variable
-  //psi2S_pointingAngle_sign = new TH1F("psi2S_cosAlpha_sign", "#psi' cos(#alpha)", 210, -1.05, 1.05) ; // empty variable
-  //psi2S_pointingAngle_sb = new TH1F("psi2S_cosAlpha_sb", "#psi' cos(#alpha)", 210, -1.05, 1.05) ; // empty variable
-  pT_vs_y_psi2S_h = new TH2F("psi2S_pT_vs_y", "#psi' p_{T} vs y;y;p_{T} [GeV]", 88, -2.2, 2.2, 200, 0, 100) ;
-  nPsi2S_h  = new TH1I("psi2S_multiplicity", "#psi' multiplicity;Candidates/Event;Events", 5, 0.5, 5.5) ;
+  //psi2S_pointingAngle = new TH1F("psi2S_cosAlpha", ""+mumu_label+" cos(#alpha)", 210, -1.05, 1.05) ; // empty variable
+  //psi2S_pointingAngle_sign = new TH1F("psi2S_cosAlpha_sign", ""+mumu_label+" cos(#alpha)", 210, -1.05, 1.05) ; // empty variable
+  //psi2S_pointingAngle_sb = new TH1F("psi2S_cosAlpha_sb", ""+mumu_label+" cos(#alpha)", 210, -1.05, 1.05) ; // empty variable
+  pT_vs_y_psi2S_h = new TH2F("psi2S_pT_vs_y", ""+mumu_label+" p_{T} vs y;y;p_{T} [GeV]", 88, -2.2, 2.2, 200, 0, 100) ;
+  nPsi2S_h  = new TH1I("psi2S_multiplicity", ""+mumu_label+" multiplicity;Candidates/Event;Events", 6, -0.5, 5.5) ;
   // muons variables
   mu_px = new TH1F("mu_px", "#mu p_{x};p_{x} [GeV]", 200, -10, 10) ;
   mu_px_psi2S = new TH1F("mu_px_psi2S", "#mu p_{x};p_{x} [GeV]", 200, -10, 10) ;
@@ -967,6 +1145,108 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   cout <<"running Process with priVtxsInfo = " <<(priVtxsInfo ? "true" : "false") <<endl ;
   */
   //////////////////////////////// put the code here
+
+  TString option = GetOption();
+  //cout <<"Running Process with option \"" <<option <<"\" and MC = \"" <<MC <<"\""  <<endl;
+  //////////////////////////////////////// EXCLUSIVE KPi generated
+  Float_t Bmass_tolerance = 0.001; // B0_mass = 5.27958
+  TLorentzVector KPip4_gen, PsiPip4_gen; Double_t cosTheta_psi_gen=9., phi_gen=9.;
+  if ( MC ) {
+    nMCB0_BT_h->Fill( nMCB0 ) ;
+    for (Int_t myMCB0Idx = 0; myMCB0Idx < abs(nMCB0); myMCB0Idx++) { // only 0 and 1 candidate
+      TLorentzVector B0p4_gen, Jp4_gen, muPp4_gen, muMp4_gen, Kp4_gen, Pip4_gen ;
+      TLorentzVector positiveTrk, negativeTrk;
+      //      
+      Float_t K_E_gen = sqrt( pow((*MCkaonPx)[myMCB0Idx], 2) + pow((*MCkaonPy)[myMCB0Idx], 2) + pow((*MCkaonPz)[myMCB0Idx], 2) + pow(kaonCh_mass, 2) ) ;
+      Float_t Pi_E_gen = sqrt( pow((*MCpionPx)[myMCB0Idx], 2) + pow((*MCpionPy)[myMCB0Idx], 2) + pow((*MCpionPz)[myMCB0Idx], 2) + pow(pionCh_mass, 2) ) ;
+      Float_t muP_E_gen = sqrt( pow((*MCmupPx)[myMCB0Idx], 2) + pow((*MCmupPy)[myMCB0Idx], 2) + pow((*MCmupPz)[myMCB0Idx], 2) + pow(muon_mass, 2) ) ;
+      Float_t muM_E_gen = sqrt( pow((*MCmumPx)[myMCB0Idx], 2) + pow((*MCmumPy)[myMCB0Idx], 2) + pow((*MCmumPz)[myMCB0Idx], 2) + pow(muon_mass, 2) ) ;
+      //Float_t J_E_gen = sqrt( pow((*MCpsi2SPx)[myMCB0Idx], 2) + pow((*MCpsi2SPy)[myMCB0Idx], 2) + pow((*MCpsi2SPz)[myMCB0Idx], 2) + pow(mumu_mass, 2) ) ;
+      //
+      muPp4_gen.SetPxPyPzE( (*MCmupPx)[myMCB0Idx], (*MCmupPy)[myMCB0Idx], (*MCmupPz)[myMCB0Idx], muP_E_gen ) ;
+      muMp4_gen.SetPxPyPzE( (*MCmumPx)[myMCB0Idx], (*MCmumPy)[myMCB0Idx], (*MCmumPz)[myMCB0Idx], muM_E_gen ) ;
+      //Jp4_gen.SetPxPyPzE( (*MCpsi2SPx)[myMCB0Idx], (*MCpsi2SPy)[myMCB0Idx], (*MCpsi2SPz)[myMCB0Idx], J_E_gen ) ; replaced by:
+      Jp4_gen = muPp4_gen + muMp4_gen;
+      Kp4_gen.SetPxPyPzE( (*MCkaonPx)[myMCB0Idx], (*MCkaonPy)[myMCB0Idx], (*MCkaonPz)[myMCB0Idx], K_E_gen ) ;
+      Pip4_gen.SetPxPyPzE( (*MCpionPx)[myMCB0Idx], (*MCpionPy)[myMCB0Idx], (*MCpionPz)[myMCB0Idx], Pi_E_gen ) ;
+      B0p4_gen = Jp4_gen + Pip4_gen + Kp4_gen ;
+      if ( fabs(B0p4_gen.M() - B0_mass) > Bmass_tolerance) continue;
+      //B0p4_gen = Jp4_gen + Kp4_gen ; // for B+ -> J/psi K+ test
+      KPip4_gen = Pip4_gen + Kp4_gen ;
+      PsiPip4_gen = Jp4_gen + Pip4_gen ;
+      /*
+      B0_gen_p_h->Fill( B0p4_gen.P() ) ; B0_gen_pT_h->Fill( B0p4_gen.Pt() ) ;
+      psi2S_gen_p_h->Fill( Jp4_gen.P() ) ; psi2S_gen_pT_h->Fill( Jp4_gen.Pt() ) ;
+      K_gen_p_h->Fill( Kp4_gen.P() ) ; K_gen_pT_h->Fill( Kp4_gen.Pt() ) ;
+      pi_gen_p_h->Fill( Pip4_gen.P() ) ; pi_gen_pT_h->Fill( Pip4_gen.Pt() ) ;
+      */
+      Bool_t biasCuts = kFALSE;
+      if (muPp4_gen.Pt() > 1  &&  muMp4_gen.Pt() > 1  &&  Kp4_gen.Pt() > 0.4  &&  Pip4_gen.Pt() > 0.4)
+	if (fabs(muPp4_gen.Eta()) < 2.5  &&  fabs(muMp4_gen.Eta()) < 2.5  &&  fabs(Kp4_gen.Eta()) < 2.5  &&  fabs(Pip4_gen.Eta()) < 2.5)
+	  biasCuts = kTRUE;
+
+      //mumuMass->Fill( (muPp4_gen + muMp4_gen).M() ) ;
+      psi2SPiSqMass_vs_KPiSqMass_BT_gen->Fill( KPip4_gen.M2(), PsiPip4_gen.M2() );
+      KPiSqMass_vs_psi2SKSqMass_BT_gen->Fill( (Jp4_gen + Kp4_gen).M2(), KPip4_gen.M2() );
+      psi2S_vs_mu_pT->Fill(Jp4_gen.Pt(), TMath::Min(muPp4_gen.Pt(),muMp4_gen.Pt())) ;
+      //
+      // gen angle variables
+      //cout <<"\nBefore filling GEN angle variables" <<endl;
+      // psi helicity angle
+      //Double_t theta_psi_gen = getMumuHelicityAngle(B0p4_gen, KPip4_gen, Jp4_gen, muMp4_gen);
+      //Double_t theta_psi_gen = getAleMumuHelicityAngle(B0p4_gen, KPip4_gen, Jp4_gen, muMp4_gen);
+      Double_t theta_psi_gen = GetThetaMuMu(B0p4_gen, Jp4_gen, muPp4_gen, beam_energy, mumu_mass, muon_mass) ;
+      cosTheta_psi_gen = TMath::Cos(theta_psi_gen);
+      psi2S_helicityAngle_BT_gen->Fill( theta_psi_gen ) ; 
+      cos_psi2S_helicityAngle_BT_gen->Fill( cosTheta_psi_gen ) ;
+
+      Double_t theta_psi_gen_rot = GetThetaMuMu_rot(B0p4_gen, Jp4_gen, muPp4_gen, beam_energy, mumu_mass, muon_mass) ;
+      cos_psi2S_helicityAngle_BT_gen_rot->Fill( TMath::Cos(theta_psi_gen_rot) ) ; 
+      cos_psi2S_helicityAngle_BT_gen_rotVSnotRot->Fill( cosTheta_psi_gen, TMath::Cos(theta_psi_gen_rot) ) ;
+      //
+      cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen->Fill(PsiPip4_gen.M(), cosTheta_psi_gen) ;
+      cos_psi2S_helicityAngle_vs_KPiMass_BT_gen->Fill(KPip4_gen.M(), cosTheta_psi_gen) ;
+      //
+      //cout <<"\nBefore filling K* helicity angle variables" <<endl;
+      // K* helicity angle
+      if ((*MCpionCh)[myMCB0Idx] > 0) {
+	positiveTrk = Pip4_gen ; negativeTrk = Kp4_gen ;
+      } else if ((*MCpionCh)[myMCB0Idx] < 0) {
+	positiveTrk = Kp4_gen ; negativeTrk = Pip4_gen ;
+      } else {
+	Warning("Terminate", TString::Format("(*MCpionCh)[myMCB0Idx] for myMCB0Idx = %d is neither positive nor negative!\nCheck your analyzer",myMCB0Idx));
+	return kFALSE;
+      }
+      Double_t theta_Kstar_gen = GetThetaMuMu(B0p4_gen, KPip4_gen, Kp4_gen, beam_energy, (Kp4_gen+Pip4_gen).M(), Kp4_gen.M()) ;
+      Double_t cosTheta_Kstar_gen = TMath::Cos(theta_Kstar_gen);
+      cos_Kstar_helicityAngle_BT_gen->Fill( cosTheta_Kstar_gen ) ;
+      //cos_Kstar_helicityAngle_BT_gen_fromMasses->Fill( GetCosThetaMuMu_fromMasses(pow(B0_mass,2), pow(mumu_mass,2), pow(Kp4_gen.M(),2), pow(Pip4_gen.M(),2), (Kp4_gen+Pip4_gen).M2(), (Jp4_gen+Pip4_gen).M2()) ) ;
+      cos_Kstar_helicityAngle_BT_gen_fromMasses->Fill( cosTheta_FromMasses((Kp4_gen+Pip4_gen).M2(), (Jp4_gen+Pip4_gen).M2(), Jp4_gen.M2(), B0p4_gen.M2(), Kp4_gen.M2(), Pip4_gen.M2() ) ) ;
+      //
+      cosKstar_vs_cosPsi2S_helicityAngles_BT_gen->Fill( cosTheta_psi_gen, cosTheta_Kstar_gen) ;
+
+      // planes angle
+      //cout <<"\nBefore filling GEN planes angle variables" <<endl;
+      phi_gen = getPlanesAngle(B0p4_gen, Kp4_gen, Pip4_gen, muMp4_gen, muPp4_gen) ;
+      //Double_t phi_gen = getBellePlanesAngle(B0p4_gen, Kp4_gen, Pip4_gen, muMp4_gen, muPp4_gen) ;
+      planesAngle_BT_gen->Fill( phi_gen ) ;
+      planesAngle_vs_cos_psi2S_helicityAngle_BT_gen->Fill( cosTheta_psi_gen, phi_gen ) ;
+      if (biasCuts) {
+	cos_psi2S_helicityAngle_BT_gen_bias->Fill( cosTheta_psi_gen ) ;
+	planesAngle_BT_gen_bias->Fill( phi_gen ) ;
+      }
+
+      //cout <<"\nBefore filling TNtuple" <<endl;
+      // respect TNtuple structure: "runNum : evtNum : B0_mass : KPi_mass : Jpsi_mass : JpsiPi_mass : B0_3mom : KPi_3mom : Jpsi_3mom : K_3mom : Pi_3mom : Theta_Kstar : Theta_Jpsi : Phi"
+      //Double_t NT_var[] = {runNum, evtNum, B0p4_gen.M(), KPip4_gen.M(), Jp4_gen.M(), PsiPip4_gen.M(), B0p4_gen.P(), KPip4_gen.P(), Jp4_gen.P(), Kp4_gen.P(), Pip4_gen.P(), theta_KPip4_gen, theta_psi_gen, phi_gen};
+      // respect TNtuple structure: "runNum : evtNum : B0beauty : massKPi : massMuMuPi : cosMuMu : phi"
+      Double_t NT_var[] = {(Float_t)runNum, (Float_t)evtNum, (*MCkaonCh)[myMCB0Idx] > 0 ? +1. : -1., KPip4_gen.M(), PsiPip4_gen.M(), cosTheta_psi_gen, phi_gen};
+      _nt->Fill( NT_var );
+    }
+  }
+  //cout <<"\nEnd of GEN block" <<endl;
+  //return kTRUE;
+
   Bool_t year2011 = false, year2012 = false;
   /////////////////////// HLT
   // 2011
@@ -978,6 +1258,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   Bool_t HLT_2011 = false ;
   //
   // 2012
+  // psi(2S)
   Bool_t HLT_0_v3 = false, HLT_0_v4 = false, HLT_0_v5 = false, HLT_0_v6 = false ;
   Bool_t HLT_5_v3 = false, HLT_5_v4 = false, HLT_5_v5 = false, HLT_5_v6 = false ;
   Bool_t HLT_7_v1 = false, HLT_7_v2 = false, HLT_7_v3 = false ;
@@ -985,8 +1266,10 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   //
   Bool_t HLT_3p5_v3 = false, HLT_3p5_v4 = false, HLT_3p5_v5 = false, HLT_3p5_v6 = false ;
   //
-  Bool_t HLT_5_vAll = false, HLT_7_vAll = false, HLT_3p5_vAll = false ;
-  
+  Bool_t HLT_5_vAll = false, HLT_7_vAll = false, HLT_3p5_vAll = false, HLT_8_vAll = false ;
+  //
+  // J/psi
+  Bool_t HLT_8_v3 = false; Bool_t HLT_8_v4 = false; Bool_t HLT_8_v5 = false; Bool_t HLT_8_v6 = false; Bool_t HLT_8_v7 = false;
 
   for (Int_t i = 0; i != abs(TrigRes->size()); ++i)
     {
@@ -1011,6 +1294,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       if ( MC || (runNum >= 190645  &&  runNum <= 208686) ) {
 	year2012 = true ;
 	if (!HLT_Displaced) {
+	  // psi(2S)
 	  //--0
 	  if ( TrigNames->at(i).find("HLT_Dimuon0_PsiPrime_v3") != string::npos  &&  TrigRes->at(i) == 1 ) HLT_0_v3 = true;
 	  if ( TrigNames->at(i).find("HLT_Dimuon0_PsiPrime_v4") != string::npos  &&  TrigRes->at(i) == 1 ) HLT_0_v4 = true;
@@ -1031,6 +1315,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	  if ( TrigNames->at(i).find("HLT_Dimuon7_PsiPrime_v2") != string::npos  &&  TrigRes->at(i) == 1 ) HLT_7_v2 = true;
 	  if ( TrigNames->at(i).find("HLT_Dimuon7_PsiPrime_v3") != string::npos  &&  TrigRes->at(i) == 1 ) HLT_7_v3 = true;
 	  //
+	  // J/psi
+	  if ( TrigNames->at(i).find("HLT_Dimuon8_Jpsi_v3") != string::npos  &&  TrigRes->at(i) == 1) HLT_8_v3 = true;
+	  if ( TrigNames->at(i).find("HLT_Dimuon8_Jpsi_v4") != string::npos  &&  TrigRes->at(i) == 1) HLT_8_v4 = true;
+	  if ( TrigNames->at(i).find("HLT_Dimuon8_Jpsi_v5") != string::npos  &&  TrigRes->at(i) == 1) HLT_8_v5 = true;
+	  if ( TrigNames->at(i).find("HLT_Dimuon8_Jpsi_v6") != string::npos  &&  TrigRes->at(i) == 1) HLT_8_v6 = true;
+	  if ( TrigNames->at(i).find("HLT_Dimuon8_Jpsi_v7") != string::npos  &&  TrigRes->at(i) == 1) HLT_8_v7 = true;
 	} else {
 	  //- 3.5
 	  if ( TrigNames->at(i).find("HLT_DoubleMu3p5_LowMass_Displaced_v3") != string::npos  &&  TrigRes->at(i) == 1) HLT_3p5_v3 = true;
@@ -1053,17 +1343,31 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   HLT_2011_Dimuon_v[1].push_back(HLT_2011_9_v1) ; HLT_2011_Dimuon_v[1].push_back(HLT_2011_9_v4) ; HLT_2011_Dimuon_v[1].push_back(HLT_2011_9_v5) ; 
   HLT_2011_Dimuon_v[2].push_back(HLT_2011_11_v1) ; HLT_2011_Dimuon_v[2].push_back(HLT_2011_11_v4) ; HLT_2011_Dimuon_v[2].push_back(HLT_2011_11_v5) ; 
 
+  // psi(2S)
   if (HLT_5_v3 || HLT_5_v4 || HLT_5_v5 || HLT_5_v6) HLT_5_vAll = true;
   if (HLT_7_v1 || HLT_7_v2 || HLT_7_v3) HLT_7_vAll = true;
   //
   if (HLT_3p5_v3 || HLT_3p5_v4 || HLT_3p5_v5 || HLT_3p5_v6) HLT_3p5_vAll = true;
+  //
+  // J/psi
+  if (HLT_8_v3 || HLT_8_v4 || HLT_8_v5 || HLT_8_v6 || HLT_8_v7) HLT_8_vAll = true;
 
+  Bool_t HLT_mainTrigger = false;
+  if (option.Contains("psi2S"))
+    HLT_mainTrigger = HLT_5_vAll;
+  else if (option.Contains("JPsi"))
+    HLT_mainTrigger = HLT_8_vAll;
+  else {
+    cout <<"\noption does not contain neither \"psi2S\" nor \"JPsi\", please check." <<endl; return kTRUE;
+  }
+
+  //cout <<"\nEnd of trigger block" <<endl;
   //
   /////////////////////////////////
   for (Int_t myJIdx=0; myJIdx<abs(nMuMu); myJIdx++) 
     myInclusiveMuMuMass_noTrigg->Fill( (*MuMuMass)[myJIdx] ) ;
 
-  //if (!HLT_5_vAll) return kTRUE ;
+  //if (!HLT_mainTrigger) return kTRUE ;
   
   int muonQual[] = {1,3,4,12};
   Bool_t isNewSoftMuons = kTRUE;
@@ -1114,7 +1418,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       TLorentzVector psiPrime4Vec((*MuMuPx)[myJIdx], (*MuMuPy)[myJIdx], (*MuMuPz)[myJIdx], psiPrime_E);
       Float_t psiPrimeRapid = psiPrime4Vec.Rapidity();
 
-      if ( HLT_5_vAll ) {
+      if ( HLT_mainTrigger ) {
 	myMuMuMass_noMuID->Fill( Jmass );
 	if ( 1 // old SoftMuonID
 	     &&  ( ((*muQual)[mupidx]) & (1 << muonQual[3]) ) && ( ((*muQual)[mumidx]) & (1 << muonQual[3]) ) // TMOneStationTight
@@ -1150,11 +1454,11 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
       if ( (*MuMuMuonTrigMatch)[myJIdx] ) {
 	psi2SMuonTrigMatch_h->Fill( 1 ) ;
-	if (HLT_5_vAll)
+	if (HLT_mainTrigger)
 	  psi2SMuonTrigMatch_h->Fill( 2 ) ;
       } else {
 	psi2SMuonTrigMatch_h->Fill( 0 ) ;
-	if (HLT_5_vAll)
+	if (HLT_mainTrigger)
 	  psi2SMuonTrigMatch_h->Fill( -1 ) ;
       }
 
@@ -1193,6 +1497,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	  if ( HLT_7_v2 ) myInclusiveMuMuMass_HLT_7_v2->Fill( Jmass );
 	if ( MC || (runNum >= 199698 && runNum <= 208686) )
 	  if ( HLT_7_v3 ) myInclusiveMuMuMass_HLT_7_v3->Fill( Jmass );
+	// HLT_8_v*
+	if (HLT_8_v3) myInclusiveMuMuMass_HLT_8_v3->Fill( Jmass );
+	if (HLT_8_v4) myInclusiveMuMuMass_HLT_8_v4->Fill( Jmass );
+	if (HLT_8_v5) myInclusiveMuMuMass_HLT_8_v5->Fill( Jmass );
+	if (HLT_8_v6) myInclusiveMuMuMass_HLT_8_v6->Fill( Jmass );
+	if (HLT_8_v7) myInclusiveMuMuMass_HLT_8_v7->Fill( Jmass );
 	// datasets
 	if ( MC || (runNum >= 190456 && runNum <= 193621) ) { // 2012_A
 	  myInclusiveMuMuMass_12A->Fill( Jmass );
@@ -1254,7 +1564,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	    && isNewSoftMuons
 	    ) {
 	  
-	  if (HLT_5_vAll || HLT_2011 || HLT_3p5_vAll) { // trigger required here!
+	  if (HLT_mainTrigger || HLT_2011 || HLT_3p5_vAll) { // trigger required here!
 	    myMuMuMass_HLT->Fill( Jmass ) ;
 	    if (HLT_3p5_vAll) myMuMuMass_HLT3p5->Fill( Jmass ) ;
 	    /*
@@ -1277,7 +1587,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      }
 	    
 	    if ( 1 
-		 &&  ( ( HLT_5_vAll && psiPrime4Vec.Pt() > 5 )
+		 &&  ( ( HLT_mainTrigger && psiPrime4Vec.Pt() > 5 )
 		       || ( HLT_2011 && psiPrime4Vec.Pt() > 7 ) 
 		       || ( HLT_3p5_vAll && psiPrime4Vec.Pt() > 3.5 ) )
 		 //&&  fabs(psiPrimeRapid) < 2.4 // useless given the following:
@@ -1319,7 +1629,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		for (Int_t i = 0; i < rapid_bins; i++) {
 		  if ( psiPrimeRapid > rapid_min + rapid_binSize*i &&
 		       psiPrimeRapid < rapid_min + rapid_binSize*(i+1) ) { 
-		    if (HLT_5_vAll) psiPrime_rapidBin[i]->Fill(Jmass); 
+		    if (HLT_mainTrigger) psiPrime_rapidBin[i]->Fill(Jmass); 
 		    if (HLT_2011) psiPrime_2011_rapidBin[i]->Fill(Jmass); 
 		  }
 		}
@@ -1344,7 +1654,8 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     } // end loop on psi'
   
   nPsi2S_h->Fill(n_psiPrime) ;
-  
+  //cout <<"\nEnd of MuMu psi(nS)" <<endl;
+
   if (n_psiPrime > 0  &&  n_psiPrime <= 2) {
     myMuMuMass_HLT_max2psiPrime->Fill( first_psi2S_mass ) ;
     if (n_psiPrime == 2) {
@@ -1384,7 +1695,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	  //Float_t fixed_sigma = 0.150 ;
 	  Float_t fixed_sigma = 0.200 ;
 	  if (!sideband)
-	    if ( fabs(first_psi2S_mass - psi2S_mass) > fixed_sigma ) return kTRUE ;
+	    if ( fabs(first_psi2S_mass - mumu_mass) > fixed_sigma ) return kTRUE ;
 	    else myMuMuMass_HLT_1psiPrime->Fill( first_psi2S_mass ) ;
 	  else // sideband:
 	    if ( fabs(first_psi2S_mass - fit_mass) < sb_low*fixed_sigma  ||  fabs(first_psi2S_mass - fit_mass) > sb_high*fixed_sigma ) return kTRUE ; // check sidebands
@@ -1393,16 +1704,16 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       }
     }
   }
-
+  //cout <<"\nEnd of only1psiPrime block" <<endl;
   
-  //cout<<"nZ="<<nZ<<", size="<< (*B_cMass).size()<<endl;  
-        
+  
+  //cout <<"nZ = " <<nZ <<", size = " <<(*B_cMass).size() <<endl;      
   /*
     for (int myZIdx = 0; myZIdx < abs(nZ); myZIdx++) {
     if ( 1
     //&& fabs((*JPsiMass)[myXIdx]-3.0967)<0.1
     && (*MuMuPiVtx_CL)[myZIdx] > 0.1
-    && fabs( (*MuMuMass)[ (*JPsiIndex)[myZIdx] ] - psi2S_mass ) < 0.2 
+    && fabs( (*MuMuMass)[ (*JPsiIndex)[myZIdx] ] - mumu_mass ) < 0.2 
     && sqrt( pow((*B0_fkaonPx)[myXIdx], 2) + pow((*B0_fkaonPy)[myXIdx], 2) ) > 0.9
     && ( (*B0_CTauBS)[ myXIdx] /  (*B0_CTauBSE)[ myXIdx] ) > 3.0
     && sqrt( pow((*MuMuPx)[(*JPsiIndex)[myXIdx]], 2) + pow((*MuMuPy)[(*JPsiIndex)[myXIdx]], 2) ) > 7.0 
@@ -1418,7 +1729,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	 
     )
     {
-    myMuMuKMass->Fill( (*B0_Mass)[myXIdx] -  (*MuMuMass)[ (*JPsiIndex)[myXIdx] ] + psi2S_mass );         
+    myMuMuKMass->Fill( (*B0_Mass)[myXIdx] -  (*MuMuMass)[ (*JPsiIndex)[myXIdx] ] + mumu_mass );         
     }
     }
   
@@ -1451,7 +1762,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
     for (Int_t i = 0; i < abs(trk_pT.size()); ++i) 
       if ( Kp4.Pt() > trk_pT[i] )
-	MuMuKMass_trk2Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	MuMuKMass_trk2Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 
   }
 
@@ -1471,17 +1782,17 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   const float DeuteronMin = 1.6;
   const float DeuteronMax = 2.15;
 
-  Int_t nB0AC_noMassWin = 0, nB0AC = 0, nB0AC_purityWin = 0, nB0AC_signalWin = 0, nB0ACInMC = 0, nTwins = 0, nTwins_signalWin = 0 ;
+  Int_t nB0AC_noMassWin = 0, nB0AC = 0, nB0AC_purityWin = 0, nB0AC_sbWin = 0, nB0AC_signalWin = 0, nB0ACInMC = 0, nTwins = 0, nTwins_signalWin = 0 ;
   //
   Float_t priVtx_XYZ[5], priVtx_B0CosAlpha_XYZ[2][5], priVtxB0Less_XYZ[5], priVtxB0Less_B0CosAlpha_XYZ[2][5], priVtxGen_XYZ[3], genEvtVtx_XYZ[3] ;
-  Float_t pB0_XYZ[3], secVtx_XYZ[3] ;
+  //Float_t pB0_XYZ[3], secVtx_XYZ[3] ;
   for (Int_t i=0; i<5; i++) {
     priVtx_XYZ[i] = 999. ;
     priVtx_B0CosAlpha_XYZ[0][i] = 999. ; priVtx_B0CosAlpha_XYZ[1][i] = 999. ;
     priVtxB0Less_XYZ[i] = 999. ;
     priVtxB0Less_B0CosAlpha_XYZ[0][i] = 999. ; priVtxB0Less_B0CosAlpha_XYZ[1][i] = 999. ;
     if (i<3) {
-      priVtxGen_XYZ[i] = 999. ; genEvtVtx_XYZ[i] = 999. ; pB0_XYZ[i] = 999. ; secVtx_XYZ[i] = 999. ;
+      priVtxGen_XYZ[i] = 999. ; genEvtVtx_XYZ[i] = 999. ; //pB0_XYZ[i] = 999. ; secVtx_XYZ[i] = 999. ;
     }
   }
   //
@@ -1496,12 +1807,15 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   Int_t chargePi_2B0[2][2] = { {0,0},{0,0} }, chargeK_2B0[2][2] = { {0,0},{0,0} } ;
   Float_t B0Mass_gen = 0 ;
   TLorentzVector PsiPp4_2B0[2][2], Pip4_2B0[2][2], Kp4_2B0[2][2] ;
-  Double_t theta_psi = 10., phi = 10. ; 
+  TLorentzVector PsiPp4_B0constr_2B0[2][2], Pip4_B0constr_2B0[2][2], Kp4_B0constr_2B0[2][2] ;
+  Double_t theta_Kstar = 10., cosTheta_Kstar = 10.;
+  Double_t theta_psi = 10., cosTheta_psi = 10., cosTheta_psiLab = 10., theta_psi_rot = 10., cosTheta_psi_rot = 10., phi = 10., mKPi = 0. ; 
   Int_t PiCharge_2B0[2][2] = { {0,0},{0,0} }, KCharge_2B0[2][2] = { {0,0},{0,0} } ; 
   //Bool_t MuMuMatched[2][2] = {{kFALSE,kFALSE},{kFALSE,kFALSE}}, pionMatched[2][2] = {{kFALSE,kFALSE},{kFALSE,kFALSE}}, kaonMatched[2][2] = {{kFALSE,kFALSE},{kFALSE,kFALSE}} ;
   Bool_t MuMuMatched[2][2] = { {kFALSE,kFALSE},{kFALSE,kFALSE} }, pionMatched[2][2] = { {kFALSE,kFALSE},{kFALSE,kFALSE} }, kaonMatched[2][2] = { {kFALSE,kFALSE},{kFALSE,kFALSE} } ;
   Float_t twins_var[2][4] = { {0,0,0,0},{0,0,0,0} } ;
 
+  //cout <<"\nBefore main nB0 loop" <<endl;
   //for (Int_t myZIdx = 0; myZIdx < abs(nZ); myZIdx++) {
   for (Int_t myB0Idx = 0; myB0Idx < abs(nB0); myB0Idx++) {  
     int myjpsiindex = 0 ;
@@ -1554,7 +1868,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	 (*tr_dedx)[mypiIdx] < 1e-6 ) {
       kaon_pID = -1;
     }
-    //cout << "no found"<<endl;}
+    //cout << "no found" <<endl;}
     else {
       float dEdxMass = ComputedEdxMass(mypiIdx, Pip4.Pt(), KData, CData);
       //cout << dEdxMass << " Mass " << (*tr_dedxMass)[mypiIdx]; << endl;
@@ -1666,15 +1980,15 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	 //&&  (*MuMuPiVtx_CL)[myB0Idx] > 0.1 // 0.1 Kai
 	 &&  fabs(Pip4.Eta()) < 1.5
 	 &&  fabs(Jp4.Eta()) < 1.5
-	 &&  fabs( Jp4.M() - psi2S_mass ) < 0.06  // we applied a moving window on the onePsiPrime selection
+	 &&  fabs( Jp4.M() - mumu_mass ) < 0.06  // we applied a moving window on the onePsiPrime selection
 	 //&&  (*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] < 3.0
 	 //&&  (*ZCTauBSE)[myB0Idx] < 0.01 // only 150 events cut with the other cuts already applied
 	 &&  Pip4.Pt() > 7.0
 	 //&&  muon ID
 	 &&  mu1.Pt() > 7.0  &&  mu2.Pt() > 7.0
 	 ) {
-      myMuMuPiMass_Kai->Fill( Zp4.M() - Jp4.M() + psi2S_mass ) ;
-      if (HLT_7_vAll  &&  Jp4.Pt() > 7.) myMuMuPiMass_Kai_HLT7->Fill( Zp4.M() - Jp4.M() + psi2S_mass ) ;
+      myMuMuPiMass_Kai->Fill( Zp4.M() - Jp4.M() + mumu_mass ) ;
+      if (HLT_7_vAll  &&  Jp4.Pt() > 7.) myMuMuPiMass_Kai_HLT7->Fill( Zp4.M() - Jp4.M() + mumu_mass ) ;
     }
 
 
@@ -1706,20 +2020,20 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	    if (fixedMassWind) {
 	      //Float_t fixed_sigma = 0.150 ;
 	      Float_t fixed_sigma = 0.200 ;
-	      if ( fabs(Jp4.M() - psi2S_mass) < fixed_sigma ) {
+	      if ( fabs(Jp4.M() - mumu_mass) < fixed_sigma ) {
 		//myMuMuMass_KaiBF->Fill( Jp4.M() ) ;
-		myMuMuKMass_KaiBF->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+		myMuMuKMass_KaiBF->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 
-		if ( ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass) > 5.268  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass) < 5.288 )
+		if ( ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass) > 5.268  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass) < 5.288 )
 		  myMuMuMass_KaiBF->Fill( Jp4.M() ) ;
 	      }
-	    } else if ( fabs( Jp4.M() - psi2S_mass ) < 0.12 ) {
-	      myMuMuKMass_KaiBF->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	    } else if ( fabs( Jp4.M() - mumu_mass ) < 0.12 ) {
+	      myMuMuKMass_KaiBF->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	    }
 	  } else if (only1psiPrime) {
-	    myMuMuKMass_KaiBF->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	    myMuMuKMass_KaiBF->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	      
-	    if ( ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass) > 5.268  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass) < 5.288 ) 
+	    if ( ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass) > 5.268  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass) < 5.288 ) 
 	      myMuMuMass_KaiBF->Fill( Jp4.M() ) ;
 	  }
 	} // remaining cuts
@@ -1727,7 +2041,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     } // HLT_5
       
       //////////////////////////////////////// Sara plots
-    if ( HLT_5_vAll ) { // trigger
+    if ( HLT_mainTrigger ) { // trigger
       if ( 1 // muonID
 	   &&  ( ((*muQual)[mymupidx]) & (1 << muonQual[3]) )  &&  ( ((*muQual)[mymumidx]) & (1 << muonQual[3]) )
 	   &&  ( ( (*muChi2)[mymupidx] / (*muNDF)[mymupidx] ) <  1.8 )  &&  ( ( ((*muChi2)[mymumidx]) / (*muNDF)[mymumidx] ) < 1.8 )
@@ -1739,30 +2053,30 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	/*
 	  for (Int_t i = 0; i < abs(Z_CTauBSOverE.size()); ++i) {
 	  if ( (*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] > Z_CTauBSOverE[i])
-	  MuMuKMass_ZCTauBSOverE[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	  MuMuKMass_ZCTauBSOverE[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	  }*/
 	for (Int_t i = 0; i < abs(mu_pT.size()); ++i) {
 	  if ( mu1.Pt() > mu_pT[i] )
-	    MuMuKMass_mu1Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	    MuMuKMass_mu1Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	  if ( mu2.Pt() > mu_pT[i] )
-	    MuMuKMass_mu2Pt[i]->Fill(( Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	    MuMuKMass_mu2Pt[i]->Fill(( Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	}
 	for (Int_t i = 0; i < abs(trk_pT.size()); ++i) {
 	  if ( Pip4.Pt() > trk_pT[i] )
-	    MuMuKMass_trk1Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	    MuMuKMass_trk1Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	  //if ( > trk_pT[i] ) // moved in the B0 loop above
-	  //MuMuKMass_trk2Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	  //MuMuKMass_trk2Pt[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	}
 	/*
 	  for (Int_t i = 0; i < abs(Z_CL.size()); ++i)
 	  if ( (*MuMuPiVtx_CL)[myB0Idx] > Z_CL[i] )
-	  MuMuKMass_ZCL[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	  MuMuKMass_ZCL[i]->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	*/
       } // muonID
     } // trigger
       
       //////////////////////////////////////// Nairit cuts
-    if ( HLT_5_vAll ) { // trigger
+    if ( HLT_mainTrigger ) { // trigger
 
       if ( 1 // muonID
 	   &&  ( ((*muQual)[mymupidx]) & (1 << muonQual[3]) )  &&  ( ((*muQual)[mymumidx]) & (1 << muonQual[3]) )
@@ -1781,15 +2095,15 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	if ( 1
 	     && Jp4.Pt() > 5.05 // unchanged      
 	     && fabs(mu1.Eta()) < 2.0 && fabs(mu2.Eta()) < 2.0 // unchanged     
-	     && fabs( Jp4.M() - psi2S_mass ) < 0.12  // same as && fabs((*MuMuMass)[myPsiP_fromZ_Index]-psi2SPDGmass) < 0.12  unchanged
+	     && fabs( Jp4.M() - mumu_mass ) < 0.12  // same as && fabs((*MuMuMass)[myPsiP_fromZ_Index]-psi2SPDGmass) < 0.12  unchanged
 	     && ( (*MuMuVtx_CL)[myjpsiindex] > 0.02 ) // optimised value
 	     && mu1.Pt() > 3.3  &&  mu2.Pt() > 3.3 // this cut is ok with muons at any eta; later we ask >4.0 for central muons
 	     //
 	     && mu1_PtSel && mu2_PtSel
 	     ) {
-	  if ( (((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass > 5.15)  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass < 5.2))  || 
-	       (((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass > 5.35)  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass < 5.4) )) {
-	    MuMuKMass_sb->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	  if ( (((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass > 5.15)  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass < 5.2))  || 
+	       (((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass > 5.35)  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass < 5.4) )) {
+	    MuMuKMass_sb->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	    dEdx_vs_pT[2]->Fill(Kp4.Pt(), ((*tr_dedx)[mypiIdx])) ;	 
 	  }
 
@@ -1808,10 +2122,10 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	       && Jp4.DeltaR(Kp4) < 0.4
 	       && Bcp4.Pt() > 5 //7
 	       ) {
-	    MuMuKMass_Nairit->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
+	    MuMuKMass_Nairit->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
 	    dEdx_vs_p_Bplus->Fill(Kp4.P(), ((*tr_dedx)[mypiIdx])) ;
 
-	    if ( ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass > 5.25)  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass < 5.31) ) {
+	    if ( ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass > 5.25)  &&  ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass < 5.31) ) {
 	      trk_pT_test_h->Fill( Kp4.Pt() ) ;
 	      dEdx_vs_pT[1]->Fill(Kp4.Pt(), ((*tr_dedx)[mypiIdx])) ;	 
 	      dEdxMass_h[1]->Fill( ComputedEdxMass(mypiIdx, Kp4.Pt(), KData, CData) ) ;
@@ -1824,49 +2138,9 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     } // trigger
 
 
-      //////////////////////////////////////// EXCLUSIVE KPi
-    if ( MC ) {
-      nMCB0_BT_h->Fill( nMCB0 ) ;
-      for (Int_t myMCB0Idx = 0; myMCB0Idx < abs(nMCB0); myMCB0Idx++) { // only 0 and 1 candidate
-	TLorentzVector B0p4_gen, Jp4_gen, muPp4_gen, muMp4_gen, Kp4_gen, Pip4_gen, Kstar_gen ;
-	//      
-	Float_t J_E_gen = 0, K_E_gen = 0, Pi_E_gen = 0, muP_E_gen = 0, muM_E_gen = 0;
-	J_E_gen = sqrt( pow((*MCpsi2SPx)[myMCB0Idx], 2) + pow((*MCpsi2SPy)[myMCB0Idx], 2) + pow((*MCpsi2SPz)[myMCB0Idx], 2) + pow(psi2S_mass, 2) ) ;
-	K_E_gen = sqrt( pow((*MCkaonPx)[myMCB0Idx], 2) + pow((*MCkaonPy)[myMCB0Idx], 2) + pow((*MCkaonPz)[myMCB0Idx], 2) + pow(kaonCh_mass, 2) ) ;
-	Pi_E_gen = sqrt( pow((*MCpionPx)[myMCB0Idx], 2) + pow((*MCpionPy)[myMCB0Idx], 2) + pow((*MCpionPz)[myMCB0Idx], 2) + pow(pionCh_mass, 2) ) ;
-	//
-	Jp4_gen.SetPxPyPzE( (*MCpsi2SPx)[myMCB0Idx], (*MCpsi2SPy)[myMCB0Idx], (*MCpsi2SPz)[myMCB0Idx], J_E_gen ) ;
-	muPp4_gen.SetPxPyPzE( (*MCmupPx)[myMCB0Idx], (*MCmupPy)[myMCB0Idx], (*MCmupPz)[myMCB0Idx], muP_E_gen ) ;
-	muMp4_gen.SetPxPyPzE( (*MCmumPx)[myMCB0Idx], (*MCmumPy)[myMCB0Idx], (*MCmumPz)[myMCB0Idx], muM_E_gen ) ;
-	Kp4_gen.SetPxPyPzE( (*MCkaonPx)[myMCB0Idx], (*MCkaonPy)[myMCB0Idx], (*MCkaonPz)[myMCB0Idx], K_E_gen ) ;
-	Pip4_gen.SetPxPyPzE( (*MCpionPx)[myMCB0Idx], (*MCpionPy)[myMCB0Idx], (*MCpionPz)[myMCB0Idx], Pi_E_gen ) ;
-	B0p4_gen = Jp4_gen + Pip4_gen + Kp4_gen ;
-	Kstar_gen = Pip4_gen + Kp4_gen ;
-	/*
-	B0_gen_p_h->Fill( B0p4_gen.P() ) ; B0_gen_pT_h->Fill( B0p4_gen.Pt() ) ;
-	psi2S_gen_p_h->Fill( Jp4_gen.P() ) ; psi2S_gen_pT_h->Fill( Jp4_gen.Pt() ) ;
-	K_gen_p_h->Fill( Kp4_gen.P() ) ; K_gen_pT_h->Fill( Kp4_gen.Pt() ) ;
-	pi_gen_p_h->Fill( Pip4_gen.P() ) ; pi_gen_pT_h->Fill( Pip4_gen.Pt() ) ;
-	*/
-	psi2SPiSqMass_vs_KPiSqMass_BT_gen->Fill( (Kp4_gen + Pip4_gen).M2(), (Jp4_gen + Pip4_gen).M2() );
-	KPiSqMass_vs_psi2SKSqMass_BT_gen->Fill( (Jp4_gen + Kp4_gen).M2(), (Kp4_gen + Pip4_gen).M2() );
-
-	// gen angle variables
-	//
-	// psi helicity angle
-	Double_t theta_psi_gen = getMumuHelicityAngle(B0p4_gen, Kstar_gen, Jp4_gen, muMp4_gen);
-	//Double_t theta_psi_gen = getAleMumuHelicityAngle(B0p4_gen, Kstar_gen, Jp4_gen, muMp4_gen);
-	psi2S_helicityAngle_BT_gen->Fill( theta_psi_gen ) ; 
-	cos_psi2S_helicityAngle_BT_gen->Fill( TMath::Cos(theta_psi_gen) ) ;
-	//cos_psi2S_helicityAngle_BT_gen->Fill( theta_psi_gen ) ;
-	// planes angle
-	Double_t phi_gen = getPlanesAngle(B0p4_gen, Kp4_gen, Pip4_gen, muMp4_gen, muPp4_gen) ;
-	//Double_t phi_gen = getBellePlanesAngle(B0p4_gen, Kp4_gen, Pip4_gen, muMp4_gen, muPp4_gen) ;
-	planesAngle_BT_gen->Fill( phi_gen ) ;
-      }
-    }
-    
-    if ( HLT_5_vAll ) 
+    //////////////////////////////////////// EXCLUSIVE KPi    
+    //cout <<"\nBefore EXCLUSIVE KPi block" <<endl;
+    if ( HLT_mainTrigger ) 
       {
 	//for (Int_t myB0Idx=0; myB0Idx<abs(nB0); myB0Idx++) {  // already opened above    
 	// set indices
@@ -1885,19 +2159,30 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	mu2E = sqrt( pow((*muPx)[mu2_fromB0_index],2) + pow((*muPy)[mu2_fromB0_index],2) + pow((*muPz)[mu2_fromB0_index],2) + pow(muon_mass,2) );
 	mu1_p4.SetPxPyPzE( (*muPx)[mu1_fromB0_index], (*muPy)[mu1_fromB0_index], (*muPz)[mu1_fromB0_index], mu1E);
 	mu2_p4.SetPxPyPzE( (*muPx)[mu2_fromB0_index], (*muPy)[mu2_fromB0_index], (*muPz)[mu2_fromB0_index], mu2E);
+	//    
+	TLorentzVector Mu1p4, Mu2p4, PsiPp4;
+	TLorentzVector Pip4_exchanged, Kp4_exchanged;
+	if (!B0massConstr) {
+	  Mu1p4.SetPxPyPzE( (*Muon1Px_MuMuPiK)[myB0Idx], (*Muon1Py_MuMuPiK)[myB0Idx], (*Muon1Pz_MuMuPiK)[myB0Idx], (*Muon1E_MuMuPiK)[myB0Idx]) ;
+	  Mu2p4.SetPxPyPzE( (*Muon2Px_MuMuPiK)[myB0Idx], (*Muon2Py_MuMuPiK)[myB0Idx], (*Muon2Pz_MuMuPiK)[myB0Idx], (*Muon2E_MuMuPiK)[myB0Idx]) ;
+	  Pip4.SetPxPyPzE( (*PionPx_MuMuPiK)[myB0Idx], (*PionPy_MuMuPiK)[myB0Idx], (*PionPz_MuMuPiK)[myB0Idx], (*PionE_MuMuPiK)[myB0Idx]) ;
+	  Kp4.SetPxPyPzE( (*KaonPx_MuMuPiK)[myB0Idx], (*KaonPy_MuMuPiK)[myB0Idx], (*KaonPz_MuMuPiK)[myB0Idx], (*KaonE_MuMuPiK)[myB0Idx]) ;
+	} else {
+	  Mu1p4.SetPxPyPzE( (*Muon1Px_MuMuPiK_B0Mass)[myB0Idx], (*Muon1Py_MuMuPiK_B0Mass)[myB0Idx], (*Muon1Pz_MuMuPiK_B0Mass)[myB0Idx], (*Muon1E_MuMuPiK_B0Mass)[myB0Idx]) ;
+	  Mu2p4.SetPxPyPzE( (*Muon2Px_MuMuPiK_B0Mass)[myB0Idx], (*Muon2Py_MuMuPiK_B0Mass)[myB0Idx], (*Muon2Pz_MuMuPiK_B0Mass)[myB0Idx], (*Muon2E_MuMuPiK_B0Mass)[myB0Idx]) ;
+	  Pip4.SetPxPyPzE( (*PionPx_MuMuPiK_B0Mass)[myB0Idx], (*PionPy_MuMuPiK_B0Mass)[myB0Idx], (*PionPz_MuMuPiK_B0Mass)[myB0Idx], (*PionE_MuMuPiK_B0Mass)[myB0Idx]) ;
+	  Kp4.SetPxPyPzE( (*KaonPx_MuMuPiK_B0Mass)[myB0Idx], (*KaonPy_MuMuPiK_B0Mass)[myB0Idx], (*KaonPz_MuMuPiK_B0Mass)[myB0Idx], (*KaonE_MuMuPiK_B0Mass)[myB0Idx]) ;
+	}
+	PsiPp4 = Mu1p4 + Mu2p4;
+	Pip4_exchanged.SetVectM(Pip4.Vect(), kaonCh_mass) ;
+	Kp4_exchanged.SetVectM(Kp4.Vect(), pionCh_mass) ;
+
+	TLorentzVector PsiPp4_orig;
+	Float_t PsiP_E_orig = 0.;
+	PsiP_E_orig = sqrt( pow((*MuMuPx)[psip_index],2) + pow((*MuMuPy)[psip_index], 2) + pow((*MuMuPz)[psip_index], 2) + pow((*MuMuMass)[psip_index], 2) ) ;
+	PsiPp4_orig.SetPxPyPzE( (*MuMuPx)[psip_index], (*MuMuPy)[psip_index], (*MuMuPz)[psip_index], PsiP_E_orig) ;
+	hmyPsiP_Pt->Fill( PsiPp4_orig.Pt() );
 	//
-	TLorentzVector PsiPp4;
-	Float_t PsiP_E = 0.;
-	PsiP_E = sqrt( pow((*MuMuPx)[psip_index],2) + pow((*MuMuPy)[psip_index], 2) + pow((*MuMuPz)[psip_index], 2) + pow((*MuMuMass)[psip_index], 2) ) ;
-	PsiPp4.SetPxPyPzE( (*MuMuPx)[psip_index], (*MuMuPy)[psip_index], (*MuMuPz)[psip_index], PsiP_E) ;
-	hmyPsiP_Pt->Fill(PsiPp4.Pt());
-	//
-	TLorentzVector pip4, pip4_exchanged;
-	pip4.SetPxPyPzE( (*PionPx_MuMuPiK)[myB0Idx], (*PionPy_MuMuPiK)[myB0Idx], (*PionPz_MuMuPiK)[myB0Idx], (*PionE_MuMuPiK)[myB0Idx]) ;
-	      
-	TLorentzVector kp4, kp4_exchanged;
-	kp4.SetPxPyPzE( (*KaonPx_MuMuPiK)[myB0Idx], (*KaonPy_MuMuPiK)[myB0Idx], (*KaonPz_MuMuPiK)[myB0Idx], (*KaonE_MuMuPiK)[myB0Idx]) ;
-	      
 	TLorentzVector Pip4_orig, Pip4_orig_ex, Kp4_orig, Kp4_orig_ex;
 	Pip4_orig.SetPxPyPzE( (*trackPx)[pi_orig_Index], (*trackPy)[pi_orig_Index], (*trackPz)[pi_orig_Index], (*trackEnergy)[pi_orig_Index]) ; // original
 	Pip4_orig_ex.SetVectM(Pip4_orig.Vect(), kaonCh_mass) ;
@@ -1907,36 +2192,36 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	//Kp4_orig.SetPxPyPzE( (*trackPx)[ka_orig_Index], (*trackPy)[ka_orig_Index], (*trackPz)[ka_orig_Index], (*trackEnergy)[ka_orig_Index]) ; // original but trackEnergy is filled with the mass assumpion of ?
 	Kp4_orig_ex.SetVectM(Kp4_orig.Vect(), pionCh_mass) ;
 	      
-	TLorentzVector Kstarp4, Kstarp4_orig, Kstarp4_orig_ex, myB0p4, myB0p4_orig, myB0p4_KPiExchanged;
-	Kstarp4 = pip4 + kp4 ;
-	Kstarp4_orig = Pip4_orig + Kp4_orig ;
-	Kstarp4_orig_ex = Pip4_orig_ex + Kp4_orig_ex ;
-	myB0p4 = PsiPp4 + pip4 + kp4;
-	myB0p4_orig = PsiPp4 + Pip4_orig + Kp4_orig;
+	TLorentzVector KPip4, KPip4_orig, KPip4_orig_ex, Zp4_orig, myB0p4, myB0p4_orig, myB0p4_KPiExchanged;
+	KPip4 = Pip4 + Kp4 ;
+	KPip4_orig = Pip4_orig + Kp4_orig ;
+	KPip4_orig_ex = Pip4_orig_ex + Kp4_orig_ex ;
+	Zp4 = PsiPp4 + Pip4;
+	Zp4_orig = PsiPp4_orig + Pip4_orig;
+	myB0p4 = PsiPp4_orig + Pip4 + Kp4;
+	myB0p4_orig = PsiPp4_orig + Pip4_orig + Kp4_orig;
 	// alternatively:
-	Float_t myB0MassAlt = (PsiPp4 + Pip4_orig + Kp4_orig).Mag() - PsiPp4.M() + psi2S_mass;
-	Float_t myB0MassAlt_ex = (PsiPp4 + Pip4_orig_ex + Kp4_orig_ex).Mag() - PsiPp4.M() + psi2S_mass;
+	Float_t myB0MassAlt = (PsiPp4_orig + Pip4_orig + Kp4_orig).Mag() - PsiPp4_orig.M() + mumu_mass;
+	Float_t myB0MassAlt_ex = (PsiPp4_orig + Pip4_orig_ex + Kp4_orig_ex).Mag() - PsiPp4_orig.M() + mumu_mass;
 	//
-	pip4_exchanged.SetVectM(pip4.Vect(), kaonCh_mass) ;
-	kp4_exchanged.SetVectM(kp4.Vect(), pionCh_mass) ;
-	myB0p4_KPiExchanged = PsiPp4 + pip4_exchanged + kp4_exchanged;
+	myB0p4_KPiExchanged = PsiPp4_orig + Pip4_exchanged + Kp4_exchanged;
 	//
 	// Armenteros plot
 	// original tracks
-	Float_t pi_KstarPl_orig = ( (Pip4_orig.Vect()).Dot(Kstarp4_orig.Vect()) ) / Kstarp4_orig.Rho()  ; 
-	Float_t K_KstarPl_orig = ( (Kp4_orig.Vect()).Dot(Kstarp4_orig.Vect()) ) / Kstarp4_orig.Rho() ;  
+	Float_t pi_KstarPl_orig = ( (Pip4_orig.Vect()).Dot(KPip4_orig.Vect()) ) / KPip4_orig.Rho()  ; 
+	Float_t K_KstarPl_orig = ( (Kp4_orig.Vect()).Dot(KPip4_orig.Vect()) ) / KPip4_orig.Rho() ;  
 	Float_t alpha_orig = (pi_KstarPl_orig - K_KstarPl_orig)/(pi_KstarPl_orig + K_KstarPl_orig) ; 
 	Float_t pi_KstarPt_orig = sqrt( pow(Pip4_orig.Rho(),2) - pow(pi_KstarPl_orig,2) ) ;
 	Float_t K_KstarPt_orig = sqrt( pow(Kp4_orig.Rho(),2) - pow(K_KstarPl_orig,2) ) ;
 	// refitted tracks
-	Float_t pi_KstarPl = ( (pip4.Vect()).Dot(Kstarp4.Vect()) ) / Kstarp4.Rho()  ; 
-	Float_t K_KstarPl = ( (kp4.Vect()).Dot(Kstarp4.Vect()) ) / Kstarp4.Rho() ;  
+	Float_t pi_KstarPl = ( (Pip4.Vect()).Dot(KPip4.Vect()) ) / KPip4.Rho()  ; 
+	Float_t K_KstarPl = ( (Kp4.Vect()).Dot(KPip4.Vect()) ) / KPip4.Rho() ;  
 	Float_t alpha = (pi_KstarPl - K_KstarPl)/(pi_KstarPl + K_KstarPl) ; 
-	Float_t pi_KstarPt = sqrt( pow(pip4.Rho(),2) - pow(pi_KstarPl,2) ) ;
-	//Float_t K_KstarPt = sqrt( pow(kp4.Rho(),2) - pow(K_KstarPl,2) ) ;
+	Float_t pi_KstarPt = sqrt( pow(Pip4.Rho(),2) - pow(pi_KstarPl,2) ) ;
+	//Float_t K_KstarPt = sqrt( pow(Kp4.Rho(),2) - pow(K_KstarPl,2) ) ;
 	// for exchanged particles
-	Float_t pi_ex_KstarPl = ( (Pip4_orig_ex.Vect()).Dot(Kstarp4_orig_ex.Vect()) ) / Kstarp4_orig_ex.Rho()  ; 
-	Float_t K_ex_KstarPl = ( (Kp4_orig_ex.Vect()).Dot(Kstarp4_orig_ex.Vect()) ) / Kstarp4_orig_ex.Rho() ;  
+	Float_t pi_ex_KstarPl = ( (Pip4_orig_ex.Vect()).Dot(KPip4_orig_ex.Vect()) ) / KPip4_orig_ex.Rho()  ; 
+	Float_t K_ex_KstarPl = ( (Kp4_orig_ex.Vect()).Dot(KPip4_orig_ex.Vect()) ) / KPip4_orig_ex.Rho() ;  
 	//Float_t alpha_orig_ex = (pi_ex_KstarPl - K_ex_KstarPl)/(pi_ex_KstarPl + K_ex_KstarPl) ; 
 	Float_t alpha_orig_ex = (K_ex_KstarPl - pi_ex_KstarPl)/(pi_ex_KstarPl + K_ex_KstarPl) ; 
 	Float_t pi_ex_KstarPt = sqrt( pow(Pip4_orig_ex.Rho(),2) - pow(pi_ex_KstarPl,2) ) ;
@@ -1944,9 +2229,19 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	//
 	// reco angle variables
 	//
+	//cout <<"\nBefore setting reco angle variables" <<endl;
+	// K* helicity angle
+	theta_Kstar = GetThetaMuMu(myB0p4_orig, KPip4_orig, Kp4_orig, beam_energy, (KPip4_orig).M(), Kp4_orig.M()) ;
+	cosTheta_Kstar = TMath::Cos(theta_Kstar) ;
 	// psi helicity angle
-	theta_psi = getMumuHelicityAngle(myB0p4_orig, Kstarp4_orig, PsiPp4, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4) ;
-	//theta_psi = getAleMumuHelicityAngle(myB0p4_orig, Kstarp4_orig, PsiPp4, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4) ;
+	//theta_psi = getMumuHelicityAngle(myB0p4_orig, KPip4_orig, PsiPp4_orig, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4) ;
+	//theta_psi = getAleMumuHelicityAngle(myB0p4_orig, KPip4_orig, PsiPp4_orig, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4) ;
+	theta_psi = GetThetaMuMu(myB0p4_orig, PsiPp4_orig, (*muCharge)[mu1_fromB0_index]>0 ? mu1_p4 : mu2_p4, beam_energy, mumu_mass, muon_mass) ;
+	cosTheta_psi = TMath::Cos(theta_psi) ;
+	cosTheta_psiLab = TMath::Cos( GetThetaMuMuLab(myB0p4_orig, PsiPp4_orig, (*muCharge)[mu1_fromB0_index]>0 ? mu1_p4 : mu2_p4, beam_energy, mumu_mass, muon_mass) ) ;
+	theta_psi_rot = GetThetaMuMu_rot(myB0p4_orig, PsiPp4_orig, (*muCharge)[mu1_fromB0_index]>0 ? mu1_p4 : mu2_p4, beam_energy, mumu_mass, muon_mass) ;
+	cosTheta_psi_rot = TMath::Cos(theta_psi_rot) ;
+	mKPi = KPip4_orig.M() ;
 	// planes angle
 	phi = getPlanesAngle(myB0p4_orig, Kp4_orig, Pip4_orig, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4, (*muCharge)[mu1_fromB0_index]<0 ? mu2_p4 : mu1_p4) ;
 	//phi = getBellePlanesAngle(myB0p4_orig, Kp4_orig, Pip4_orig, (*muCharge)[mu1_fromB0_index]<0 ? mu1_p4 : mu2_p4, (*muCharge)[mu1_fromB0_index]<0 ? mu2_p4 : mu1_p4) ;
@@ -1964,12 +2259,12 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	hB0VtxCL->Fill( (*B0Vtx_CL)[myB0Idx] );
 	//
 	Float_t B0_Pt = sqrt( pow((*B0Px)[myB0Idx],2) + pow((*B0Py)[myB0Idx],2) ) ;
-	hB0_Pt->Fill( B0_Pt );
+	hB0Pt->Fill( B0_Pt );
 	//
-	Float_t pion_fromB0_Pt = sqrt( pow((*PionPx_MuMuPiK)[myB0Idx],2) + pow((*PionPy_MuMuPiK)[myB0Idx],2) ) ;
-	Float_t kaon_fromB0_Pt = sqrt( pow((*KaonPx_MuMuPiK)[myB0Idx],2) + pow((*KaonPy_MuMuPiK)[myB0Idx],2) ) ;
-	hPionfromBpt->Fill( pion_fromB0_Pt );
-	hKaonfromBpt->Fill( kaon_fromB0_Pt );
+	Float_t pion_fromB0_Pt = Pip4.Pt() ;
+	Float_t kaon_fromB0_Pt = Kp4.Pt() ;
+	hPionfromB0pt->Fill( pion_fromB0_Pt );
+	hKaonfromB0pt->Fill( kaon_fromB0_Pt );
 	//
 	////////////////////////////////
 	Bool_t newsoftID = kFALSE ;
@@ -2003,19 +2298,19 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	  PV_matching_cuts = kTRUE;
 	//
 	if ( 1 
-	     && ( (*B0Vtx_CL)[myB0Idx] > 0.05 )
-	     //&& ( (*B0CosAlphaPV)[myB0Idx] > 0.9 ) // 0.99
-	     && ( (*B0CosAlphaPV)[myB0Idx] > 0.99 ) && ( (*B0CosAlpha3DPV)[myB0Idx] > 0.99 )
-	     && ( (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] > 3.5 ) // 7
+	     //&& ( (*B0Vtx_CL)[myB0Idx] > 0.05 ) // removed because in BDT
+	     && ( (*B0CosAlphaPV)[myB0Idx] > 0.9 ) // 0.99
+	     //&& ( (*B0CosAlphaPV)[myB0Idx] > 0.99 ) && ( (*B0CosAlpha3DPV)[myB0Idx] > 0.99 )
+	     //&& ( (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] > 3.5 ) // 7 // removed because in BDT
 	     )
 	  BO_selectionCuts = kTRUE ;
 	//
 	if ( 1 && newsoftID 
-	     && ( fabs( (*MuMuMass)[psip_index] - psi2S_mass ) < 0.12 )
+	     && ( fabs( (*MuMuMass)[psip_index] - mumu_mass ) < 0.12 )
 	     && ( (*MuMuVtx_CL)[psip_index] > 0.05 )
 	     //&& ( pion_fromB0_Pt > 0.5 ) // 0.45
 	     //&& ( kaon_fromB0_Pt > 0.5 ) // 0.45
-	     && ( B0_Pt > 7.)
+	     //&& ( B0_Pt > 7.) // removed because in BDT
 	     && ( PsiPrime_fromB0_Pt > 5.)
 	     //&& ( mu1_p4.Pt() > 3.3 && mu2_p4.Pt() > 3.3)
 	     && Mu1_PtSel && Mu2_PtSel
@@ -2028,7 +2323,8 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      hmyPsiPKPiMass_bothCombSel->Fill(myB0p4.M());
 	      hmyPsiPKPiMass_bothCombSel->Fill(myB0p4_KPiExchanged.M());
 	      
-	      psi2SPiSqMass_vs_KPiSqMass_ABaseC->Fill( (kp4 + pip4).M2(), (PsiPp4 + pip4).M2() );
+	      psi2SPiSqMass_vs_KPiSqMass_ABaseC->Fill( KPip4_orig.M2(), Zp4_orig.M2() );
+	      psi2SPiSqMass_vs_KPiSqMass_B0constr_ABaseC->Fill( KPip4.M2(), Zp4.M2() );
 	      
 	      baselineB0Sel = kTRUE;
 	    }
@@ -2036,11 +2332,34 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      baselinePVMatching = kTRUE;
 	  }
 	//
+	// Nairit's optimized cuts 23/02/2015
+	if ( baselineB0Sel
+	     && (*B0Vtx_CL)[myB0Idx] > 0.09 // stronger than baselineB0Sel
+	     && (*B0CosAlphaPV)[myB0Idx] > 0.9985 // stronger than baselineB0Sel
+	     && (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] > 9.0 // stronger than baselineB0Sel
+	     && (*MuMuVtx_CL)[psip_index] > 0.02 // already tighter before
+	     && PsiPp4_orig.DeltaR(Pip4_orig) < 1.0
+	     && PsiPp4_orig.DeltaR(Kp4_orig) < 1.0
+	     && ((*trackChi2)[pi_orig_Index]/(*trackNDF)[pi_orig_Index]) < 7.0 && ((*trackChi2)[ka_orig_Index]/(*trackNDF)[ka_orig_Index]) < 7.0
+	     && (*trackShits)[pi_orig_Index] >= 10 && (*trackShits)[ka_orig_Index] >= 10
+	     && (*trackPhits)[pi_orig_Index] > 0 && (*trackPhits)[ka_orig_Index] > 0
+	     && B0_Pt > 5 
+	     && Pip4_orig.Pt() > 0.45 && Kp4_orig.Pt() > 0.45
+	     //&& PsiPp4_orig.Pt() > 8
+	     )
+	  {
+	    hmyPsiPKPiMassNairitSelAlt->Fill( myB0MassAlt );
+	    if ( fabs(myB0MassAlt - 5.280) < 2*0.012 )
+	      psi2SPiSqMass_vs_KPiSqMass_NairitPeak->Fill( KPip4_orig.M2(), Zp4_orig.M2() ) ;
+	    else if ( (fabs(myB0MassAlt - 5.280) > 5*0.012)  &&  (fabs(myB0MassAlt - 5.280) < 7*0.012) )
+	      psi2SPiSqMass_vs_KPiSqMass_NairitSb->Fill( KPip4_orig.M2(), Zp4_orig.M2() ) ;
+	  }
+	// my cuts 
 	if ( 1 
-	     && B0_Pt > 8.
+	     //&& B0_Pt > 8. // removed because in BDT
 	     //&& pion_fromB0_Pt > 0.7
-	     && PsiPp4.DeltaR(pip4) < 1.0 //0.5
-	     && PsiPp4.DeltaR(kp4) < 1.0 //0.5
+	     //&& PsiPp4_orig.DeltaR(Pip4_orig) < 0.5 //1.0 // removed because in BDT
+	     //&& PsiPp4_orig.DeltaR(Kp4_orig) < 0.5 //1.0 // removed because in BDT
 	     //
 	     && ((*trackChi2)[pi_orig_Index]/(*trackNDF)[pi_orig_Index]) < 5.0
 	     && ((*trackChi2)[ka_orig_Index]/(*trackNDF)[ka_orig_Index]) < 5.0
@@ -2048,10 +2367,11 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	     && (*trackShits)[ka_orig_Index] >= 10
 	     && (*trackPhits)[pi_orig_Index] > 0
 	     && (*trackPhits)[ka_orig_Index] > 0
-	     && pip4.Eta() < 2.4
-	     && kp4.Eta() < 2.4
+	     && Pip4_orig.Eta() < 2.4
+	     && Kp4_orig.Eta() < 2.4
 	     )
 	  {
+	    //cout <<"before PV matching" <<endl ;
 	    // PV matching
 	    if ( baselinePVMatching
 		 && Pip4_orig.Pt() > 2. && Kp4_orig.Pt() > 2.
@@ -2071,7 +2391,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      B0_PVCTau_h->Fill( (*B0CTauPV)[myB0Idx] / (*B0CTauPVE)[myB0Idx] ) ;
 	      B0_CosAlphaCTau_h->Fill( (*B0CTauPVCosAlpha)[myB0Idx] / (*B0CTauPVCosAlphaE)[myB0Idx] ) ;
 	      B0_PVXCTau_h->Fill( (*B0CTauPVX)[myB0Idx] / (*B0CTauPVXE)[myB0Idx] ) ;
-	      B0_PVX3DCTau_h->Fill( (*B0CTauPVX_3D)[myB0Idx] / (*B0CTauPVX_3D_err)[myB0Idx] ) ;
+	      //B0_PVX3DCTau_h->Fill( (*B0CTauPVX_3D)[myB0Idx] / (*B0CTauPVX_3D_err)[myB0Idx] ) ;
 
 	      if ( (priVtx_X == (*PriVtx_B0CosAlpha_X)[myB0Idx]) &&
 		   (priVtx_Y == (*PriVtx_B0CosAlpha_Y)[myB0Idx]) &&
@@ -2090,13 +2410,13 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	    }
 	    //
 	    if ( baselineB0Sel ) {
-	      if (PsiPp4.DeltaR(pip4) < 0.4  &&  PsiPp4.DeltaR(kp4) < 0.4)
+	      if (PsiPp4_orig.DeltaR(Pip4) < 0.4  &&  PsiPp4_orig.DeltaR(Kp4) < 0.4)
 		hmyPsiPKPiMass_deltaRtest->Fill( myB0MassAlt );
 	      if ((*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] > 11)
 		hmyPsiPKPiMass_B0cTautest->Fill( myB0MassAlt );
 	      if (B0_Pt > 15.) {
 		hmyPsiPKPiMass_B0pTtest->Fill( myB0MassAlt );
-		if ( (Pip4_orig + Kp4_orig).M() > 0.85  &&  (Pip4_orig + Kp4_orig).M() < 0.95 )
+		if ( (KPip4_orig).M() > 0.85  &&  (KPip4_orig).M() < 0.95 )
 		  if ( fabs(myB0MassAlt - 5.280808) < 2*0.00816 ) {
 		    hPionFromKstar_p->Fill( Pip4_orig.P() );
 		    hKaonFromKstar_p->Fill( Kp4_orig.P() );
@@ -2104,15 +2424,32 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      }
 	      nB0AC_noMassWin++ ;
 	      
-	      kaonP_vs_pionP->Fill( Pip4_orig.P(),Kp4_orig.P() ) ;
-	      kaonPt_vs_pionPt->Fill( Pip4_orig.Pt(),Kp4_orig.Pt() ) ;
+	      kaonP_vs_pionP->Fill( Pip4_orig.P(), Kp4_orig.P() ) ;
+	      kaonPt_vs_pionPt->Fill( Pip4_orig.Pt(), Kp4_orig.Pt() ) ;
+	      kaonIdx_vs_pionIdx->Fill( pi_orig_Index, ka_orig_Index) ; 
 	      trk_dz->Fill((*trackDzVtx)[pi_orig_Index]) ; trk_dz->Fill((*trackDzVtx)[ka_orig_Index]) ;
 	      trk_dxy->Fill((*trackDxyVtx)[pi_orig_Index]) ; trk_dxy->Fill((*trackDxyVtx)[ka_orig_Index]) ;
-	      hmyPsiPMassSel->Fill( PsiPp4.M() ); hPsiPrimefromBMassSel->Fill( (*MuMuMass)[(*B0MuMuIdx)[myB0Idx]] ) ;
-	      hmyPsiPKPiMassSelZoom->Fill( myB0p4_orig.M() );
-	      hmyPsiPKPiMassSelAlt->Fill( myB0MassAlt );
-	      hmyPsiPKPiMassSelAltZoom->Fill( myB0MassAlt );
-	      
+	      hmyPsiPMassSel->Fill( PsiPp4_orig.M() ); hPsiPrimefromBMassSel->Fill( (*MuMuMass)[(*B0MuMuIdx)[myB0Idx]] ) ;
+	      hmyPsiPKPiMassZoom->Fill( myB0p4_orig.M() );
+	      hmyPsiPKPiMassAlt->Fill( myB0MassAlt );
+	      hmyPsiPKPiMassAltZoom->Fill( myB0MassAlt );
+	      // look for reflections M(KK), M(KPi), M(PiPi), M(PsiKK), M(MuMuPiPi)
+	      hmyPiPiMass->Fill( (Pip4_orig + Kp4_orig_ex).M() ) ;
+	      hmyPiKMass->Fill( (KPip4_orig).M() ) ;
+	      hmyKKMass->Fill( (Pip4_orig_ex + Kp4_orig).M() ) ;
+	      hmyPsiPPiPiMass->Fill( (PsiPp4_orig + Pip4_orig + Kp4_orig_ex).M() ) ;
+	      hmyPsiPPiKMass->Fill( (PsiPp4_orig + Pip4_orig + Kp4_orig).M() ) ; hmyPsiPPiKMass_zoom->Fill( (PsiPp4_orig + Pip4_orig + Kp4_orig).M() ) ;
+	      hmyPsiPKKMass->Fill( (PsiPp4_orig + Pip4_orig_ex + Kp4_orig).M() ) ;
+	      if ( (Pip4_orig_ex + Kp4_orig).M() > phi_left  &&  (Pip4_orig_ex + Kp4_orig).M() < phi_right) {
+		hmyPsiPPhiMass->Fill( (PsiPp4_orig + Pip4_orig_ex + Kp4_orig).M() ) ;
+		if ((PsiPp4_orig + Pip4_orig_ex + Kp4_orig).M() > Bs_left  &&  (PsiPp4_orig + Pip4_orig_ex + Kp4_orig).M() < Bs_right) { // to tune
+		  hmyPsiPPiKMass_fromBs->Fill( (PsiPp4_orig + Pip4_orig + Kp4_orig).M() ); hmyPsiPPiKMass_fromBs_zoom->Fill( (PsiPp4_orig + Pip4_orig + Kp4_orig).M() ); }
+	      }
+	      hmyPiPiMass_vs_KKMass->Fill( (Pip4_orig + Kp4_orig_ex).M(), (Pip4_orig_ex + Kp4_orig).M() ) ;
+	      hmyPsiPPiPiMass_vs_PiPiMass->Fill( (PsiPp4_orig + Pip4_orig + Kp4_orig_ex).M(), (Pip4_orig + Kp4_orig_ex).M() ) ;
+	      hmyPsiPKKMass_vs_KKMass->Fill( (PsiPp4_orig + Pip4_orig_ex + Kp4_orig).M(), (Pip4_orig_ex + Kp4_orig).M() ) ;
+	      //
+	    
 	      // tight cuts
 	      for (Int_t i = 0; i < abs(piPt_B0.size()); ++i)
 		if (Pip4_orig.Pt() > piPt_B0[i]) 
@@ -2133,21 +2470,47 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  myMuMuKPiMass_trksAndB0vtxCLAndB0Ctau[i]->Fill( myB0MassAlt ) ;
 	      
 	      ///////////////////////////////////////////////////////////////////
-
+	      //cout <<"before nB0AC++" <<endl ;
 	      if ( myB0MassAlt > 5.15  &&  myB0MassAlt < 5.45 ) {
 		nB0AC++ ;
 
-		psi2SPiSqMass_vs_KPiSqMass_AC->Fill( (kp4 + pip4).M2(), (PsiPp4 + pip4).M2() );
+		psi2SPiSqMass_vs_KPiSqMass_AC->Fill( KPip4.M2(), (PsiPp4_orig + Pip4).M2() );
 
-		if ( fabs(myB0MassAlt - B0_massFit) < 2*B0_sigmaFit ) 
-		  nB0AC_purityWin++ ;
-		
+		Float_t mva_values[] = { (Float_t)(Pip4_orig.Pt()), (Float_t)(Kp4_orig.Pt()), B0_Pt, (Float_t)(Pip4_orig.Pt()), (Float_t)(Kp4_orig.Pt()), (Float_t)(Pip4_orig.Pt() + Kp4_orig.Pt()), (Float_t)(PsiPp4_orig.DeltaR(Pip4_orig)), (Float_t)(PsiPp4_orig.DeltaR(Kp4_orig)), (Float_t)(PsiPp4_orig.DeltaR(KPip4_orig)), (Float_t)(Pip4_orig.DeltaR(Kp4_orig)), (*B0Vtx_CL)[myB0Idx], (Float_t)((*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx]) //, (Float_t)((*B0CTauBS)[myB0Idx]/(*B0CTauBSE)[myB0Idx]) 
+					 , (Float_t)((*B0CosAlphaPV)[myB0Idx]), myB0MassAlt, (Float_t)nB0AC
+					 , (Float_t)(KPip4_orig.M()), (Float_t)(Zp4_orig.M()), (Float_t)cosTheta_psi, (Float_t)phi // AA vars
+					 , (Float_t)(Pip4_orig + Kp4_orig_ex).M(), (Float_t)(PsiPp4_orig + Pip4_orig + Kp4_orig_ex).M(), (Float_t)(Pip4_orig_ex + Kp4_orig).M(), (Float_t)(PsiPp4_orig + Pip4_orig_ex + Kp4_orig).M() // reflections check
+					 , (Float_t)(KPip4_gen.M()), (Float_t)(PsiPip4_gen.M()), (Float_t)cosTheta_psi_gen, (Float_t)phi_gen // efficiency
+					 , 0. // dummy value for Data
+		}; 
+		/*
+		mva_vars_all[0] = Pip4_orig.Pt(); mva_vars_all[1] = Kp4_orig.Pt(); mva_vars_all[2] = B0_Pt;
+		if (Pip4_orig.Pt() < Kp4_orig.Pt()) {
+		  mva_vars_all[3] = Pip4_orig.Pt(); mva_vars_all[4] = Kp4_orig.Pt();
+		} else {
+		  mva_vars_all[3] = Kp4_orig.Pt(); mva_vars_all[4] = Pip4_orig.Pt();
+		}
+		mva_vars_all[5] = PsiPp4_orig.DeltaR(Pip4_orig); mva_vars_all[6] = PsiPp4_orig.DeltaR(Kp4_orig);
+		mva_vars_all[7] = (*B0Vtx_CL)[myB0Idx]; mva_vars_all[8] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx]; mva_vars_all[9] = (*B0CTauBS)[myB0Idx]/(*B0CTauBSE)[myB0Idx]; mva_vars_all[10] = (*B0CosAlphaPV)[myB0Idx];
+		mva_vars_all[11] = myB0MassAlt; mva_vars_all[12] = nB0AC;
+		*/
+		Int_t mva_vars_n = mva_vars_all.size();
+		for (Int_t i = 0; i < mva_vars_n; ++i)
+		  mva_vars_all[i] = mva_values[i];
+		if (Pip4_orig.Pt() < Kp4_orig.Pt()) {
+		  mva_vars_all[3] = Kp4_orig.Pt(); mva_vars_all[4] = Pip4_orig.Pt();
+		  mva_vars_all[6] = PsiPp4_orig.DeltaR(Kp4_orig); mva_vars_all[7] = PsiPp4_orig.DeltaR(Pip4_orig); 
+		}
+		// one more variable below: B0_matched
+
 		// MC matching
 		//if ( MC ) { // moved below
-		Float_t minDeltaRMuMu = 0.05, minDeltaRPi = 0.5, minDeltaRK = 0.5;
+		Float_t minDeltaRMuMu = 0.1, minDeltaRPi = 0.5, minDeltaRK = 0.5;
+		//Float_t minDeltaRMuMu = 0.05, minDeltaRPi = 0.5, minDeltaRK = 0.5;
 		//Float_t minDeltaRMuMu = 0.5, minDeltaRPi = 0.5, minDeltaRK = 0.5; // same result
 		//Float_t minDeltaRMuMu = 0.05, minDeltaRPi = 0.9, minDeltaRK = 0.9;  
 		//int myMuMuMatched[] = {-1,-1}, myPiMatched[] = {-1,-1}, myKMatched[] = {-1,-1};
+		Float_t DrMuMu = 10., MuMuPtDiff = 10., DrPi = 10., piPtDiff = 10., DrK = 10., kPtDiff = 10. ;
 		
 		vector<int> truePiCharge, trueKCharge ;
 		vector<TLorentzVector> truePi4Vec, trueK4Vec, trueMuMu4Vec, trueB04Vec ;   
@@ -2161,7 +2524,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		    genEvtVtx_XYZ[0] = (*genEvtVtx_X)[myMCB0Idx] ; genEvtVtx_XYZ[1] = (*genEvtVtx_Y)[myMCB0Idx] ; genEvtVtx_XYZ[2] = (*genEvtVtx_Z)[myMCB0Idx] ;
 		    //      
 		    Float_t J_E_gen = 0, K_E_gen = 0, Pi_E_gen = 0, muP_E_gen = 0, muM_E_gen = 0;
-		    J_E_gen = sqrt( pow((*MCpsi2SPx)[myMCB0Idx], 2) + pow((*MCpsi2SPy)[myMCB0Idx], 2) + pow((*MCpsi2SPz)[myMCB0Idx], 2) + pow(psi2S_mass, 2) ) ;
+		    J_E_gen = sqrt( pow((*MCpsi2SPx)[myMCB0Idx], 2) + pow((*MCpsi2SPy)[myMCB0Idx], 2) + pow((*MCpsi2SPz)[myMCB0Idx], 2) + pow(mumu_mass, 2) ) ;
 		    K_E_gen = sqrt( pow((*MCkaonPx)[myMCB0Idx], 2) + pow((*MCkaonPy)[myMCB0Idx], 2) + pow((*MCkaonPz)[myMCB0Idx], 2) + pow(kaonCh_mass, 2) ) ;
 		    Pi_E_gen = sqrt( pow((*MCpionPx)[myMCB0Idx], 2) + pow((*MCpionPy)[myMCB0Idx], 2) + pow((*MCpionPz)[myMCB0Idx], 2) + pow(pionCh_mass, 2) ) ;
 		    muP_E_gen = sqrt( pow((*MCmupPx)[myMCB0Idx], 2) + pow((*MCmupPy)[myMCB0Idx], 2) + pow((*MCmupPz)[myMCB0Idx], 2) + pow(muon_mass, 2) ) ;
@@ -2175,31 +2538,95 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		    B0p4_gen = Jp4_gen + Pip4_gen + Kp4_gen ;
 		    Kstar_gen = Pip4_gen + Kp4_gen ;
 
+		    // NO GEN FILL INSIDE RECO LOOP!
+		    /*
 		    B0_gen_p_h->Fill( B0p4_gen.P() ) ; B0_gen_pT_h->Fill( B0p4_gen.Pt() ) ;
 		    psi2S_gen_p_h->Fill( Jp4_gen.P() ) ; psi2S_gen_pT_h->Fill( Jp4_gen.Pt() ) ;
 		    K_gen_p_h->Fill( Kp4_gen.P() ) ; K_gen_pT_h->Fill( Kp4_gen.Pt() ) ;
 		    pi_gen_p_h->Fill( Pip4_gen.P() ) ; pi_gen_pT_h->Fill( Pip4_gen.Pt() ) ;
-		    
-		    psi2SPiSqMass_vs_KPiSqMass_gen->Fill( (Kp4_gen + Pip4_gen).M2(), (Jp4_gen + Pip4_gen).M2() );
-		    
+
+		    psi2SPiSqMass_vs_KPiSqMass_gen->Fill( Kstar_gen.M2(), (Jp4_gen + Pip4_gen).M2() );
+		    */
 		    truePi4Vec.push_back( Pip4_gen ); trueK4Vec.push_back( Kp4_gen ); trueMuMu4Vec.push_back( Jp4_gen ); trueB04Vec.push_back( B0p4_gen );
 		    truePiCharge.push_back( (*MCpionCh)[myMCB0Idx] ); trueKCharge.push_back( (*MCkaonCh)[myMCB0Idx] ); 
 		  }
-		  if (nMCB0 > 0)
+		  if (nMCB0 > 0) {
 		    B0Mass_gen = B0p4_gen.M() ;
+		    //
+		    DrMuMu = trueMuMu4Vec[0].DeltaR(PsiPp4_orig) ; // DeltaR between true psi' and reco psi'
+		    MuMuPtDiff = fabs(trueMuMu4Vec[0].Pt() - PsiPp4_orig.Pt())/trueMuMu4Vec[0].Pt() ;
+		    DrPi = truePi4Vec[0].DeltaR(Pip4_orig) ; // DeltaR between true pi and reco pi
+		    piPtDiff = fabs(truePi4Vec[0].Pt() - Pip4_orig.Pt())/truePi4Vec[0].Pt() ;
+		    DrK = trueK4Vec[0].DeltaR(Kp4_orig) ; // DeltaR between true K and reco K
+		    kPtDiff = fabs(trueK4Vec[0].Pt() - Kp4_orig.Pt())/trueK4Vec[0].Pt() ;
+		  }
+		  else
+		    B0Mass_gen = 0 ;
+		  //if ( fabs(B0Mass_gen - B0_mass) > Bmass_tolerance) continue;
+ 
+		  // MVA B0 matching
+		  if ( (DrMuMu < minDeltaRMuMu) && (MuMuPtDiff < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+		    if ( ((*trackCharge)[pi_orig_Index] * truePiCharge[0] > 0) && ((*trackCharge)[ka_orig_Index] * trueKCharge[0] > 0) ) 
+		      if ( (DrPi < minDeltaRPi) && (piPtDiff < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			if ( (DrK < minDeltaRK) && (kPtDiff < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			  mva_values[mva_vars_n-1] = 1.;
+			else mva_values[mva_vars_n-1] = -1.;
+		      else mva_values[mva_vars_n-1] = -1.;
+		    else mva_values[mva_vars_n-1] = -1.;
+		  else mva_values[mva_vars_n-1] = -1.;
+		} // if ( MC )
+		mva_vars_all[mva_vars_n-1] = mva_values[mva_vars_n-1];
+
+		// MVA fill
+		if ( fabs(myB0MassAlt - B0_massFit) < B0_signal*B0_sigmaFit ) { 
+		  nB0AC_purityWin++ ;
+		  hPionPt_fromB0peak->Fill(Pip4_orig.Pt()); hKaonPt_fromB0peak->Fill(Kp4_orig.Pt()); hPionPtPlusKaonPt_fromB0peak->Fill(Pip4_orig.Pt() + Kp4_orig.Pt()); hB0Pt_fromB0peak->Fill(B0_Pt);
+		  hPionDeltaRKaon_fromB0peak->Fill((Float_t)(Pip4_orig.DeltaR(Kp4_orig))); hPsiDeltaRKPi_fromB0peak->Fill((Float_t)(PsiPp4_orig.DeltaR(KPip4_orig))); KPiMass_fromB0peak->Fill( KPip4_orig.M() );
+		  if (Pip4_orig.Pt() < Kp4_orig.Pt()) {
+		    hHigherPt_fromB0peak->Fill(Kp4_orig.Pt()); hLowerPt_fromB0peak->Fill(Pip4_orig.Pt());
+		    hPsiDeltaRHigherPtTrk_fromB0peak->Fill((Float_t)(PsiPp4_orig.DeltaR(Kp4_orig))); hPsiDeltaRLowerPtTrk_fromB0peak->Fill((Float_t)(PsiPp4_orig.DeltaR(Pip4_orig)));
+		  } else {
+		    hHigherPt_fromB0peak->Fill(Pip4_orig.Pt()); hLowerPt_fromB0peak->Fill(Kp4_orig.Pt());
+		    hPsiDeltaRHigherPtTrk_fromB0peak->Fill((Float_t)(PsiPp4_orig.DeltaR(Pip4_orig))); hPsiDeltaRLowerPtTrk_fromB0peak->Fill((Float_t)(PsiPp4_orig.DeltaR(Kp4_orig)));
+		  }
+		  hB0VtxCL_fromB0peak->Fill((*B0Vtx_CL)[myB0Idx]); B0_PVCTau_fromB0peak->Fill( (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ); B0_BSCTau_fromB0peak->Fill( (*B0CTauBS)[myB0Idx]/(*B0CTauBSE)[myB0Idx] ); B0_pointingAnglePV_fromB0peak->Fill((*B0CosAlphaPV)[myB0Idx]);
+		  cos_psi2S_helicityAngleLabB0peak->Fill( cosTheta_psiLab );
+		  for (Int_t i = 0; i < mva_vars_n; ++i)
+		    mva_vars_sig[i] = mva_values[i];
 		}
-		
+		else if ( fabs(myB0MassAlt - B0_massFit) > innerSB*B0_sigmaFit  &&  fabs(myB0MassAlt - B0_massFit) < outerSB*B0_sigmaFit) {
+		  nB0AC_sbWin++;
+		  hPionPt_fromB0sb->Fill(Pip4_orig.Pt()); hKaonPt_fromB0sb->Fill(Kp4_orig.Pt()); hPionPtPlusKaonPt_fromB0sb->Fill(Pip4_orig.Pt() + Kp4_orig.Pt()); hB0Pt_fromB0sb->Fill(B0_Pt);
+		  hPionDeltaRKaon_fromB0sb->Fill((Float_t)(Pip4_orig.DeltaR(Kp4_orig))); hPsiDeltaRKPi_fromB0sb->Fill((Float_t)(PsiPp4_orig.DeltaR(KPip4_orig))); KPiMass_fromB0sb->Fill( KPip4_orig.M() );
+		  if (Pip4_orig.Pt() < Kp4_orig.Pt()) {
+		    hLowerPt_fromB0sb->Fill(Pip4_orig.Pt()); hHigherPt_fromB0sb->Fill(Kp4_orig.Pt());
+		    hPsiDeltaRHigherPtTrk_fromB0sb->Fill((Float_t)(PsiPp4_orig.DeltaR(Kp4_orig))); hPsiDeltaRLowerPtTrk_fromB0sb->Fill((Float_t)(PsiPp4_orig.DeltaR(Pip4_orig)));
+		  } else {
+		    hLowerPt_fromB0sb->Fill(Kp4_orig.Pt()); hHigherPt_fromB0sb->Fill(Pip4_orig.Pt());
+		    hPsiDeltaRHigherPtTrk_fromB0sb->Fill((Float_t)(PsiPp4_orig.DeltaR(Pip4_orig))); hPsiDeltaRLowerPtTrk_fromB0sb->Fill((Float_t)(PsiPp4_orig.DeltaR(Kp4_orig)));
+		  }
+		  hB0VtxCL_fromB0sb->Fill((*B0Vtx_CL)[myB0Idx]); B0_PVCTau_fromB0sb->Fill( (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ); B0_BSCTau_fromB0sb->Fill( (*B0CTauBS)[myB0Idx]/(*B0CTauBSE)[myB0Idx] ); B0_pointingAnglePV_fromB0sb->Fill((*B0CosAlphaPV)[myB0Idx]);
+		  cos_psi2S_helicityAngleLabB0sb->Fill( cosTheta_psiLab );
+		  //
+		  for (Int_t i = 0; i < mva_vars_n; ++i)
+		    mva_vars_bkg[i] = mva_values[i];
+		  mva_variables_bkg->Fill();
+		}
+		mva_variables_all->Fill();
+
+
 		if ( !MC || (MC && nMCB0>0) ) {
 
 		  if ( (nB0AC == 1 ) ) {
 		    
-		    pB0_XYZ[0] = (*B0Px)[myB0Idx] ; pB0_XYZ[1] = (*B0Py)[myB0Idx] ; pB0_XYZ[2] = (*B0Pz)[myB0Idx] ;
+		    //pB0_XYZ[0] = (*B0Px)[myB0Idx] ; pB0_XYZ[1] = (*B0Py)[myB0Idx] ; pB0_XYZ[2] = (*B0Pz)[myB0Idx] ;
 		    B0CTau_2B0[0][0] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
-		    secVtx_XYZ[0] = (*B0DecayVtx_X)[myB0Idx] ; secVtx_XYZ[1] = (*B0DecayVtx_Y)[myB0Idx] ; secVtx_XYZ[2] = (*B0DecayVtx_Z)[myB0Idx] ;
+		    //secVtx_XYZ[0] = (*B0DecayVtx_X)[myB0Idx] ; secVtx_XYZ[1] = (*B0DecayVtx_Y)[myB0Idx] ; secVtx_XYZ[2] = (*B0DecayVtx_Z)[myB0Idx] ;
 		    //if ( priVtx_Z )
 		    priVtx_XYZ[0] = priVtx_X; priVtx_XYZ[1] = priVtx_Y; priVtx_XYZ[2] = priVtx_Z;
-		    priVtx_XYZ[3] = (*B0CosAlphaPV)[myB0Idx] ; priVtx_XYZ[4] = (*B0CosAlpha3DPV)[myB0Idx] ;
+		    priVtx_XYZ[3] = (*B0CosAlphaPV)[myB0Idx] ; //priVtx_XYZ[4] = (*B0CosAlpha3DPV)[myB0Idx] ;
 
+		    //cout <<"before PriVtx stuff" <<endl ;
 		    if ( PriVtx_B0CosAlpha_Z ) {
 		      priVtx_B0CosAlpha_XYZ[0][0] = (*PriVtx_B0CosAlpha_X)[myB0Idx]; priVtx_B0CosAlpha_XYZ[0][1] = (*PriVtx_B0CosAlpha_Y)[myB0Idx]; priVtx_B0CosAlpha_XYZ[0][2] = (*PriVtx_B0CosAlpha_Z)[myB0Idx] ; 
 		      priVtx_B0CosAlpha_XYZ[0][3] = (*B0CosAlphaPVCosAlpha)[myB0Idx]; priVtx_B0CosAlpha_XYZ[0][4] = 0; // to add (*B0CosAlphaPVCosAlpha3D)[myB0Idx];
@@ -2223,22 +2650,24 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		       
  
 		    B0Mass_2B0[0][nB0AC-1] = myB0MassAlt ;
-		    PsiPp4_2B0[0][nB0AC-1] = PsiPp4; Pip4_2B0[0][nB0AC-1] = Pip4_orig; Kp4_2B0[0][nB0AC-1] = Kp4_orig ;
+		    PsiPp4_2B0[0][nB0AC-1] = PsiPp4_orig; Pip4_2B0[0][nB0AC-1] = Pip4_orig; Kp4_2B0[0][nB0AC-1] = Kp4_orig ;
+		    PsiPp4_B0constr_2B0[0][nB0AC-1] = PsiPp4; Pip4_B0constr_2B0[0][nB0AC-1] = Pip4; Kp4_B0constr_2B0[0][nB0AC-1] = Kp4 ;
 		    PiCharge_2B0[0][nB0AC-1] = (*trackCharge)[pi_orig_Index] ; KCharge_2B0[0][nB0AC-1] = (*trackCharge)[ka_orig_Index] ;
 		    //
-		    twins_var[0][0] = PsiPp4.M(); twins_var[0][1] = PsiPp4.Pt(); twins_var[0][2] = Kp4_orig.Pt(); twins_var[0][3] = Pip4_orig.Pt();
+		    twins_var[0][0] = PsiPp4_orig.M(); twins_var[0][1] = PsiPp4_orig.Pt(); twins_var[0][2] = Kp4_orig.Pt(); twins_var[0][3] = Pip4_orig.Pt();
 
 		    if ( MC ) {
 		      DeltaR_1B0[0] = myB0p4_orig.DeltaR(trueB04Vec[0]) ;
 		      DeltaPt_1B0[0] = fabs(myB0p4_orig.Pt() - trueB04Vec[0].Pt()) / trueB04Vec[0].Pt() ;
-		      
-		      Double_t DrMuMu = trueMuMu4Vec[0].DeltaR(PsiPp4) ; // DeltaR between true psi' and reco psi'
-		      Double_t MuMuPtDiff = fabs(trueMuMu4Vec[0].Pt() - PsiPp4.Pt())/trueMuMu4Vec[0].Pt() ;
+		      // moved above
+		      /*
+		      Double_t DrMuMu = trueMuMu4Vec[0].DeltaR(PsiPp4_orig) ; // DeltaR between true psi' and reco psi'
+		      Double_t MuMuPtDiff = fabs(trueMuMu4Vec[0].Pt() - PsiPp4_orig.Pt())/trueMuMu4Vec[0].Pt() ;
 		      Double_t DrPi = truePi4Vec[0].DeltaR(Pip4_orig) ; // DeltaR between true pi and reco pi
 		      Double_t piPtDiff = fabs(truePi4Vec[0].Pt() - Pip4_orig.Pt())/truePi4Vec[0].Pt() ;
 		      Double_t DrK = trueK4Vec[0].DeltaR(Kp4_orig) ; // DeltaR between true K and reco K
 		      Double_t kPtDiff = fabs(trueK4Vec[0].Pt() - Kp4_orig.Pt())/trueK4Vec[0].Pt() ;
-		      
+		      */
 		      chargePi_1B0[0] = truePiCharge[0] * PiCharge_2B0[0][nB0AC-1] ;
 		      chargeK_1B0[0] = trueKCharge[0] * KCharge_2B0[0][nB0AC-1] ;
 		      
@@ -2258,10 +2687,11 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  }
 		  else if ( nB0AC == 2 ) {
 		    B0Mass_2B0[0][nB0AC-1] = myB0MassAlt ;
-		    PsiPp4_2B0[0][nB0AC-1] = PsiPp4; Pip4_2B0[0][nB0AC-1] = Pip4_orig; Kp4_2B0[0][nB0AC-1] = Kp4_orig ;
+		    PsiPp4_2B0[0][nB0AC-1] = PsiPp4_orig; Pip4_2B0[0][nB0AC-1] = Pip4_orig; Kp4_2B0[0][nB0AC-1] = Kp4_orig ;
+		    PsiPp4_B0constr_2B0[0][nB0AC-1] = PsiPp4; Pip4_B0constr_2B0[0][nB0AC-1] = Pip4; Kp4_B0constr_2B0[0][nB0AC-1] = Kp4 ;
 		    PiCharge_2B0[0][nB0AC-1] = (*trackCharge)[pi_orig_Index] ; KCharge_2B0[0][nB0AC-1] = (*trackCharge)[ka_orig_Index] ;
 		    //
-		    twins_var[1][0] = PsiPp4.M(); twins_var[1][1] = PsiPp4.Pt(); twins_var[1][2] = Kp4_orig.Pt(); twins_var[1][3] = Pip4_orig.Pt();
+		    twins_var[1][0] = PsiPp4_orig.M(); twins_var[1][1] = PsiPp4_orig.Pt(); twins_var[1][2] = Kp4_orig.Pt(); twins_var[1][3] = Pip4_orig.Pt();
 		    if (twins_var[0][0] == twins_var[1][0]) // psi(2S) mass
 		      if (twins_var[0][1] == twins_var[1][1]) // psi(2S) pT
 			if (twins_var[0][2] == twins_var[1][3]) // track pT
@@ -2274,10 +2704,10 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		      DeltaR_2B0[0][nB0AC-1] = myB0p4_orig.DeltaR(trueB04Vec[0]) ; 
 		      DeltaPt_2B0[0][nB0AC-1] = fabs(myB0p4_orig.Pt() - trueB04Vec[0].Pt()) / trueB04Vec[0].Pt() ; 
 		      
-		      Double_t DrMuMu[2] = { trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[0][0]), trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[0][1]) } ; // DeltaR between true psi' and reco psi'
-		      Double_t MuMuPtDiff[2] = { fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[0][0].Pt())/trueMuMu4Vec[0].Pt(), fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[0][1].Pt())/trueMuMu4Vec[0].Pt() } ;
-		      Double_t piPtDiff[2] = { fabs(truePi4Vec[0].Pt() - Pip4_2B0[0][0].Pt())/truePi4Vec[0].Pt(), fabs(truePi4Vec[0].Pt() - Pip4_2B0[0][1].Pt())/truePi4Vec[0].Pt() } ;
-		      Double_t kPtDiff[2] = { fabs(trueK4Vec[0].Pt() - Kp4_2B0[0][0].Pt())/trueK4Vec[0].Pt(), fabs(trueK4Vec[0].Pt() - Kp4_2B0[0][1].Pt())/trueK4Vec[0].Pt() } ;
+		      Double_t DrMuMu_2B0[2] = { trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[0][0]), trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[0][1]) } ; // DeltaR between true psi' and reco psi'
+		      Double_t MuMuPtDiff_2B0[2] = { fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[0][0].Pt())/trueMuMu4Vec[0].Pt(), fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[0][1].Pt())/trueMuMu4Vec[0].Pt() } ;
+		      Double_t piPtDiff_2B0[2] = { fabs(truePi4Vec[0].Pt() - Pip4_2B0[0][0].Pt())/truePi4Vec[0].Pt(), fabs(truePi4Vec[0].Pt() - Pip4_2B0[0][1].Pt())/truePi4Vec[0].Pt() } ;
+		      Double_t kPtDiff_2B0[2] = { fabs(trueK4Vec[0].Pt() - Kp4_2B0[0][0].Pt())/trueK4Vec[0].Pt(), fabs(trueK4Vec[0].Pt() - Kp4_2B0[0][1].Pt())/trueK4Vec[0].Pt() } ;
 		    
 		      for (Int_t i = 0; i < nB0AC; i++) { 
 			DrPi_2B0[i] = truePi4Vec[0].DeltaR(Pip4_2B0[0][i]) ; // DeltaR between true psi' and reco psi'
@@ -2285,21 +2715,22 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 			chargePi_2B0[0][i] = truePiCharge[0] * PiCharge_2B0[0][i] ;
 			chargeK_2B0[0][i] = trueKCharge[0] * KCharge_2B0[0][i] ;
 
-			if ( (DrMuMu[i] < minDeltaRMuMu) && (MuMuPtDiff[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			if ( (DrMuMu_2B0[i] < minDeltaRMuMu) && (MuMuPtDiff_2B0[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			  MuMuMatched[0][i] = kTRUE ;
 		      
 			if ( chargePi_2B0[0][i] > 0 ) 
-			  if ( (DrPi_2B0[i] < minDeltaRPi) && (piPtDiff[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			  if ( (DrPi_2B0[i] < minDeltaRPi) && (piPtDiff_2B0[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			    pionMatched[0][i] = kTRUE ;
 		      
 			if ( chargeK_2B0[0][i] > 0 ) 
-			  if ( (DrK_2B0[i] < minDeltaRK) && (kPtDiff[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			  if ( (DrK_2B0[i] < minDeltaRK) && (kPtDiff_2B0[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			    kaonMatched[0][i] = kTRUE ;
 		      }
 		    }
 		  } // if ( nB0AC == 2 ) {
 		} // if ( !MC || (MC && nMCB0>0) ) {
 	      
+		//cout <<"before nB0AC_signalWin++" <<endl ;
 		if ( fabs(myB0MassAlt - B0_massFit) < 3*B0_sigmaFit ) {
 		  nB0AC_signalWin++ ;
 		
@@ -2317,38 +2748,39 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		    B0VtxCL_2B0[0] = (*B0Vtx_CL)[myB0Idx] ;
 		    B0CTau_2B0[1][0] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
 		    alpha_2B0[0] = alpha_orig;
-		    DeltaR_1B0[1] = myB0p4_orig.DeltaR(trueB04Vec[0]) ;
-		    DeltaPt_1B0[1] = fabs(myB0p4_orig.Pt() - trueB04Vec[0].Pt()) / trueB04Vec[0].Pt() ;
-		    PsiPp4_2B0[1][0] = PsiPp4; Pip4_2B0[1][0] = Pip4_orig; Kp4_2B0[1][0] = Kp4_orig ;
+		    PsiPp4_2B0[1][0] = PsiPp4_orig; Pip4_2B0[1][0] = Pip4_orig; Kp4_2B0[1][0] = Kp4_orig ;
+		    PsiPp4_B0constr_2B0[1][0] = PsiPp4; Pip4_B0constr_2B0[1][0] = Pip4; Kp4_B0constr_2B0[1][0] = Kp4 ;
 		    PiCharge_2B0[1][0] = (*trackCharge)[pi_orig_Index] ; KCharge_2B0[1][0] = (*trackCharge)[ka_orig_Index] ;
 		    //
-		    twins_var[0][0] = PsiPp4.M(); twins_var[0][1] = PsiPp4.Pt(); twins_var[0][2] = Kp4_orig.Pt(); twins_var[0][3] = Pip4_orig.Pt();
+		    twins_var[0][0] = PsiPp4_orig.M(); twins_var[0][1] = PsiPp4_orig.Pt(); twins_var[0][2] = Kp4_orig.Pt(); twins_var[0][3] = Pip4_orig.Pt();
 
 		    if ( MC ) { // truth matching
 		      if ( nMCB0 < 2 ) {   // skip events with more than 1 generated B0		  
 
+			DeltaR_1B0[1] = myB0p4_orig.DeltaR(trueB04Vec[0]) ;
+			DeltaPt_1B0[1] = fabs(myB0p4_orig.Pt() - trueB04Vec[0].Pt()) / trueB04Vec[0].Pt() ;
 			chargePi_1B0[1] = truePiCharge[0] * PiCharge_2B0[1][0] ;
 			chargeK_1B0[1] = trueKCharge[0] * KCharge_2B0[1][0] ;
 			chargePi_2B0[1][0] = chargePi_1B0[1] ;
 			chargeK_2B0[1][0] = chargeK_1B0[1] ;
 			  
-			Double_t DrMuMu = trueMuMu4Vec[0].DeltaR(PsiPp4) ; // DeltaR between true psi' and reco psi'
-			Double_t MuMuPtDiff = fabs(trueMuMu4Vec[0].Pt() - PsiPp4.Pt())/trueMuMu4Vec[0].Pt() ;
-			Double_t DrPi = truePi4Vec[0].DeltaR(Pip4_orig) ; // DeltaR between true psi' and reco psi'
-			Double_t piPtDiff = fabs(truePi4Vec[0].Pt() - Pip4_orig.Pt())/truePi4Vec[0].Pt() ;
-			Double_t DrK = trueK4Vec[0].DeltaR(Kp4_orig) ; // DeltaR between true psi' and reco psi'
-			Double_t kPtDiff = fabs(trueK4Vec[0].Pt() - Kp4_orig.Pt())/trueK4Vec[0].Pt() ;
+			Double_t DrMuMu_1B0 = trueMuMu4Vec[0].DeltaR(PsiPp4_orig) ; // DeltaR between true psi' and reco psi'
+			Double_t MuMuPtDiff_1B0 = fabs(trueMuMu4Vec[0].Pt() - PsiPp4_orig.Pt())/trueMuMu4Vec[0].Pt() ;
+			Double_t DrPi_1B0 = truePi4Vec[0].DeltaR(Pip4_orig) ; // DeltaR between true psi' and reco psi'
+			Double_t piPtDiff_1B0 = fabs(truePi4Vec[0].Pt() - Pip4_orig.Pt())/truePi4Vec[0].Pt() ;
+			Double_t DrK_1B0 = trueK4Vec[0].DeltaR(Kp4_orig) ; // DeltaR between true psi' and reco psi'
+			Double_t kPtDiff_1B0 = fabs(trueK4Vec[0].Pt() - Kp4_orig.Pt())/trueK4Vec[0].Pt() ;
 		      
 			// check truth matching
-			if ( (DrMuMu < minDeltaRMuMu) && (MuMuPtDiff < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			if ( (DrMuMu_1B0 < minDeltaRMuMu) && (MuMuPtDiff_1B0 < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			  MuMuMatched_1B0[1] = kTRUE ;
 			  
 			if ( chargePi_1B0[1] > 0 ) 
-			  if ( (DrPi < minDeltaRPi) && (piPtDiff < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			  if ( (DrPi_1B0 < minDeltaRPi) && (piPtDiff_1B0 < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			    pionMatched_1B0[1] = kTRUE ;
 			  
 			if ( chargeK_1B0[1] > 0 ) 
-			  if ( (DrK < minDeltaRK) && (kPtDiff < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			  if ( (DrK_1B0 < minDeltaRK) && (kPtDiff_1B0 < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			    kaonMatched_1B0[1] = kTRUE ;
 
 		      }
@@ -2360,10 +2792,11 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		    B0VtxCL_2B0[1] = (*B0Vtx_CL)[myB0Idx] ;
 		    B0CTau_2B0[1][1] = (*B0CTauPV)[myB0Idx]/(*B0CTauPVE)[myB0Idx] ;
 		    alpha_2B0[1] = alpha_orig;
-		    PsiPp4_2B0[1][1] = PsiPp4; Pip4_2B0[1][1] = Pip4_orig; Kp4_2B0[1][1] = Kp4_orig ;
+		    PsiPp4_2B0[1][1] = PsiPp4_orig; Pip4_2B0[1][1] = Pip4_orig; Kp4_2B0[1][1] = Kp4_orig ;
+		    PsiPp4_B0constr_2B0[1][1] = PsiPp4; Pip4_B0constr_2B0[1][1] = Pip4; Kp4_B0constr_2B0[1][1] = Kp4 ;
 		    PiCharge_2B0[1][1] = (*trackCharge)[pi_orig_Index] ; KCharge_2B0[1][1] = (*trackCharge)[ka_orig_Index] ;
 		    //
-		    twins_var[1][0] = PsiPp4.M(); twins_var[1][1] = PsiPp4.Pt(); twins_var[1][2] = Kp4_orig.Pt(); twins_var[1][3] = Pip4_orig.Pt();
+		    twins_var[1][0] = PsiPp4_orig.M(); twins_var[1][1] = PsiPp4_orig.Pt(); twins_var[1][2] = Kp4_orig.Pt(); twins_var[1][3] = Pip4_orig.Pt();
 		    if (twins_var[0][0] == twins_var[1][0]) // psi(2S) mass
 		      if (twins_var[0][1] == twins_var[1][1]) // psi(2S) pT
 			if (twins_var[0][2] == twins_var[1][3]) // track pT
@@ -2379,27 +2812,27 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 			chargePi_2B0[1][1] = truePiCharge[0] * PiCharge_2B0[1][1] ;
 			chargeK_2B0[1][1] = trueKCharge[0] * KCharge_2B0[1][1] ;
 		      
-			Double_t DrMuMu[2] = { trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[1][0]), trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[1][1]) } ; // DeltaR between true psi' and reco psi'
-			Double_t MuMuPtDiff[2] = { fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[1][0].Pt())/trueMuMu4Vec[0].Pt(), fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[1][1].Pt())/trueMuMu4Vec[0].Pt() } ;
-			Double_t DrPi[2] = { truePi4Vec[0].DeltaR(Pip4_2B0[1][0]), truePi4Vec[0].DeltaR(Pip4_2B0[1][1]) } ; // DeltaR between true psi' and reco psi'
-			Double_t piPtDiff[2] = { fabs(truePi4Vec[0].Pt() - Pip4_2B0[1][0].Pt())/truePi4Vec[0].Pt(), fabs(truePi4Vec[0].Pt() - Pip4_2B0[1][1].Pt())/truePi4Vec[0].Pt() } ;
-			Double_t DrK[2] = { trueK4Vec[0].DeltaR(Kp4_2B0[1][0]), trueK4Vec[0].DeltaR(Kp4_2B0[1][1]) } ; // DeltaR between true psi' and reco psi'
-			Double_t kPtDiff[2] = { fabs(trueK4Vec[0].Pt() - Kp4_2B0[1][0].Pt())/trueK4Vec[0].Pt(), fabs(trueK4Vec[0].Pt() - Kp4_2B0[1][1].Pt())/trueK4Vec[0].Pt() } ;
+			Double_t DrMuMu_2B0[2] = { trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[1][0]), trueMuMu4Vec[0].DeltaR(PsiPp4_2B0[1][1]) } ; // DeltaR between true psi' and reco psi'
+			Double_t MuMuPtDiff_2B0[2] = { fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[1][0].Pt())/trueMuMu4Vec[0].Pt(), fabs(trueMuMu4Vec[0].Pt() - PsiPp4_2B0[1][1].Pt())/trueMuMu4Vec[0].Pt() } ;
+			Double_t DrPi_2B0_in[2] = { truePi4Vec[0].DeltaR(Pip4_2B0[1][0]), truePi4Vec[0].DeltaR(Pip4_2B0[1][1]) } ; // DeltaR between true psi' and reco psi'
+			Double_t piPtDiff_2B0[2] = { fabs(truePi4Vec[0].Pt() - Pip4_2B0[1][0].Pt())/truePi4Vec[0].Pt(), fabs(truePi4Vec[0].Pt() - Pip4_2B0[1][1].Pt())/truePi4Vec[0].Pt() } ;
+			Double_t DrK_2B0_in[2] = { trueK4Vec[0].DeltaR(Kp4_2B0[1][0]), trueK4Vec[0].DeltaR(Kp4_2B0[1][1]) } ; // DeltaR between true psi' and reco psi'
+			Double_t kPtDiff_2B0[2] = { fabs(trueK4Vec[0].Pt() - Kp4_2B0[1][0].Pt())/trueK4Vec[0].Pt(), fabs(trueK4Vec[0].Pt() - Kp4_2B0[1][1].Pt())/trueK4Vec[0].Pt() } ;
 		      
 			//if ( nTwins_signalWin == 1 ) { // let's match any 2 B0 candidates
 
 			// check truth matching
 			for (Int_t i = 0; i < nB0AC_signalWin+1; i++) { // if ( (!MC && (nB0AC_signalWin == 2)) || nB0ACInMC == 2 )
 
-			  if ( (DrMuMu[i] < minDeltaRMuMu) && (MuMuPtDiff[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			  if ( (DrMuMu_2B0[i] < minDeltaRMuMu) && (MuMuPtDiff_2B0[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			    MuMuMatched[1][i] = kTRUE ;
 			  
 			  if ( chargePi_2B0[1][i] > 0 ) 
-			    if ( (DrPi[i] < minDeltaRPi) && (piPtDiff[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			    if ( (DrPi_2B0_in[i] < minDeltaRPi) && (piPtDiff_2B0[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			      pionMatched[1][i] = kTRUE ;
 			  
 			  if ( chargeK_2B0[1][i] > 0 ) 
-			    if ( (DrK[i] < minDeltaRK) && (kPtDiff[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
+			    if ( (DrK_2B0_in[i] < minDeltaRK) && (kPtDiff_2B0[i] < momentumCut) ) // matching based on DeltaR and below momentumCut relative difference in pT
 			      kaonMatched[1][i] = kTRUE ;
 			  
 			  // fill histograms
@@ -2426,11 +2859,11 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 			      }
 			    */
 			    // matched kaons
-			    hMCDeltaRK_fromTwins->Fill( DrK[i] );
+			    hMCDeltaRK_fromTwins->Fill( DrK_2B0[i] );
 			    hMCPtRecoVsPtTrueK_fromTwins->Fill( trueK4Vec[0].Pt(), Kp4_2B0[1][i].Pt());
-			    hMCDeltaPtK_fromTwins->Fill( kPtDiff[i] ) ;
+			    hMCDeltaPtK_fromTwins->Fill( kPtDiff_2B0[i] ) ;
 			    if ( pionMatched[1][i] )
-			      hMCDeltaPtK_fromTwinsPiMatched->Fill( kPtDiff[i] ) ;
+			      hMCDeltaPtK_fromTwinsPiMatched->Fill( kPtDiff_2B0[i] ) ;
 			    hMCpTTrueK_fromTwins->Fill( Kp4_2B0[1][i].Pt() );
 			    
 			    /*
@@ -2477,7 +2910,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  float minDeltaR[] = {0.5, 0.5};
 		  float minDrK = 0.5;
     
-		  //float partMass = (partNum == psi2S_PDGId) ? psi2S_mass : X3872PDG;
+		  //float partMass = (partNum == psi2S_PDGId) ? mumu_mass : X3872PDG;
 		  //float minMassRange = (partNum == psi2S_PDGId) ? 3.656 : 3.827;                // 3.855 : 3.665; Sideband
 		  //float maxMassRange = (partNum == psi2S_PDGId) ? 3.716 : 3.917;               // 3.885  : 3.707; Sidebands
 
@@ -2510,7 +2943,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  truePiCharge.push_back(charge);
 		  }
 		  else if(abs(pId) == psi2S_Id) {   // psi(2S)
-		  psi2SGen4Mom.SetXYZM((*MCPx)[it],(*MCPy)[it],(*MCPz)[it], psi2S_mass);
+		  psi2SGen4Mom.SetXYZM((*MCPx)[it],(*MCPy)[it],(*MCPz)[it], mumu_mass);
 		  //psi2SGenPt = psi2SGen4Mom.Pt(); psi2SGenY = psi2SGen4Mom.Rapidity();
 		  }
 		  else if(abs(pId) == Kaon_Id) {   // K
@@ -2614,35 +3047,35 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      } // if ( myB0MassAlt > 5.15  &&  myB0MassAlt < 5.45 ) {	    
 	      ////////////////////////////////////////////////////////////////////////////////////
 	    
-	      //
+	      //cout <<"before K*" <<endl ;
 	      // K* 
 	      if (myB0MassAlt > 5.25  &&  myB0MassAlt < 5.3) {
-		hmyKPiMass->Fill( (Pip4_orig + Kp4_orig).M() ) ;
-		hmyKPiMass_ex->Fill( (Pip4_orig_ex + Kp4_orig_ex).M() ) ;
+		hmyKPiMass->Fill( (KPip4_orig).M() ) ;
+		hmyKPiMass_ex->Fill( (KPip4_orig_ex).M() ) ;
 		if (Kp4_orig.Pt() < 1.) {
-		  hmyKPiMass_KpTcut->Fill( (Pip4_orig + Kp4_orig).M() ) ;
-		  hmyKPiMass_ex_KpTcut->Fill( (Pip4_orig_ex + Kp4_orig_ex).M() ) ;
+		  hmyKPiMass_KpTcut->Fill( (KPip4_orig).M() ) ;
+		  hmyKPiMass_ex_KpTcut->Fill( (KPip4_orig_ex).M() ) ;
 		  // high purity
 		  if ((*TrackTight)[pi_orig_Index] && (*TrackTight)[pi_orig_Index]) {
 
-		    hmyKPiMass_KpTcut_tightTr->Fill( (Pip4_orig + Kp4_orig).M() ) ;
-		    hmyKPiMass_ex_KpTcut_tightTr->Fill( (Pip4_orig_ex + Kp4_orig_ex).M() ) ;
+		    hmyKPiMass_KpTcut_tightTr->Fill( (KPip4_orig).M() ) ;
+		    hmyKPiMass_ex_KpTcut_tightTr->Fill( (KPip4_orig_ex).M() ) ;
 		    if ((*TrackHighPurity)[pi_orig_Index] && (*TrackHighPurity)[ka_orig_Index]) {
 
-		      hmyKPiMass_KpTcut_HP->Fill( (Pip4_orig + Kp4_orig).M() ) ;
-		      hmyKPiMass_ex_KpTcut_HP->Fill( (Pip4_orig_ex + Kp4_orig_ex).M() ) ;
+		      hmyKPiMass_KpTcut_HP->Fill( (KPip4_orig).M() ) ;
+		      hmyKPiMass_ex_KpTcut_HP->Fill( (KPip4_orig_ex).M() ) ;
 		    }
 		  }
 		}
 	      } // B0 mass window (5.25,5.3)
-	      if ( (Pip4_orig + Kp4_orig).M() > 0.85  &&  (Pip4_orig + Kp4_orig).M() < 0.95 ) { //  for right pi-K masses assignment
+	      if ( (KPip4_orig).M() > 0.85  &&  (KPip4_orig).M() < 0.95 ) { //  for right pi-K masses assignment
 
 		hmyPsiPKPiMass_fromKstar->Fill( myB0MassAlt ) ;
 		if (myB0MassAlt > hmyPsiPKPiMass_fromKstar->GetXaxis()->GetXmin()  &&  myB0MassAlt < hmyPsiPKPiMass_fromKstar->GetXaxis()->GetXmax()) {
 		  hmyPsiPKPiMass_fromKstar_ex_noRange->Fill( myB0MassAlt_ex ) ;
 		  hmyPsiPKPiMass_fromKstar_diff->Fill(myB0MassAlt - myB0MassAlt_ex) ;
 		}
-		hpsiPK_vs_KPi->Fill( (Pip4_orig + Kp4_orig).M(), (PsiPp4 + Kp4_orig).M() ) ;
+		hpsiPK_vs_KPi->Fill( (KPip4_orig).M(), (PsiPp4_orig + Kp4_orig).M() ) ;
 		if ( fabs(myB0MassAlt - 5.280808) < 2*0.00816 ) {
 			
 		  //hPionFromKstar_pT->Fill( pion_fromB0_Pt );
@@ -2691,10 +3124,10 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  alpha_vs_alphaEx->Fill(alpha_orig, alpha_orig_ex) ;
 		} // B0 2*sigma mass window
 	      }// right pi-K masses assignment
-	      else if ( (Pip4_orig + Kp4_orig).M() < 0.8  ||  (Pip4_orig + Kp4_orig).M() > 1. ) { // sideband for right pi-K masses assignment
+	      else if ( (KPip4_orig).M() < 0.8  ||  (KPip4_orig).M() > 1. ) { // sideband for right pi-K masses assignment
 		
 		hmyPsiPKPiMass_fromKstar_sb->Fill( myB0MassAlt ) ;
-		hpsiPK_vs_KPi_sb->Fill( (Pip4_orig + Kp4_orig).M(), (PsiPp4 + Kp4_orig).M()) ;
+		hpsiPK_vs_KPi_sb->Fill( (KPip4_orig).M(), (PsiPp4_orig + Kp4_orig).M()) ;
 		if ( fabs(myB0MassAlt - 5.28057) < 2*0.01227 ) {
 			
 		  //hPionFromKstar_sb_pT->Fill( pion_fromB0_Pt );
@@ -2708,10 +3141,10 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	      }
 	      //
 	      // for exchanged pi-K masses
-	      if ( (Pip4_orig_ex + Kp4_orig_ex).M() > 0.85  &&  (Pip4_orig_ex + Kp4_orig_ex).M() < 0.95 ) {
+	      if ( (KPip4_orig_ex).M() > 0.85  &&  (KPip4_orig_ex).M() < 0.95 ) {
 		      
 		hmyPsiPKPiMass_fromKstar_ex->Fill( myB0MassAlt_ex ) ;
-		hpsiPK_vs_KPi_ex->Fill( (Pip4_orig_ex + Kp4_orig_ex).M(), (PsiPp4 + Kp4_orig_ex).M()) ;
+		hpsiPK_vs_KPi_ex->Fill( (KPip4_orig_ex).M(), (PsiPp4_orig + Kp4_orig_ex).M()) ;
 		if ( fabs(myB0MassAlt_ex - 5.277776) < 2*0.01161 ) {
 		    
 		  //hPionFromKstar_ex_pT->Fill( pion_fromB0_Pt );
@@ -2727,7 +3160,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	    } // if ( baselineB0Sel ) {
 	  } // cuts
 	//} // nB0 loop // closed below
-      } // if ( HLT_5_vAll && nB0>0 )
+      } // if ( HLT_mainTrigger && nB0>0 )
       
     /*
     //////////////////////////////////////// my scan
@@ -2816,14 +3249,14 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       || ( HLT_3p5_vAll  &&  Jp4.Pt() > 3.5 ) ) // not needed with one_psi2S already required
 	    
       { 
-      if ( HLT_5_vAll ) { // not needed with onePsiPrime
+      if ( HLT_mainTrigger ) { // not needed with onePsiPrime
       if ( fabs(mu1.Rapidity()) < 2.4  &&  fabs(mu2.Rapidity()) < 2.4 )
       psi2S_HLT5_yMu_h->Fill( Jp4.M() ) ;
       }
       
       if ( 1  // baseline cuts
-      //&& fabs( Jp4.M() - psi2S_mass ) < 0.06 
-      //&& (HLT_5_vAll) // not needed with onePsiPrime
+      //&& fabs( Jp4.M() - mumu_mass ) < 0.06 
+      //&& (HLT_mainTrigger) // not needed with onePsiPrime
       //      &&(*ZCosAlphaBS)[myB0Idx]>0.95
       // my cuts
       && (*MuMuPiVtx_CL)[myB0Idx] > 0.01 // Lucia: 0.01
@@ -2860,7 +3293,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       
       psi2S_DeltaR_pi_h[0]->Fill( Jp4.DeltaR(Pip4) ) ; 
       if ((*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] > 3.0)
-      psi2S_DeltaR_pi_vs_mumupiMass_nonpr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass, Jp4.DeltaR(Pip4) ) ;
+      psi2S_DeltaR_pi_vs_mumupiMass_nonpr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass, Jp4.DeltaR(Pip4) ) ;
       //psi2S_pointingAngle_sign->Fill( (*JCosAlpha)[myjpsiindex] ) ;  
       Z_cosPA[0]->Fill( coeff ) ;
       Z_cosPA[0].first->Fill( (*ZCosAlphaPV)[myB0Idx] ) ;  Z_cosPA[0].second->Fill( (*ZCosAlphaPV)[myB0Idx] ) ; 
@@ -2870,7 +3303,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
       Z_vs_pi_pT_h->Fill( Pip4.Pt(), Z_Pt) ;
       Z_CTauBS_over_Z_CTauBSE_h->Fill( (*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] ) ;
       }
-      myMuMuPiMass->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
+      myMuMuPiMass->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
       
       
       ///////////////////////// START SCANNING /////////////////////////
@@ -2879,13 +3312,13 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
         if (Jp4.DeltaR(Pip4) < deltaR_piPsi2S[k]) {
 	  for (Int_t j = 0; j < abs(pi_pT.size()); ++j)
 	    if (Pip4.Pt() > pi_pT[j]) 
-	      myMuMuPiMass_piPt[0][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=0 -> all
+	      myMuMuPiMass_piPt[0][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=0 -> all
 	    for (Int_t j = 0; j < abs(Z_pT.size()); ++j) 
 	      if (Z_Pt > Z_pT[j]) 
-	        myMuMuPiMass_ZPt[0][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=0 -> all
+	        myMuMuPiMass_ZPt[0][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=0 -> all
 		  for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j)
 		    if (Pip4.Pt() > piAndZ_pT[j].first  &&  Z_Pt > piAndZ_pT[j].second) 
-		      myMuMuPiMass_piAndZPt[0][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=0 -> all ;
+		      myMuMuPiMass_piAndZPt[0][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=0 -> all ;
 	}
 		    
       if ( (*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] < 1.8 ) { // prompt i=1
@@ -2895,27 +3328,27 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     Z_cosPA[1].first->Fill( (*ZCosAlphaPV)[myB0Idx] ) ;  Z_cosPA[1].second->Fill( (*ZCosAlphaPV)[myB0Idx] ) ; 
     Z_DeltaR_vs_cosPA[1]->Fill( fabs((*ZCosAlphaPV)[myB0Idx]), Jp4.DeltaR(Pip4) ) ;
     if ( fabs((*ZCosAlphaPV)[myB0Idx]) > cosAlpha_cut2 ) { 
-    myMuMuPiMass_pr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_pr->SetLineColor( kBlack ) ;
+    myMuMuPiMass_pr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_pr->SetLineColor( kBlack ) ;
     for (Int_t k = 0; k < abs(deltaR_piPsi2S.size()); ++k)
     if (Jp4.DeltaR(Pip4) < deltaR_piPsi2S[k]) {
     for (Int_t j = 0; j < abs(pi_pT.size()); ++j) 
     if (Pip4.Pt() > pi_pT[j]) {
-    myMuMuPiMass_piPt[1][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=1 -> prompt
+    myMuMuPiMass_piPt[1][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=1 -> prompt
     myMuMuPiMass_piPt[1][j][k]->SetLineColor( kBlack ) ; } // i=1 -> prompt
     for (Int_t j = 0; j < abs(Z_pT.size()); ++j) 
     if (Z_Pt > Z_pT[j]) {
-    myMuMuPiMass_ZPt[1][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=1 -> prompt
+    myMuMuPiMass_ZPt[1][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=1 -> prompt
     myMuMuPiMass_ZPt[1][j][k]->SetLineColor( kBlack ) ; } // i=1 -> prompt
     for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j)
     if (Pip4.Pt() > piAndZ_pT[j].first  &&  Z_Pt > piAndZ_pT[j].second) {
-    myMuMuPiMass_piAndZPt[1][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=1 -> prompt ;
+    myMuMuPiMass_piAndZPt[1][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=1 -> prompt ;
     myMuMuPiMass_piAndZPt[1][j][k]->SetLineColor( kBlack ) ; } // i=1 -> prompt
     }
 		      
     if ( fabs((*trackDzVtx)[mypiIdx]) < 1) { // pi Dz < 1
-    myMuMuPiMass_pr_Dz01->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; 
+    myMuMuPiMass_pr_Dz01->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; 
     if ( fabs((*trackDzVtx)[mypiIdx]) < 0.4) // pi Dz < 0.4
-    myMuMuPiMass_pr_DzCut->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; }
+    myMuMuPiMass_pr_DzCut->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; }
     }
 
     if ( fabs(Jp4.Rapidity()) < 1 ) { // prompt barrel i=2
@@ -2924,26 +3357,26 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     Z_cosPA[2].first->Fill( (*ZCosAlphaPV)[myB0Idx] ) ;  Z_cosPA[2].second->Fill( (*ZCosAlphaPV)[myB0Idx] ) ; 
     Z_DeltaR_vs_cosPA[2]->Fill( fabs((*ZCosAlphaPV)[myB0Idx]), Jp4.DeltaR(Pip4) ) ;
     if ( fabs((*ZCosAlphaPV)[myB0Idx]) > cosAlpha_cut2 ) {
-    myMuMuPiMass_barrel_pr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_barrel_pr->SetLineColor( kBlack ) ;
+    myMuMuPiMass_barrel_pr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_barrel_pr->SetLineColor( kBlack ) ;
     for (Int_t k = 0; k < abs(deltaR_piPsi2S.size()); ++k) 
     if (Jp4.DeltaR(Pip4) < deltaR_piPsi2S[k]) {
     for (Int_t j = 0; j < abs(pi_pT.size()); ++j) 
     if (Pip4.Pt() > pi_pT[j]) {
-    myMuMuPiMass_piPt[2][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=2 -> prompt barrel
+    myMuMuPiMass_piPt[2][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=2 -> prompt barrel
     myMuMuPiMass_piPt[2][j][k]->SetLineColor( kBlack ) ; } // i=1 -> prompt barrel
     for (Int_t j = 0; j < abs(Z_pT.size()); ++j) 
     if (Z_Pt > Z_pT[j]) {
-    myMuMuPiMass_ZPt[2][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=2 -> prompt barrel
+    myMuMuPiMass_ZPt[2][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=2 -> prompt barrel
     myMuMuPiMass_ZPt[2][j][k]->SetLineColor( kBlack ) ; } // i=2 -> prompt barrel
     for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j)
     if (Pip4.Pt() > piAndZ_pT[j].first  &&  Z_Pt > piAndZ_pT[j].second) {
-    myMuMuPiMass_piAndZPt[2][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=2 -> prompt barrel;
+    myMuMuPiMass_piAndZPt[2][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=2 -> prompt barrel;
     myMuMuPiMass_piAndZPt[2][j][k]->SetLineColor( kBlack ) ; } // i=2 -> prompt barrel
     }
     } 
     } else // non barrel
     if ( fabs((*ZCosAlphaPV)[myB0Idx]) > cosAlpha_cut2 ) {
-    myMuMuPiMass_nonBarrel_pr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
+    myMuMuPiMass_nonBarrel_pr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
     myMuMuPiMass_nonBarrel_pr->SetLineColor( kBlack ) ; }
 		      
     } else if ( (*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] < 3.0) { // quasi prompt i=3
@@ -2952,18 +3385,18 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     Z_cosPA[3].first->Fill( (*ZCosAlphaPV)[myB0Idx] ) ;  Z_cosPA[3].second->Fill( (*ZCosAlphaPV)[myB0Idx] ) ; 
     Z_DeltaR_vs_cosPA[3]->Fill( fabs((*ZCosAlphaPV)[myB0Idx]), Jp4.DeltaR(Pip4) ) ;
     if ( (*ZCosAlphaPV)[myB0Idx] > cosAlpha_cut2 ) {
-    myMuMuPiMass_quasipr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
+    myMuMuPiMass_quasipr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
     for (Int_t k = 0; k < abs(deltaR_piPsi2S.size()); ++k) 
     if (Jp4.DeltaR(Pip4) < deltaR_piPsi2S[k]) {
     for (Int_t j = 0; j < abs(pi_pT.size()); ++j) 
     if (Pip4.Pt() > pi_pT[j]) 
-    myMuMuPiMass_piPt[3][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=3 -> quasi prompt
+    myMuMuPiMass_piPt[3][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=3 -> quasi prompt
     for (Int_t j = 0; j<abs(Z_pT.size()); ++j) 
     if (Z_Pt > Z_pT[j]) 
-    myMuMuPiMass_ZPt[3][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=3 -> quasi prompt
+    myMuMuPiMass_ZPt[3][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=3 -> quasi prompt
     for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j)
     if (Pip4.Pt() > piAndZ_pT[j].first  &&  Z_Pt > piAndZ_pT[j].second) 
-    myMuMuPiMass_piAndZPt[3][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=3 -> quasi prompt ;
+    myMuMuPiMass_piAndZPt[3][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=3 -> quasi prompt ;
     }
     }
 
@@ -2985,22 +3418,22 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     ) { 
     Float_t mu_pT_cut = 3.5 ; //mu_pT_cut = 4.0 ; mu_pT_cut = 4.5 ;
     if (HLT_5_vAll) {
-    myMuMuKMass_Kai->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass) ;
+    myMuMuKMass_Kai->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass) ;
     if (mu1.Pt() > mu_pT_cut  &&  mu2.Pt() > mu_pT_cut) {
-    myMuMuPiMass_HLT5to3p5->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
-    myMuMuKMass_HLT5to3p5->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ; 
-    if ( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass  >  5.24  &&
-    (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass  <  5.32 ) {
+    myMuMuPiMass_HLT5to3p5->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
+    myMuMuKMass_HLT5to3p5->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ; 
+    if ( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass  >  5.24  &&
+    (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass  <  5.32 ) {
     mu1_pT_test_h->Fill( mu1.Pt() ) ;  mu2_pT_test_h->Fill( mu2.Pt() ) ;
     mu1_eta_test_h->Fill( mu1.Eta() ) ;  mu2_eta_test_h->Fill( mu2.Eta() ) ; }
     }
     }
     else if (HLT_3p5_vAll) {
     if (mu1.Pt() > mu_pT_cut  &&  mu2.Pt() > mu_pT_cut) {
-    myMuMuPiMass_HLT3p5_allCuts->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
-    myMuMuKMass_HLT3p5_allCuts->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass ) ;
-    if ((Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass  >  5.24  &&
-    (Jp4 + Kp4).Mag() - Jp4.M() + psi2S_mass  <  5.32 ) {
+    myMuMuPiMass_HLT3p5_allCuts->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
+    myMuMuKMass_HLT3p5_allCuts->Fill( (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass ) ;
+    if ((Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass  >  5.24  &&
+    (Jp4 + Kp4).Mag() - Jp4.M() + mumu_mass  <  5.32 ) {
     mu1_pT_test_h->Fill( mu1.Pt() ) ;  mu2_pT_test_h->Fill( mu2.Pt() ) ;
     mu1_eta_test_h->Fill( mu1.Eta() ) ;  mu2_eta_test_h->Fill( mu2.Eta() ) ; }
     }
@@ -3008,31 +3441,31 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     }
 
     if ( (*ZCosAlphaPV)[myB0Idx] > cosAlpha_cut2 ) {
-    myMuMuPiMass_nonpr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_nonpr->SetLineColor( kRed ) ;
+    myMuMuPiMass_nonpr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_nonpr->SetLineColor( kRed ) ;
     if ( (*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] > 5.0  &&  Jp4.DeltaR(Pip4) < 0.2
     &&  Pip4.Pt() > 12  &&  Z_Pt > 40 ) {
-    myMuMuPiMass_DeltaR0p2_nonpr5->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_DeltaR0p2_nonpr5->SetLineColor( kRed ) ; 
+    myMuMuPiMass_DeltaR0p2_nonpr5->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_DeltaR0p2_nonpr5->SetLineColor( kRed ) ; 
     if (Jp4.DeltaR(Pip4) < 0.1) {
-    myMuMuPiMass_DeltaR0p1_nonpr5->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_DeltaR0p1_nonpr5->SetLineColor( kRed ) ; }
+    myMuMuPiMass_DeltaR0p1_nonpr5->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_DeltaR0p1_nonpr5->SetLineColor( kRed ) ; }
     if ((*ZCTauBS)[myB0Idx] / (*ZCTauBSE)[myB0Idx] > 8.0) {
-    myMuMuPiMass_DeltaR0p2_nonpr8->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_DeltaR0p2_nonpr8->SetLineColor( kRed ) ; 
+    myMuMuPiMass_DeltaR0p2_nonpr8->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_DeltaR0p2_nonpr8->SetLineColor( kRed ) ; 
     if (Jp4.DeltaR(Pip4) < 0.1) {
-    myMuMuPiMass_DeltaR0p1_nonpr8->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; myMuMuPiMass_DeltaR0p1_nonpr8->SetLineColor( kRed ) ; }
+    myMuMuPiMass_DeltaR0p1_nonpr8->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; myMuMuPiMass_DeltaR0p1_nonpr8->SetLineColor( kRed ) ; }
     }
     }
     for (Int_t k = 0; k < abs(deltaR_piPsi2S.size()); ++k)
     if (Jp4.DeltaR(Pip4) < deltaR_piPsi2S[k]) {
     for (Int_t j = 0; j < abs(pi_pT.size()); ++j) 
     if (Pip4.Pt() > pi_pT[j]) {
-    myMuMuPiMass_piPt[4][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=4 -> non prompt
+    myMuMuPiMass_piPt[4][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=4 -> non prompt
     myMuMuPiMass_piPt[4][j][k]->SetLineColor( kRed ) ; } // i=4 -> non prompt
     for (Int_t j = 0; j<abs(Z_pT.size()); ++j) 
     if (Z_Pt > Z_pT[j]) {
-    myMuMuPiMass_ZPt[4][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=4 -> non prompt
+    myMuMuPiMass_ZPt[4][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=4 -> non prompt
     myMuMuPiMass_ZPt[4][j][k]->SetLineColor( kRed ) ; } // i=4 -> non prompt
     for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j)
     if (Pip4.Pt() > piAndZ_pT[j].first  &&  Z_Pt > piAndZ_pT[j].second) {
-    myMuMuPiMass_piAndZPt[4][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // 4=1 -> non prompt ;
+    myMuMuPiMass_piAndZPt[4][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // 4=1 -> non prompt ;
     myMuMuPiMass_piAndZPt[4][j][k]->SetLineColor( kRed ) ; } // i=4 -> non prompt
     }
     }
@@ -3043,30 +3476,30 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     Z_cosPA[5].first->Fill( (*ZCosAlphaPV)[myB0Idx] ) ;  Z_cosPA[5].second->Fill( (*ZCosAlphaPV)[myB0Idx] ) ; 
     Z_DeltaR_vs_cosPA[5]->Fill( fabs((*ZCosAlphaPV)[myB0Idx]), Jp4.DeltaR(Pip4) ) ;
     if ( (*ZCosAlphaPV)[myB0Idx] > cosAlpha_cut2 ) {
-    myMuMuPiMass_barrel_nonpr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
+    myMuMuPiMass_barrel_nonpr->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
     for (Int_t k = 0; k < abs(deltaR_piPsi2S.size()); ++k) 
     if (Jp4.DeltaR(Pip4) < deltaR_piPsi2S[k]) {
     for (Int_t j = 0; j < abs(pi_pT.size()); ++j) 
     if (Pip4.Pt() > pi_pT[j]) {
-    myMuMuPiMass_piPt[5][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=5 -> non prompt barrel
+    myMuMuPiMass_piPt[5][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=5 -> non prompt barrel
     myMuMuPiMass_piPt[5][j][k]->SetLineColor( kRed ) ; } // i=5 -> non prompt barrel
     for (Int_t j = 0; j < abs(Z_pT.size()); ++j) 
     if (Z_Pt > Z_pT[j]) {
-    myMuMuPiMass_ZPt[5][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=5 -> non prompt barrel
+    myMuMuPiMass_ZPt[5][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=5 -> non prompt barrel
     myMuMuPiMass_ZPt[5][j][k]->SetLineColor( kRed ) ; } // i=5 -> non prompt barrel
     for (Int_t j = 0; j < abs(piAndZ_pT.size()); ++j)
     if (Pip4.Pt() > piAndZ_pT[j].first  &&  Z_Pt > piAndZ_pT[j].second) { 
-    myMuMuPiMass_piAndZPt[5][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; // i=5 -> non prompt barrel
+    myMuMuPiMass_piAndZPt[5][j][k]->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; // i=5 -> non prompt barrel
     myMuMuPiMass_piAndZPt[5][j][k]->SetLineColor( kRed ) ; } // i=5 -> non prompt barrel
     }
 						
     if ( fabs((*trackDzVtx)[mypiIdx]) > 1) // pi Dz > 1
-    myMuMuPiMass_nonpr_Dz1inf->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ; 
+    myMuMuPiMass_nonpr_Dz1inf->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ; 
     }
     }
     }
     if ( fabs(Jp4.Rapidity()) < 1 ) // barrel
-    myMuMuPiMass_barrel->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + psi2S_mass ) ;
+    myMuMuPiMass_barrel->Fill( (*MuMuPiMass)[myB0Idx] - Jp4.M() + mumu_mass ) ;
     //} else if ( fabs(Jp4.M() - fit_mass) > sb_low*sigma && fabs(Jp4.M() - fit_mass) < sb_high*sigma ) { // fit mass and interpolated sigma
     // } else if ( fabs(Jp4.M() - fit_mass) > sb_low*fit_sigma && fabs(Jp4.M() - fit_mass) < sb_high*fit_sigma ) { // fit mass and fit sigma
     ////psi2S_pointingAngle_sb->Fill( (*JCosAlpha)[myjpsiindex] ) ; 
@@ -3085,6 +3518,15 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   nB0AC_h->Fill( nB0AC ) ;  
   nB0AC_signalWin_h->Fill( nB0AC_signalWin ) ;
   nB0AC_purityWin_h->Fill( nB0AC_purityWin ) ;
+  
+  if ( nB0AC_purityWin > 0) {
+    if ( MC ) {
+      if ( nB0AC_purityWin == 1  &&  mva_vars_sig[mva_vars_sig.size()-1] > 0)
+	mva_variables_sig->Fill();
+    } else
+      if ( nB0AC_purityWin == 1 )
+	mva_variables_sig->Fill();
+  }
 
   Float_t minDeltaRB0 = 0.1, minDeltaPtB0 = 0.02 ; // (0.1,0.02)
   if (nB0AC == 1) {
@@ -3093,10 +3535,19 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
     hB0Mass_noTwins_noSignalWinNotTwins->Fill( B0Mass_2B0[0][0] ) ;
     if ( fabs(B0Mass_2B0[0][0] - B0_massFit) < 3*B0_sigmaFit ) { 
       psi2SPiSqMass_vs_KPiSqMass_1B0[0]->Fill( (Kp4_2B0[0][0] + Pip4_2B0[0][0]).M2(), (PsiPp4_2B0[0][0] + Pip4_2B0[0][0]).M2() ) ;
+      psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[0]->Fill( (Kp4_B0constr_2B0[0][0] + Pip4_B0constr_2B0[0][0]).M2(), (PsiPp4_B0constr_2B0[0][0] + Pip4_B0constr_2B0[0][0]).M2() ) ;
+      cos_Kstar_helicityAngle->Fill( cosTheta_Kstar ) ;
       psi2S_helicityAngle->Fill( theta_psi ) ;
-      cos_psi2S_helicityAngle->Fill( TMath::Cos(theta_psi) ) ;
-      //cos_psi2S_helicityAngle->Fill( theta_psi ) ;
+      //cos_psi2S_helicityAngle->Fill( TMath::Cos(theta_psi) ) ;
+      cos_psi2S_helicityAngle->Fill( cosTheta_psi ) ;
+      cos_psi2S_helicityAngle_rot->Fill( cosTheta_psi_rot ) ;
+      cos_psi2S_helicityAngle_rotVSnotRot->Fill( cosTheta_psi, cosTheta_psi_rot ) ;
+      cos_psi2S_helicityAngle_vs_KPiMass->Fill( mKPi, cosTheta_psi ) ;
+      //
+      cosKstar_vs_cosPsi2S_helicityAngles->Fill( cosTheta_psi, cosTheta_Kstar) ;
+      //
       planesAngle->Fill( phi ) ;
+      planesAngle_vs_cos_psi2S_helicityAngle->Fill( cosTheta_psi, phi ) ;
     }
 
     if ( MC ) {
@@ -3106,7 +3557,8 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
 	hMCTruthMatching_1B0[0][0]->Fill(1) ;
 	//if ( (chargePi_1B0[0] > 0) && (chargeK_1B0[0] > 0) ) {
-	if ( MuMuMatched_1B0[0] && pionMatched_1B0[0] && kaonMatched_1B0[0] ) {
+	//if ( MuMuMatched_1B0[0] && pionMatched_1B0[0] && kaonMatched_1B0[0] ) {
+	if ( pionMatched_1B0[0] && kaonMatched_1B0[0] ) {
 	  hMCTruthMatching_1B0[0][1]->Fill(1) ;
 	  hB0Mass_1B0matched[0][1]->Fill( B0Mass_2B0[0][0] ) ;
 	  
@@ -3118,6 +3570,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		priVtx_delta[j][i]->Fill( genEvtVtx_XYZ[i] - priVtxGen_XYZ[i] ) ;
 
 	    if ( fabs(genEvtVtx_XYZ[2] - priVtxGen_XYZ[2]) < 0.0001) {
+	      /*
 	      if ( fabs(priVtx_XYZ[2] - genEvtVtx_XYZ[2]) < 0.1 ) 
 		if ( fabs(priVtx_XYZ[2] - priVtxB0Less_XYZ[2]) > 0.1 ) {
 		  cout <<"\nB0CTau_2B0[0][0] = " <<B0CTau_2B0[0][0] <<" ; " ;
@@ -3134,6 +3587,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		  }
 		  cout <<endl ;
 		}
+	      */
 	      priVtx_deltaX_test->Fill( genEvtVtx_XYZ[0] - priVtxGen_XYZ[0] ) ;
 	      priVtx_deltaY_test->Fill( genEvtVtx_XYZ[1] - priVtxGen_XYZ[1] ) ;
 	      //
@@ -3183,6 +3637,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	hMCTruthMatching_1B0[0][2]->Fill(0) ;
     }
   } else if (nB0AC == 2) {
+    //cout <<"\nJust inside nB0AC == 2" <<endl;
     // twins histograms
     nTwins_h[0]->Fill( nTwins ) ;
     // no twin
@@ -3336,9 +3791,10 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   //if ( (!MC && (nB0AC_signalWin == nB0AC)) || (nB0ACInMC == nB0AC) ) { // ?
   if ( (!MC && (nB0AC_signalWin > 0)) || (nB0ACInMC > 0) ) { // nB0ACInMC > 0 only if (MC && nB0AC_signalWin>0) 
     // only 1 B0
-    if ( (!MC && (nB0AC_signalWin == 1)) || (nB0ACInMC == 1) ) 
+    if ( (!MC && (nB0AC_signalWin == 1)) || (nB0ACInMC == 1) ) {
       psi2SPiSqMass_vs_KPiSqMass_1B0[1]->Fill( (Kp4_2B0[1][0] + Pip4_2B0[1][0]).M2(), (PsiPp4_2B0[1][0] + Pip4_2B0[1][0]).M2() ) ;
-
+      psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[1]->Fill( (Kp4_B0constr_2B0[1][0] + Pip4_B0constr_2B0[1][0]).M2(), (PsiPp4_B0constr_2B0[1][0] + Pip4_B0constr_2B0[1][0]).M2() ) ;
+    }
     if ( nB0ACInMC == 1 ) { // nB0ACInMC > 0 only if (MC && nB0AC_signalWin>0)
       hMCDeltaR_1B0->Fill( DeltaR_1B0[1] ) ;
       hMCDeltaPt_1B0->Fill( DeltaPt_1B0[1] ) ;
@@ -3348,7 +3804,8 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 	hB0Mass_1B0matched[1][0]->Fill( B0Mass_2B0[1][0] ) ;
 
 	//if ( (chargePi_1B0[1] > 0) && (chargeK_1B0[1] > 0) ) { 
-	if ( MuMuMatched_1B0[1] && pionMatched_1B0[1] && kaonMatched_1B0[1] ) {
+	//if ( MuMuMatched_1B0[1] && pionMatched_1B0[1] && kaonMatched_1B0[1] ) {
+	if ( pionMatched_1B0[1] && kaonMatched_1B0[1] ) {
 	  hMCTruthMatching_1B0[1][1]->Fill(1) ;
 	  hB0Mass_1B0matched[1][1]->Fill( B0Mass_2B0[1][0] ) ;	    
 	}
@@ -3457,15 +3914,17 @@ float psiPrimePiK_MC::ComputedEdxMass(int itrack, float TrackPt, float K, float 
 
 void psiPrimePiK_MC::SlaveTerminate()
 {
-  // The SlaveTerminate() function is called after all entries or objects
-  // have been processed. When running with PROOF SlaveTerminate() is called
-  // on each slave server.
+  // The SlaveTerminate() function is called after all entries or objects have been processed.
+  // When running with PROOF SlaveTerminate() is called on each slave server.
   cout <<"\nSlaveTerminate:" <<endl ;
 
   TDirectory *savedir = gDirectory;
   if (fOut) 
     {      
       fOut->cd();
+      //
+      _nt->Write();
+      mva_variables_sig->Write(); mva_variables_bkg->Write(); mva_variables_all->Write(); // causes the same trees in an other output file to have all of the branches at 0
       //// Write histograms in output file
       gStyle->SetOptStat(111111) ;
       //
@@ -3496,6 +3955,8 @@ void psiPrimePiK_MC::SlaveTerminate()
       // HLT_7_v*
       myInclusiveMuMuMass_HLT_7_v1->Write() ; myInclusiveMuMuMass_HLT_7_v2->Write() ; myInclusiveMuMuMass_HLT_7_v3->Write() ;
       myInclusiveMuMuMass_HLT_7_v3C->Write() ; myInclusiveMuMuMass_HLT_7_v2v3C->Write() ; myInclusiveMuMuMass_HLT_7_v3D->Write() ;
+      // HLT_8_v*
+      myInclusiveMuMuMass_HLT_8_v3->Write() ; myInclusiveMuMuMass_HLT_8_v4->Write() ; myInclusiveMuMuMass_HLT_8_v5->Write() ; myInclusiveMuMuMass_HLT_8_v6->Write() ; myInclusiveMuMuMass_HLT_8_v7->Write() ;
       // datasets 
       myInclusiveMuMuMass_12A->Write() ;
       myInclusiveMuMuMass_12A_HLT_0_v3->Write() ; myInclusiveMuMuMass_12A_HLT_5_v3->Write() ; myInclusiveMuMuMass_12A_HLT_9_v9->Write() ;
@@ -3520,34 +3981,56 @@ void psiPrimePiK_MC::SlaveTerminate()
       //
       // EXCLUSIVE KPi
       myExclusiveMuMuKPiMass->Write() ;
-      hmyPsiPKPiMassBaseSelAlt->Write() ;  
-      kaonP_vs_pionP->Write() ; kaonPt_vs_pionPt->Write() ; trk_dxy->Write() ; trk_dz->Write() ;
+      hmyPsiPKPiMassBaseSelAlt->Write() ;
+      kaonP_vs_pionP->Write() ; kaonPt_vs_pionPt->Write() ; kaonIdx_vs_pionIdx->Write() ;
+      trk_dxy->Write() ; trk_dz->Write() ;
       hmyPsiPKPiMass_B0pTtest->Write() ; hPionFromKstar_p->Write() ; hKaonFromKstar_p->Write() ;
       hmyPsiPKPiMass_deltaRtest->Write() ; hmyPsiPKPiMass_B0cTautest->Write() ;
       hmyPsiPKPiMass->Write() ; hmyPsiPKPiMass_KPiExchanged->Write() ; hmyPsiPKPiMass_bothComb->Write() ;
-      hB0VtxCL->Write() ; hB0_Pt->Write() ;
+      hB0VtxCL->Write() ; hB0Pt->Write() ;
       hB0CTauPVSignif->Write() ; hB0CTauPVXSignif->Write() ;
       hPsiPrimefromBMass->Write() ; hPsiPrime_fromB_Pt->Write() ; hmyPsiP_Pt->Write() ;
-      hPionfromBpt->Write() ; hKaonfromBpt->Write() ;
+      hPionfromB0pt->Write() ; hKaonfromB0pt->Write() ;
       myExclMuMuKPiMassSel->Write() ; hmyPsiPKPiMass_bothCombSel->Write() ;
-      psi2SPiSqMass_vs_KPiSqMass_ABaseC->Write() ;
+      psi2SPiSqMass_vs_KPiSqMass_ABaseC->Write() ; psi2SPiSqMass_vs_KPiSqMass_B0constr_ABaseC->Write() ;
       hmyPsiPMassSel->Write() ; hPsiPrimefromBMassSel->Write() ;
-      hmyPsiPKPiMassSelZoom->Write() ; hmyPsiPKPiMassSelAlt->Write() ; hmyPsiPKPiMassSelAltZoom->Write() ; 
+      hmyPsiPKPiMassZoom->Write() ; hmyPsiPKPiMassAlt->Write() ; hmyPsiPKPiMassAltZoom->Write() ;
+      hmyPsiPKPiMassNairitSelAlt->Write() ; psi2SPiSqMass_vs_KPiSqMass_NairitPeak->Write() ; psi2SPiSqMass_vs_KPiSqMass_NairitSb->Write() ;
+      hmyPiPiMass->Write() ; hmyPiKMass->Write() ; hmyKKMass->Write() ; hmyPsiPPiPiMass->Write() ; hmyPsiPPiKMass->Write() ; hmyPsiPPiKMass_zoom->Write() ; hmyPsiPKKMass->Write() ; hmyPsiPPhiMass->Write() ; hmyPsiPPiKMass_fromBs->Write() ; hmyPsiPPiKMass_fromBs_zoom->Write() ;
+      hmyPiPiMass_vs_KKMass->Write() ; hmyPsiPPiPiMass_vs_PiPiMass->Write() ; hmyPsiPKKMass_vs_KKMass->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_AC->Write() ;
+      // MVA
+      hPionPt_fromB0peak->Write() ; hKaonPt_fromB0peak->Write() ; hPionPtPlusKaonPt_fromB0peak->Write(); hLowerPt_fromB0peak->Write(); hHigherPt_fromB0peak->Write(); hB0Pt_fromB0peak->Write();
+      hPsiDeltaRHigherPtTrk_fromB0peak->Write(); hPsiDeltaRLowerPtTrk_fromB0peak->Write(); hPionDeltaRKaon_fromB0peak->Write(); hPsiDeltaRKPi_fromB0peak->Write(); KPiMass_fromB0peak->Write();
+      hB0VtxCL_fromB0peak->Write(); B0_PVCTau_fromB0peak->Write() ; B0_BSCTau_fromB0peak->Write() ; B0_pointingAnglePV_fromB0peak->Write();
+      cos_psi2S_helicityAngleLabB0peak->Write();
+      hPionPt_fromB0sb->Write() ; hKaonPt_fromB0sb->Write() ; hPionPtPlusKaonPt_fromB0sb->Write(); hLowerPt_fromB0sb->Write(); hHigherPt_fromB0sb->Write(); hB0Pt_fromB0sb->Write();
+      hPsiDeltaRHigherPtTrk_fromB0sb->Write(); hPsiDeltaRLowerPtTrk_fromB0sb->Write(); hPionDeltaRKaon_fromB0sb->Write(); hPsiDeltaRKPi_fromB0sb->Write(); KPiMass_fromB0sb->Write();
+      hB0VtxCL_fromB0sb->Write(); B0_PVCTau_fromB0sb->Write() ; B0_BSCTau_fromB0sb->Write() ; B0_pointingAnglePV_fromB0sb->Write();
+      cos_psi2S_helicityAngleLabB0peak->Write();
       //
       // MC analysis
       nMCB0_BT_h->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_BT_gen->Write() ; KPiSqMass_vs_psi2SKSqMass_BT_gen->Write() ;
       nB0AC_noMassWin_h->Write() ; nB0AC_h->Write() ; nB0AC_signalWin_h->Write() ; nB0AC_purityWin_h->Write() ; 
       hB0Mass_1B0->Write() ; hB0Mass_noTwins_noSignalWinNotTwins->Write() ; 
-      for (Int_t i=0; i<2; i++)
-	psi2SPiSqMass_vs_KPiSqMass_1B0[i]->Write() ;
-      psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle->Write() ; planesAngle->Write() ;
+      for (Int_t i=0; i<2; i++) {
+	psi2SPiSqMass_vs_KPiSqMass_1B0[i]->Write() ; psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[i]->Write() ;
+      }
+      cos_Kstar_helicityAngle->Write() ;
+      psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle_rot->Write() ; cos_psi2S_helicityAngle_rotVSnotRot->Write() ; cos_psi2S_helicityAngle_vs_KPiMass->Write() ;
+      cosKstar_vs_cosPsi2S_helicityAngles->Write() ;
+      planesAngle->Write() ; planesAngle_vs_cos_psi2S_helicityAngle->Write() ;
       hB0CTau_1B0->Write() ; hB0CTau_1B0matched->Write() ;
       nMCB0_h->Write() ;
       B0_gen_p_h->Write() ; B0_gen_pT_h->Write() ; psi2S_gen_p_h->Write() ; psi2S_gen_pT_h->Write() ; K_gen_p_h->Write() ; K_gen_pT_h->Write() ; pi_gen_p_h->Write() ; pi_gen_pT_h->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_gen->Write() ;
-      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; planesAngle_BT_gen->Write() ;
+      psi2S_vs_mu_pT->Write() ;
+      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen_bias->Write() ; cos_psi2S_helicityAngle_BT_gen_rot->Write() ; cos_psi2S_helicityAngle_BT_gen_rotVSnotRot->Write() ;
+      cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen->Write() ; cos_psi2S_helicityAngle_vs_KPiMass_BT_gen->Write() ;
+      cos_Kstar_helicityAngle_BT_gen->Write() ; cos_Kstar_helicityAngle_BT_gen_fromMasses->Write() ; 
+      cosKstar_vs_cosPsi2S_helicityAngles_BT_gen->Write() ;
+      planesAngle_BT_gen->Write() ; planesAngle_BT_gen_bias->Write() ; planesAngle_vs_cos_psi2S_helicityAngle_BT_gen->Write() ;
       B0_gen_mass_h->Write() ;
       piCh_vs_KCh_gen->Write() ;
       hMCDeltaRK_fromTwins->Write() ; hMCPtRecoVsPtTrueK_fromTwins->Write() ; hMCDeltaPtK_fromTwins->Write() ; hMCDeltaPtK_fromTwinsPiMatched->Write() ; hMCpTTrueK_fromTwins->Write() ;
@@ -3702,6 +4185,7 @@ void psiPrimePiK_MC::SlaveTerminate()
 
       //psi2S_DeltaR_pi_h->Write() ; psi2S_DeltaR_pi_pr_h->Write() ; psi2S_DeltaR_pi_quasipr_h->Write() ; psi2S_DeltaR_pi_nonpr_h->Write() ; 
       //psi2S_pointingAngle->Write() ; psi2S_pointingAngle_sign->Write() ; psi2S_pointingAngle_sb->Write() ;
+      B0_PVCTau_h->Write() ; B0_CosAlphaCTau_h->Write() ; B0_PVXCTau_h->Write() ; B0_PVX3DCTau_h->Write() ;
       pT_vs_y_psi2S_h->Write() ;
       nPsi2S_h->Write() ;
       // mu variables
@@ -3743,6 +4227,7 @@ void psiPrimePiK_MC::SlaveTerminate()
   
   if (SaraOut) 
     {      
+      cout <<"\nInside SaraOut" <<endl;
       SaraOut->cd();
       //// Write histograms in output file
       gStyle->SetOptStat(111111) ;
@@ -3773,7 +4258,9 @@ void psiPrimePiK_MC::SlaveTerminate()
     }
 
   if ( AlexisOut ) 
+  //if ( kFALSE ) 
     {      
+      cout <<"\nInside AlexisOut" <<endl;
       AlexisOut->cd();
       //// Write histograms in output file
       gStyle->SetOptStat(111111) ;
@@ -3784,13 +4271,29 @@ void psiPrimePiK_MC::SlaveTerminate()
       nMCB0_BT_h->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_BT_gen->Write() ; KPiSqMass_vs_psi2SKSqMass_BT_gen->Write() ;
       nB0_h->Write() ; nB0AC_noMassWin_h->Write() ; nB0AC_h->Write() ; nB0AC_signalWin_h->Write() ; nB0AC_purityWin_h->Write() ; nB0ACInMC_h->Write() ;
-      hmyPsiPMassSel->Write() ; hmyPsiPKPiMassSelZoom->Write() ;  hmyPsiPKPiMassSelAlt->Write() ; hmyPsiPKPiMassSelAltZoom->Write() ;
+      hmyPsiPMassSel->Write() ; hmyPsiPKPiMassZoom->Write() ;  hmyPsiPKPiMassAlt->Write() ; hmyPsiPKPiMassAltZoom->Write() ;
+      hmyPsiPKPiMassNairitSelAlt->Write() ; psi2SPiSqMass_vs_KPiSqMass_NairitPeak->Write() ; psi2SPiSqMass_vs_KPiSqMass_NairitSb->Write() ;
+      hmyPiPiMass->Write() ; hmyPiKMass->Write() ; hmyKKMass->Write() ; hmyPsiPPiPiMass->Write() ; hmyPsiPPiKMass->Write() ; hmyPsiPPiKMass_zoom->Write() ; hmyPsiPKKMass->Write() ; hmyPsiPPhiMass->Write() ; hmyPsiPPiKMass_fromBs->Write() ; hmyPsiPPiKMass_fromBs_zoom->Write() ;
+      hmyPiPiMass_vs_KKMass->Write() ; hmyPsiPPiPiMass_vs_PiPiMass->Write() ; hmyPsiPKKMass_vs_KKMass->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_AC->Write() ;
+      // MVA
+      hPionPt_fromB0peak->Write() ; hKaonPt_fromB0peak->Write() ; hPionPtPlusKaonPt_fromB0peak->Write(); hLowerPt_fromB0peak->Write(); hHigherPt_fromB0peak->Write(); hB0Pt_fromB0peak->Write();
+      hPsiDeltaRHigherPtTrk_fromB0peak->Write(); hPsiDeltaRLowerPtTrk_fromB0peak->Write(); hPionDeltaRKaon_fromB0peak->Write(); hPsiDeltaRKPi_fromB0peak->Write(); KPiMass_fromB0peak->Write();
+      hB0VtxCL_fromB0peak->Write(); B0_PVCTau_fromB0peak->Write() ; B0_BSCTau_fromB0peak->Write() ; B0_pointingAnglePV_fromB0peak->Write();
+      cos_psi2S_helicityAngleLabB0peak->Write();
+      hPionPt_fromB0sb->Write() ; hKaonPt_fromB0sb->Write() ; hPionPtPlusKaonPt_fromB0sb->Write(); hLowerPt_fromB0sb->Write(); hHigherPt_fromB0sb->Write(); hB0Pt_fromB0sb->Write();
+      hPsiDeltaRHigherPtTrk_fromB0sb->Write(); hPsiDeltaRLowerPtTrk_fromB0sb->Write(); hPionDeltaRKaon_fromB0sb->Write(); hPsiDeltaRKPi_fromB0sb->Write(); KPiMass_fromB0sb->Write();
+      hB0VtxCL_fromB0sb->Write(); B0_PVCTau_fromB0sb->Write() ; B0_BSCTau_fromB0sb->Write() ; B0_pointingAnglePV_fromB0sb->Write();
+      cos_psi2S_helicityAngleLabB0peak->Write();
       // 
       hB0Mass_1B0->Write() ; hB0Mass_noTwins_noSignalWinNotTwins->Write() ;
-      for (Int_t i=0; i<2; i++)
-	psi2SPiSqMass_vs_KPiSqMass_1B0[i]->Write() ; 
-      psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle->Write() ; planesAngle->Write() ;
+      for (Int_t i=0; i<2; i++) {
+	psi2SPiSqMass_vs_KPiSqMass_1B0[i]->Write() ;  psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[i]->Write() ; 
+      }
+      cos_Kstar_helicityAngle->Write() ;
+      psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle->Write() ; cos_psi2S_helicityAngle_rot->Write() ; cos_psi2S_helicityAngle_rotVSnotRot->Write() ; cos_psi2S_helicityAngle_vs_KPiMass->Write() ;
+      cosKstar_vs_cosPsi2S_helicityAngles->Write() ;
+      planesAngle->Write() ; planesAngle_vs_cos_psi2S_helicityAngle->Write() ;
       hB0CTau_1B0->Write() ; hB0CTau_1B0matched->Write() ;
       hMCDeltaR_1B0->Write() ; hMCDeltaPt_1B0->Write() ; 
       for (Int_t i=0; i<3; i++) {
@@ -3832,7 +4335,12 @@ void psiPrimePiK_MC::SlaveTerminate()
       hMCDeltaPt_1vs2_2B0->Write() ; hMCDeltaR_1vs2_2B0->Write() ;
       hMCDeltaR_1vs2_2B0twin->Write() ; hMCDeltaPt_1vs2_2B0twin->Write() ; hB0VtxCL_1vs2_2B0twin->Write() ; hB0Mass_1vs2_2B0twin->Write() ; hB0CTau_1vs2_2B0twin->Write() ; hAlpha_1vs2_2B0twin->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_gen->Write() ;
-      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; planesAngle_BT_gen->Write() ;
+      psi2S_vs_mu_pT->Write() ;
+      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen_bias->Write() ; cos_psi2S_helicityAngle_BT_gen_rot->Write() ; cos_psi2S_helicityAngle_BT_gen_rotVSnotRot->Write() ;
+      cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen->Write() ; cos_psi2S_helicityAngle_vs_KPiMass_BT_gen->Write() ;
+      cos_Kstar_helicityAngle_BT_gen->Write() ; cos_Kstar_helicityAngle_BT_gen_fromMasses->Write() ; 
+      cosKstar_vs_cosPsi2S_helicityAngles_BT_gen->Write() ;
+      planesAngle_BT_gen->Write() ; planesAngle_BT_gen_bias->Write() ; planesAngle_vs_cos_psi2S_helicityAngle_BT_gen->Write() ;
       B0_gen_mass_h->Write() ;
       piCh_vs_KCh_gen->Write() ; 
       hMCDeltaRK_fromTwins->Write() ; hMCPtRecoVsPtTrueK_fromTwins->Write() ; hMCDeltaPtK_fromTwins->Write() ; hMCDeltaPtK_fromTwinsPiMatched->Write() ; hMCpTTrueK_fromTwins->Write() ;
@@ -3866,13 +4374,38 @@ void psiPrimePiK_MC::SlaveTerminate()
       AlexisOut->Close();
       //
     }
-
+  
   if ( tightCutsOut ) 
     {      
+      cout <<"\nInside tightCutsOut" <<endl;
       tightCutsOut->cd();
       //
-      hmyPsiPMassSel->Write() ; hmyPsiPKPiMassSelZoom->Write() ; hmyPsiPKPiMassSelAlt->Write() ; hmyPsiPKPiMassSelAltZoom->Write() ; 
+      _nt->Write();
+      mva_variables_sig->Write(); mva_variables_bkg->Write(); mva_variables_all->Write();
+      //
+      psi2SPiSqMass_vs_KPiSqMass_BT_gen->Write() ; KPiSqMass_vs_psi2SKSqMass_BT_gen->Write() ;
+      psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen_bias->Write() ; cos_psi2S_helicityAngle_BT_gen_rot->Write() ; cos_psi2S_helicityAngle_BT_gen_rotVSnotRot->Write() ;
+      cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen->Write() ; cos_psi2S_helicityAngle_vs_KPiMass_BT_gen->Write() ;
+      cos_Kstar_helicityAngle_BT_gen->Write() ; cos_Kstar_helicityAngle_BT_gen_fromMasses->Write() ; 
+      cosKstar_vs_cosPsi2S_helicityAngles_BT_gen->Write() ;
+      planesAngle_BT_gen->Write() ; planesAngle_BT_gen_bias->Write() ; planesAngle_vs_cos_psi2S_helicityAngle_BT_gen->Write() ;
+      //
+      kaonP_vs_pionP->Write() ; kaonPt_vs_pionPt->Write() ; kaonIdx_vs_pionIdx->Write() ;
+
+      hmyPsiPMassSel->Write() ; hmyPsiPKPiMassZoom->Write() ; hmyPsiPKPiMassAlt->Write() ; hmyPsiPKPiMassAltZoom->Write() ;
+      hmyPsiPKPiMassNairitSelAlt->Write() ; psi2SPiSqMass_vs_KPiSqMass_NairitPeak->Write() ; psi2SPiSqMass_vs_KPiSqMass_NairitSb->Write() ;
       psi2SPiSqMass_vs_KPiSqMass_AC->Write() ;
+      hmyPiPiMass->Write() ; hmyPiKMass->Write() ; hmyKKMass->Write() ; hmyPsiPPiPiMass->Write() ; hmyPsiPPiKMass->Write() ; hmyPsiPPiKMass_zoom->Write() ; hmyPsiPKKMass->Write() ; hmyPsiPPhiMass->Write() ; hmyPsiPPiKMass_fromBs->Write() ; hmyPsiPPiKMass_fromBs_zoom->Write() ;
+      // MVA
+      hPionPt_fromB0peak->Write() ; hKaonPt_fromB0peak->Write() ; hPionPtPlusKaonPt_fromB0peak->Write(); hLowerPt_fromB0peak->Write(); hHigherPt_fromB0peak->Write(); hB0Pt_fromB0peak->Write();
+      hPsiDeltaRHigherPtTrk_fromB0peak->Write(); hPsiDeltaRLowerPtTrk_fromB0peak->Write(); hPionDeltaRKaon_fromB0peak->Write(); hPsiDeltaRKPi_fromB0peak->Write(); KPiMass_fromB0peak->Write();
+      hB0VtxCL_fromB0peak->Write(); B0_PVCTau_fromB0peak->Write() ; B0_BSCTau_fromB0peak->Write() ; B0_pointingAnglePV_fromB0peak->Write();
+      cos_psi2S_helicityAngleLabB0peak->Write();
+      hPionPt_fromB0sb->Write() ; hKaonPt_fromB0sb->Write() ; hPionPtPlusKaonPt_fromB0sb->Write(); hLowerPt_fromB0sb->Write(); hHigherPt_fromB0sb->Write(); hB0Pt_fromB0sb->Write();
+      hPsiDeltaRHigherPtTrk_fromB0sb->Write(); hPsiDeltaRLowerPtTrk_fromB0sb->Write(); hPionDeltaRKaon_fromB0sb->Write(); hPsiDeltaRKPi_fromB0sb->Write(); KPiMass_fromB0sb->Write();
+      hB0VtxCL_fromB0sb->Write(); B0_PVCTau_fromB0sb->Write() ; B0_BSCTau_fromB0sb->Write() ; B0_pointingAnglePV_fromB0sb->Write();
+      cos_psi2S_helicityAngleLabB0peak->Write();
+      //
       nB0AC_h->Write() ; nB0AC_signalWin_h->Write() ; nB0AC_purityWin_h->Write() ;
       for (Int_t i = 0; i < abs(piPt_B0.size()); ++i)
 	myMuMuKPiMass_piPt[i]->Write() ;
@@ -3899,29 +4432,108 @@ void psiPrimePiK_MC::SlaveTerminate()
       tightCutsOut->Close();
       //
     }
+  
   //
 }
 
 void psiPrimePiK_MC::Terminate()
 {
-  // The Terminate() function is the last function to be called during
-  // a query. It always runs on the client, it can be used to present
-  // the results graphically or save the results to file.
+  // The Terminate() function is the last function to be called during a query.
+  // It always runs on the client, it can be used to present the results graphically or save the results to file.
   cout <<"\nTerminate:" <<endl ;
 
-  TString dir = "";
-
   TString option = GetOption();
-  if (option == "officialMC") {
-    //dir = "officialMC" ;
-    //dir = "officialMC/0p9" ; 
-    dir = "officialMC_extended" ;
+  cout <<"\nIn Terminate option = \"" <<option <<"\"" <<endl ;
+
+  TString dir = "";
+  TString mumu_label = "";
+
+  if (option.Contains("psi2S")) {
+    dir = "psi2S/";
+    mumu_label = "#psi'" ;
+  } else if (option.Contains("JPsi")) {
+    dir = "JPsi/";
+    mumu_label = "J/#psi";
+  } else {
+    cout <<"\ndir is neither \"psi2S\" nor \"JPsi\", please check." <<endl; return;
   }
-  gSystem->mkdir(TString::Format("plots/%s", dir.Data()), true);
-  
-  if ( (AlexisFile = dynamic_cast<TProofOutputFile*>(fOutput->FindObject("26Jan_histos.root"))) ) {
-    TString outputFile(AlexisFile->GetOutputFileName());
-    TString outputName(AlexisFile->GetName()); outputName += ".root";
+
+  if (option.Contains("officialMC")) {
+    if (!option.Contains("noPtEtaCuts")) {
+      if (option.Contains("tmva"))
+	dir.Append("officialMC_tmva") ;
+      else if (option.Contains("generic")) {
+	dir.Append("officialMC_generic") ;
+      } else {
+	//dir = "officialMC" ;
+	//dir = "officialMC/0p9" ;
+	dir.Append("officialMC_extended") ;
+      }
+    }
+    else
+      dir.Append("officialMC_noPtEtaCuts") ;
+  }
+  //
+  Bool_t doGEN_plots;
+  if ( option.Contains("MC") ) {
+    dir.Prepend("plots/mc/");
+    doGEN_plots = kTRUE;
+  } else {
+    dir.Prepend("plots/data/");
+    doGEN_plots = kFALSE;
+  }
+
+  gSystem->mkdir(TString::Format("%s", dir.Data()), true);
+
+  TString fileName = "26Jan_histos.root"; fileName = "HLT5.root";
+
+  B0_signal = 2.;
+  //innerSB = 5. ; outerSB = 9.;
+  innerSB = 4. ; outerSB = 6.;
+  TString B0limits = TString::Format("%.1fSig_%.1fto%.1fSB",B0_signal,innerSB,outerSB);
+  B0limits.ReplaceAll(".","p") ;
+
+  fileName = option+"_"+B0limits+".root";
+  if ( option.Contains("MC") )
+    fileName = option+"_Bd2MuMuKPi_"+B0limits+".root";
+
+  TString histName = "";
+
+  // Dalitz countour
+  TGraph *cont_up = 0; TGraph *cont_down = 0;
+  Int_t m = 19800;
+  Double_t x[19800], m23_max[19800], m23_min[19800];
+  Double_t E2[19800], E3[19800];
+	    
+  Double_t m_mother = B0_mass; 
+  //Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = mumu_mass ; 
+  Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = mumu_mass ; 
+	    
+  Double_t m12_min = (m_dau1+m_dau2)*(m_dau1+m_dau2);
+  Double_t m12_max = (m_mother-m_dau3)*(m_mother-m_dau3);
+  Double_t step = (m12_max - m12_min)/(m-1);
+	    
+  x[0] = m12_min + 0.0001;
+	    
+  for (Int_t k=1; k<m; k++ ) 
+    x[k] = x[k-1] + step;
+	    
+  Int_t n = 19799;
+  for (Int_t i=0; i<n; i++) {
+    E2[i] = (x[i] - m_dau1*m_dau1 + m_dau2*m_dau2)/(2*sqrt(x[i]));
+    E3[i] = (m_mother*m_mother - x[i] - m_dau3*m_dau3)/(2*sqrt(x[i]));
+    m23_min[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) + sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
+    m23_max[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) - sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
+  }
+
+  cont_up = new TGraph(n,x,m23_min); cont_up->SetLineWidth(3);
+  cont_down = new TGraph(n,x,m23_max); cont_down->SetLineWidth(3);
+
+
+  if ( (OutFile = dynamic_cast<TProofOutputFile*>(fOutput->FindObject( fileName.Data() ))) ) {
+
+    TString outputFile(OutFile->GetOutputFileName());
+    TString outputName(OutFile->GetName()); outputName += ".root";
     Printf("\nOutput file found: %s", outputFile.Data());
     
     // Open the file
@@ -3929,151 +4541,150 @@ void psiPrimePiK_MC::Terminate()
     if (AlexisOut) {
       Printf("Managed to open file: %s\n", outputFile.Data());
       ////////// Read histograms //////////
-      // 1 B0
-      if ( (hMCTruthMatching_1B0[0][0] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0")) ) {
-	cout <<"MC matching efficiency for only 1 B0 = " <<( 1. - hMCTruthMatching_1B0[0][0]->GetBinContent(hMCTruthMatching_1B0[0][0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[0][0]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_1B0\" not found");
-      if ( (hMCTruthMatching_1B0[0][1] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0_dauCh")) ) {
-	cout <<"MC matching (with daughters charge) efficiency for only 1 B0 = " <<( 1. - hMCTruthMatching_1B0[0][1]->GetBinContent(hMCTruthMatching_1B0[0][1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[0][1]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_1B0_dauCh\" not found");
-      //
-      if ( (hMCTruthMatching_1B0[0][2] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0fromDau")) ) {
-	cout <<"MC truth daughters matching efficiency for only 1 B0 = " <<( 1. - hMCTruthMatching_1B0[0][2]->GetBinContent(hMCTruthMatching_1B0[0][2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[0][2]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_1B0fromDau\" not found");
-      //
+      if (doGEN_plots) {
+	// 1 B0
+	if ( (hMCTruthMatching_1B0[0][0] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0")) ) {
+	  cout <<"MC matching efficiency for only 1 B0 = " <<( 1. - hMCTruthMatching_1B0[0][0]->GetBinContent(hMCTruthMatching_1B0[0][0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[0][0]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_1B0\" not found");
+	if ( (hMCTruthMatching_1B0[0][1] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0_dauCh")) ) {
+	  cout <<"MC matching (with daughters charge) efficiency for only 1 B0 = " <<( 1. - hMCTruthMatching_1B0[0][1]->GetBinContent(hMCTruthMatching_1B0[0][1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[0][1]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_1B0_dauCh\" not found");
+	//
+	if ( (hMCTruthMatching_1B0[0][2] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0fromDau")) ) {
+	  cout <<"MC truth daughters matching efficiency for only 1 B0 = " <<( 1. - hMCTruthMatching_1B0[0][2]->GetBinContent(hMCTruthMatching_1B0[0][2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[0][2]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_1B0fromDau\" not found");
+	//
 
-      // 2 B0 not twin
-      if ( (hMCTruthMatching_2B0notTwin[0] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0notTwin")) ) {
-	cout <<"MC matching efficiency for 2 B0 not twin = " <<( 1. - hMCTruthMatching_2B0notTwin[0]->GetBinContent(hMCTruthMatching_2B0notTwin[0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0notTwin[0]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin\" not found");
-      if ( (hMCTruthMatching_2B0notTwin[1] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0notTwin_dauCh")) ) {
-	cout <<"MC matching (with daughters charge) efficiency for 2 B0 not twin = " <<( 1. - hMCTruthMatching_2B0notTwin[1]->GetBinContent(hMCTruthMatching_2B0notTwin[1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0notTwin[1]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin_dauCh\" not found");
-      //
-      if ( (hMCTruthMatching_2B0notTwin[2] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0notTwin_fromDau")) ) {
-	cout <<"MC truth daughters matching efficiency for 2 B0 not twin = " <<( 1. - hMCTruthMatching_2B0notTwin[2]->GetBinContent(hMCTruthMatching_2B0notTwin[2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0notTwin[2]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin_fromDau\" not found");
-      //
+	// 2 B0 not twin
+	if ( (hMCTruthMatching_2B0notTwin[0] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0notTwin")) ) {
+	  cout <<"MC matching efficiency for 2 B0 not twin = " <<( 1. - hMCTruthMatching_2B0notTwin[0]->GetBinContent(hMCTruthMatching_2B0notTwin[0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0notTwin[0]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin\" not found");
+	if ( (hMCTruthMatching_2B0notTwin[1] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0notTwin_dauCh")) ) {
+	  cout <<"MC matching (with daughters charge) efficiency for 2 B0 not twin = " <<( 1. - hMCTruthMatching_2B0notTwin[1]->GetBinContent(hMCTruthMatching_2B0notTwin[1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0notTwin[1]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin_dauCh\" not found");
+	//
+	if ( (hMCTruthMatching_2B0notTwin[2] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0notTwin_fromDau")) ) {
+	  cout <<"MC truth daughters matching efficiency for 2 B0 not twin = " <<( 1. - hMCTruthMatching_2B0notTwin[2]->GetBinContent(hMCTruthMatching_2B0notTwin[2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0notTwin[2]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin_fromDau\" not found");
+	//
       
-      // 2 B0 twin 
-      if ( (hMCTruthMatching_2B0twin[0] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0twin")) ) {
-	cout <<"MC matching efficiency for 2 B0 twin = " <<( 1. - hMCTruthMatching_2B0twin[0]->GetBinContent(hMCTruthMatching_2B0twin[0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0twin[0]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0twin\" not found");
-      if ( (hMCTruthMatching_2B0twin[1] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0twin_dauCh")) ) {
-	cout <<"MC matching (with daughters charge) efficiency for 2 B0 twin = " <<( 1. - hMCTruthMatching_2B0twin[1]->GetBinContent(hMCTruthMatching_2B0twin[1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0twin[1]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0twin_dauCh\" not found");
-      //
-      if ( (hMCTruthMatching_2B0twin[2] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0twin_fromDau")) ) {
-	cout <<"MC truth daughters matching efficiency for 2 B0 twin = " <<( 1. - hMCTruthMatching_2B0twin[2]->GetBinContent(hMCTruthMatching_2B0twin[2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0twin[2]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0twin_fromDau\" not found");
-      //
+	// 2 B0 twin 
+	if ( (hMCTruthMatching_2B0twin[0] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0twin")) ) {
+	  cout <<"MC matching efficiency for 2 B0 twin = " <<( 1. - hMCTruthMatching_2B0twin[0]->GetBinContent(hMCTruthMatching_2B0twin[0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0twin[0]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0twin\" not found");
+	if ( (hMCTruthMatching_2B0twin[1] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0twin_dauCh")) ) {
+	  cout <<"MC matching (with daughters charge) efficiency for 2 B0 twin = " <<( 1. - hMCTruthMatching_2B0twin[1]->GetBinContent(hMCTruthMatching_2B0twin[1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0twin[1]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0twin_dauCh\" not found");
+	//
+	if ( (hMCTruthMatching_2B0twin[2] = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0twin_fromDau")) ) {
+	  cout <<"MC truth daughters matching efficiency for 2 B0 twin = " <<( 1. - hMCTruthMatching_2B0twin[2]->GetBinContent(hMCTruthMatching_2B0twin[2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0twin[2]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0twin_fromDau\" not found");
+	//
       
-      // signal win
-      cout <<"\n\nMC matching in signal mass window:\n" <<endl ;
-      if ( (hMCTruthMatching_1B0[1][0] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0signalWin")) ) {
-	cout <<"MC matching efficiency for only 1 B0 in signal = " <<( 1. - hMCTruthMatching_1B0[1][0]->GetBinContent(hMCTruthMatching_1B0[1][0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[1][0]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_1B0signalWin\" not found");
-      if ( (hMCTruthMatching_1B0[1][1] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0signalWin_dauCh")) ) {
-	cout <<"MC matching (with daughters charge) efficiency for only 1 B0 in signal = " <<( 1. - hMCTruthMatching_1B0[1][1]->GetBinContent(hMCTruthMatching_1B0[1][1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[1][1]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_1B0signalWin_dauCh\" not found");
-      if ( (hMCTruthMatching_1B0[1][2] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0signalWin_fromDau")) ) {
-	cout <<"MC truth daughters matching efficiency for only 1 B0 in signal = " <<( 1. - hMCTruthMatching_1B0[1][2]->GetBinContent(hMCTruthMatching_1B0[1][2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[1][2]->GetEntries() )*100 <<"%" <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_1B0signalWin_fromDau\" not found");
-      //
-      if ( (hMCTruthMatching_2B0signalWin_notTwin = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0signalWin_notTwin")) ) {
-	cout <<"\nMC truth matching efficiency for 2 B0 not twin in signal = " <<( 1 - hMCTruthMatching_2B0signalWin_notTwin->GetBinContent(hMCTruthMatching_2B0signalWin_notTwin->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0signalWin_notTwin->GetEntries() )*100 <<"%"  <<endl ;
-      } else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin\" not found");
+	// signal win
+	cout <<"\n\nMC matching in signal mass window:\n" <<endl ;
+	if ( (hMCTruthMatching_1B0[1][0] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0signalWin")) ) {
+	  cout <<"MC matching efficiency for only 1 B0 in signal = " <<( 1. - hMCTruthMatching_1B0[1][0]->GetBinContent(hMCTruthMatching_1B0[1][0]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[1][0]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_1B0signalWin\" not found");
+	if ( (hMCTruthMatching_1B0[1][1] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0signalWin_dauCh")) ) {
+	  cout <<"MC matching (with daughters charge) efficiency for only 1 B0 in signal = " <<( 1. - hMCTruthMatching_1B0[1][1]->GetBinContent(hMCTruthMatching_1B0[1][1]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[1][1]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_1B0signalWin_dauCh\" not found");
+	if ( (hMCTruthMatching_1B0[1][2] = (TH1I*) AlexisOut->Get("MCTruthMatching_1B0signalWin_fromDau")) ) {
+	  cout <<"MC truth daughters matching efficiency for only 1 B0 in signal = " <<( 1. - hMCTruthMatching_1B0[1][2]->GetBinContent(hMCTruthMatching_1B0[1][2]->GetXaxis()->FindBin(0.)) / hMCTruthMatching_1B0[1][2]->GetEntries() )*100 <<"%" <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_1B0signalWin_fromDau\" not found");
+	//
+	if ( (hMCTruthMatching_2B0signalWin_notTwin = (TH1I*) AlexisOut->Get("MCTruthMatching_2B0signalWin_notTwin")) ) {
+	  cout <<"\nMC truth matching efficiency for 2 B0 not twin in signal = " <<( 1 - hMCTruthMatching_2B0signalWin_notTwin->GetBinContent(hMCTruthMatching_2B0signalWin_notTwin->GetXaxis()->FindBin(0.)) / hMCTruthMatching_2B0signalWin_notTwin->GetEntries() )*100 <<"%"  <<endl ;
+	} else Warning("Terminate", "histogram \"MCTruthMatching_2B0notTwin\" not found");
+
+      } // if (doGEN_plots)
       //
       ////////// Plot histograms //////////
       //
+      vector< pair<TString, TString> > name_TH ;
+      gStyle->SetOptStat( 10 ) ;
+      
+      name_TH.push_back( make_pair("B0_multiplicity_AC","TH1I") ); name_TH.push_back( make_pair("B0twins_multiplicity_AC","TH1I") );
       /*
-      // B0 mass plots
-      if ( (nB0AC_h = (TH1I*) AlexisOut->Get("B0_multiplicity_AC")) ) {
-	nB0AC_h->Draw() ;
-	nB0AC_h->Draw("text30same") ;
-	gPad->SetLogy() ;
-	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), nB0AC_h->GetName()) );
-      } else Warning("Terminate", "histogram \"myPsiPKPiMassSelAltZoom\" not found");
+      name_TH.push_back( make_pair("myMuMuKPiMassAlt","TH1F") );
+      name_TH.push_back( make_pair("myPiPiMass","TH1F") ); name_TH.push_back( make_pair("myPiKMass","TH1F") ); name_TH.push_back( make_pair("myKKMass","TH1F") );
+      name_TH.push_back( make_pair("myMuMuPiPiMass","TH1F") ); name_TH.push_back( make_pair("myMuMuPiKMass","TH1F") ); name_TH.push_back( make_pair("myMuMuPiKMass_zoom","TH1F") ); name_TH.push_back( make_pair("myMuMuKKMass","TH1F") ); name_TH.push_back( make_pair("myMuMuPhiMass","TH1F") );
+      name_TH.push_back( make_pair("myMuMuPiKMass_fromBs","TH1F") ); name_TH.push_back( make_pair("myMuMuPiKMass_fromBs_zoom","TH1F") ); name_TH.push_back( make_pair("myPiPiMass_vs_KKMass","TH2F") ); name_TH.push_back( make_pair("myMuMuPiPiMass_vs_PiPiMass","TH2F") ); name_TH.push_back( make_pair("myMuMuKKMass_vs_KKMass","TH2F") );
+      */
+      for (Int_t i = 0; i < abs(name_TH.size()); ++i) {
+	TH1I* histo1I = 0; TH1F* histo1F = 0; TH2F* histo2F = 0;
+	if ( name_TH[i].second.EqualTo("TH1I") )
+	  if ( (histo1I = (TH1I*) AlexisOut->Get( name_TH[i].first.Data() )) ) {
+	    histo1I->Draw() ;
+	    histo1I->Draw("text30same") ; gPad->SetLogy() ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), histo1I->GetName()) );
+	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name_TH[i].first.Data() )) ;
+	else if ( name_TH[i].second.EqualTo("TH1F") )
+	  if ( (histo1F = (TH1F*) AlexisOut->Get( name_TH[i].first.Data() )) ) {
+	    histo1F->Draw() ; gPad->SetLogy(0) ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), histo1F->GetName()) );
+	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name_TH[i].first.Data() )) ;
+	else if ( name_TH[i].second.EqualTo("TH2F") )
+	  if ( (histo2F = (TH2F*) AlexisOut->Get( name_TH[i].first.Data() )) ) {
+	    histo2F->Draw() ;
+	    histo2F->Draw("colz") ; gPad->SetLogy(0) ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), histo2F->GetName()) );
+	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name_TH[i].first.Data() )) ;
+	else Warning("Terminate", "histogram type is neither \"TH1I\" nor \"TH1F\" nor \"TH2F\"!") ;
+      }
 
-      if ( (nTwins_h[0] = (TH1I*) AlexisOut->Get("B0twins_multiplicity_AC")) ) {
-	nTwins_h[0]->Draw() ;
-	nTwins_h[0]->Draw("text30same") ;
-	gPad->SetLogy(0) ;
-	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), nTwins_h[0]->GetName()) );
-      } else Warning("Terminate", "histogram \"B0twins_multiplicity_AC\" not found");
+      TCanvas *Bs_reflection = new TCanvas("Bs_reflection","B_{s} reflection", 2*600, 2*400); Bs_reflection->Divide(2,2);
+      TString BsReflection_hist[] = {"myKKMass","myMuMuPhiMass","myMuMuPiKMass","myMuMuPiKMass_zoom"};
+      Float_t lineX[2][2] = {{phi_left,phi_right}, {Bs_left,Bs_right}};
+      TH1F* histo[4] = {0,0,0,0};
+      for (Int_t i=0; i<4; ++i)
+	if ( (histo[i] = (TH1F*) AlexisOut->Get(BsReflection_hist[i])) ) {	 
+	  Bs_reflection->cd(i+1);
+	  histo[i]->Draw(); Bs_reflection->Update();
+	  if (i<2) {
+	    TLine* left = new TLine(lineX[i][0],gPad->GetUymin(),lineX[i][0],gPad->GetUymax()); left->SetLineColor(kRed); left->SetLineWidth(2);  left->Draw();
+	    TLine* right = new TLine(lineX[i][1],gPad->GetUymin(),lineX[i][1],gPad->GetUymax()); right->SetLineColor(kRed); right->SetLineWidth(2); right->Draw();
+	    if (i==0) { gPad->SetLogx(); histo[i]->GetXaxis()->SetRangeUser(0.9,histo[i]->GetXaxis()->GetXmax()) ; }
+	  }
+	  else if (i==2) { 
+	    TH1F* histoSame = (TH1F*) AlexisOut->Get("myMuMuPiKMass_fromBs") ;
+	    if (histoSame) {
+	      histoSame->SetFillColor(kRed); histoSame->Draw("same");
+	      //gPad->Update(); gPad->BuildLegend();
+	    } else Warning("Terminate", "histogram \"myMuMuPiKMass_fromBs\" not found") ;
+	    
+	  } else if (i==3) { 
+	    histo[i]->SetMinimum(0);
+	    TH1F* histoSame = (TH1F*) AlexisOut->Get("myMuMuPiKMass_fromBs_zoom") ;
+	    if (histoSame) {
+	      histoSame->SetFillColor(kRed); histoSame->Draw("same"); //gPad->BuildLegend();
+	    } else Warning("Terminate", "histogram \"myMuMuPiKMass_fromBs_zoom\" not found") ;
+	  }
+	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", BsReflection_hist[i].Data() )) ;
 
-      if ( (hmyPsiPKPiMassSelAltZoom = (TH1F*) AlexisOut->Get("myPsiPKPiMassSelAltZoom")) ) {
-
-	Double_t xMin = hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetXmin();
-	Double_t xMax = hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetXmax();
-	Int_t nBins = hmyPsiPKPiMassSelAltZoom->GetNbinsX();
-	Double_t bin_width = (xMax-xMin)/nBins ;
-  
-	RooRealVar xVar("xVar", hmyPsiPKPiMassSelAltZoom->GetXaxis()->GetTitle(), xMin, xMax) ;  xVar.setBins(nBins) ;  
-	RooDataHist *RooPsiPKPiMassSelAltZoom = new RooDataHist(hmyPsiPKPiMassSelAltZoom->GetName(), hmyPsiPKPiMassSelAltZoom->GetTitle(), RooArgSet(xVar), Import(*hmyPsiPKPiMassSelAltZoom, kFALSE)) ;
-	//RooConstVar nEntries("Entries", "Total number of entries", hmyPsiPKPiMassSelAltZoom->Integral()) ;
-  
-	Double_t fitMax = xMax, fitMin = xMin ;
-
-	RooRealVar mean("m", "mean", 5.28, 5.25, 5.31) ;
-	RooRealVar sigma1("#sigma_{1}", "sigma1", 0.01, 0.001, 0.02);
-	//RooRealVar sigma2("#sigma_{2}", "sigma2", 0.02, 0.01, 0.2);
-	RooGaussian sigPDF("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
-	//RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
-	//RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
-	//RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
-	//RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
-
-	RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+4);
-
-	RooRealVar c1("c_{1}", "c1", +0.02, -10, 10);
-	RooRealVar c2("c_{2}", "c2", -0.001, -10, 10);
-	RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2));
-	RooRealVar nBkg("nBkg", "Bkg component", 1e+3, 1e+2, 1e+4);     
-  
-	RooAddPdf *totalPDF = new RooAddPdf("totalPDF", "totalPDF", RooArgList(sigPDF, bkgPDF), RooArgList(nSig, nBkg));  // with 5 sigma
-	cout <<"\n\n---------------  Fitting histo \"" <<RooPsiPKPiMassSelAltZoom->GetTitle() <<"\"  ---------------\n" <<endl;
-  
-	totalPDF->fitTo(*RooPsiPKPiMassSelAltZoom, Range(fitMin, fitMax), Extended(kTRUE));
-
-	RooPlot* xframe = xVar.frame();
-	//xframe->SetAxisRange(fitMin, xMax) ;
-	xframe->SetTitle( RooPsiPKPiMassSelAltZoom->GetTitle() ) ;
-	xframe->SetYTitle( TString::Format("Candidates / %.1f MeV/c^{2}", bin_width*1000) ) ;
-  
-	RooPsiPKPiMassSelAltZoom->plotOn(xframe);
-	totalPDF->plotOn(xframe);
-	totalPDF->plotOn(xframe, Components(RooArgSet(sigPDF)), LineColor(kRed));
-	//totalPDF->plotOn(xframe, Components(RooArgSet(sig1PDF)), LineColor(kOrange));
-	//totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
-
-	totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9)) ;
-	//totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
-
-	xframe->Draw();
-	//gPad->SaveAs( TString::Format("plots/%s/B0_mass_1B0_fit.png", dir.Data()) );
-
-      } else Warning("Terminate", "histogram \"myPsiPKPiMassSelAltZoom\" not found");
-      //
+      Bs_reflection->SaveAs( TString::Format("%s/%s.png", dir.Data(), Bs_reflection->GetName()) );
+       
       
       // 1 B0
       if ( (hB0Mass_1B0 = (TH1F*) AlexisOut->Get("B0Mass_1B0")) ) {
-	if ( (hB0Mass_1B0matched[0][0] = (TH1F*) AlexisOut->Get("B0Mass_1B0matched")) ) {
-	  TH1F* diff_hist = (TH1F*) hB0Mass_1B0->Clone("diff_hist"); diff_hist->Sumw2();
-	  diff_hist->Add(hB0Mass_1B0matched[0][0], -1);
-	  hB0Mass_1B0->Draw() ;
+	if ( doGEN_plots) {
+	  TCanvas *BMatching_C = new TCanvas("BMatching_C","BMatching_C", 800, 600) ;  
+	  if ( (hB0Mass_1B0matched[0][0] = (TH1F*) AlexisOut->Get("B0Mass_1B0matched")) ) {
+	    TH1F* diff_hist = (TH1F*) hB0Mass_1B0->Clone("diff_hist"); diff_hist->Sumw2();
+	    diff_hist->Add(hB0Mass_1B0matched[0][0], -1);
+	    hB0Mass_1B0->Draw() ;
 
-	  if ( (hB0Mass_1B0matched[0][1] = (TH1F*) AlexisOut->Get("B0Mass_1B0matched_dauCh")) ) {
-	    TH1F* diff_hist2 = (TH1F*) hB0Mass_1B0->Clone("diff_hist2"); diff_hist2->Sumw2();
-	    diff_hist2->Add(hB0Mass_1B0matched[0][1], -1);
-	    diff_hist2->SetFillColor( kYellow ) ; diff_hist2->Draw("hist same") ;
-	    //diff_hist->SetFillColor( kRed ) ; diff_hist->Draw("hist same") ;
-	    hB0Mass_1B0->SetLineColor( kBlack ) ; hB0Mass_1B0->SetLineWidth( 2 ) ; hB0Mass_1B0->Draw("same") ;
-	    gPad->SaveAs( TString::Format("plots/%s/B0mass_1B0.png", dir.Data()) );
-
-	  } else Warning("Terminate", "histogram \"B0Mass_1B0matched_dauCh\" not found");
-	} else Warning("Terminate", "histogram \"B0Mass_1B0matched\" not found");
-	
+	    if ( (hB0Mass_1B0matched[0][1] = (TH1F*) AlexisOut->Get("B0Mass_1B0matched_dauCh")) ) {
+	      TH1F* diff_hist2 = (TH1F*) hB0Mass_1B0->Clone("diff_hist2"); diff_hist2->Sumw2();
+	      diff_hist2->Add(hB0Mass_1B0matched[0][1], -1);
+	      diff_hist2->SetFillColor( kYellow ) ; diff_hist2->Draw("hist same") ;
+	      //diff_hist->SetFillColor( kRed ) ; diff_hist->Draw("hist same") ;
+	      hB0Mass_1B0->SetLineColor( kBlack ) ; hB0Mass_1B0->SetLineWidth( 2 ) ; hB0Mass_1B0->Draw("same") ;
+	      BMatching_C->SaveAs( TString::Format("%s/B0mass_1B0.png", dir.Data()) );
+	      
+	    } else Warning("Terminate", "histogram \"B0Mass_1B0matched_dauCh\" not found");
+	  } else Warning("Terminate", "histogram \"B0Mass_1B0matched\" not found");
+	}
 	TCanvas *Bpeak_C = new TCanvas("Bpeak_C","Bpeak_C", 800, 600) ;  
 
 	Double_t xMin = hB0Mass_1B0->GetXaxis()->GetXmin();
@@ -4084,26 +4695,33 @@ void psiPrimePiK_MC::Terminate()
 	RooRealVar xVar("xVar", hB0Mass_1B0->GetXaxis()->GetTitle(), xMin, xMax) ;  xVar.setBins(nBins) ;  
 	RooDataHist *RooB0Mass_1B0 = new RooDataHist(hB0Mass_1B0->GetName(), hB0Mass_1B0->GetTitle(), RooArgSet(xVar), Import(*hB0Mass_1B0, kFALSE)) ;
 	RooConstVar nEntries("Entries", "Total number of entries", hB0Mass_1B0->Integral()) ;
+	Bool_t twoGauss = kFALSE;
+	if ( option.Contains("MC")  &&  nEntries.getVal() > 20000  &&  nEntries.getVal() < 50000) twoGauss = kTRUE;
+
 	Double_t fitMax = xMax, fitMin = xMin ;
 
 	RooRealVar mean("m", "mean", 5.28, 5.25, 5.31) ;
-	RooRealVar sigma1("#sigma_{1}", "sigma1", 0.01, 0.001, 0.02);
-	//RooRealVar sigma2("#sigma_{2}", "sigma2", 0.02, 0.01, 0.2);
+	Float_t sigmaThr = 0.04; // 0.03 goes at limit
+	RooRealVar sigma1("#sigma_{1}", "sigma1", sigmaThr/2., sigmaThr/20., sigmaThr);
+	RooRealVar sigma2("#sigma_{2}", "sigma2", 2*sigmaThr, sigmaThr, 10*sigmaThr);
 	
-	RooGaussian sigPDF("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
-	//RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
-	//RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
-	//RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
-	//RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
+	RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
+	RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
+	RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 1);
+	RooAbsPdf* sigPDF = 0;
+	if (!twoGauss) {
+	  sigPDF = new RooGaussian("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
+	} else
+	  sigPDF = new RooAddPdf("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
 	
-	RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+5);
+	RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+6);
 
 	RooRealVar c1("c_{1}", "c1", +0.02, -10, 10);
 	RooRealVar c2("c_{2}", "c2", -0.001, -10, 10);
 	RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2));
-	RooRealVar nBkg("nBkg", "Bkg component", 1e+3, 1e+2, 1e+4);     
+	RooRealVar nBkg("nBkg", "Bkg component", 1e+3, 1e+2, 1e+6);     
   
-	RooAddPdf *totalPDF = new RooAddPdf("totalPDF", "totalPDF", RooArgList(sigPDF, bkgPDF), RooArgList(nSig, nBkg));  // with 5 sigma
+	RooAddPdf *totalPDF = new RooAddPdf("totalPDF", "totalPDF", RooArgList(*sigPDF, bkgPDF), RooArgList(nSig, nBkg));  // with 5 sigma
 	cout <<"\n\n---------------  Fitting histo \"" <<RooB0Mass_1B0->GetTitle() <<"\"  ---------------\n" <<endl;
   
 	totalPDF->fitTo(*RooB0Mass_1B0, Range(fitMin, fitMax), Extended(kTRUE));
@@ -4115,21 +4733,28 @@ void psiPrimePiK_MC::Terminate()
   
 	RooB0Mass_1B0->plotOn(xframe);
 	totalPDF->plotOn(xframe);
-	totalPDF->plotOn(xframe, Components(RooArgSet(sigPDF)), LineColor(kRed));
-	//totalPDF->plotOn(xframe, Components(RooArgSet(sig1PDF)), LineColor(kOrange));
-	//totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
-
-	totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9)) ;
-	//totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
+	if (!twoGauss) {
+	  totalPDF->plotOn(xframe, Components(RooArgSet(*sigPDF)), LineColor(kRed));
+	  totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9)) ;
+	} else {
+	  totalPDF->plotOn(xframe, Components(RooArgSet(sig1PDF)), LineColor(kOrange));
+	  totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
+	  totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2,ratio)), Layout(0.55,0.9,0.9)) ;
+	}
 
 	xframe->SetTitleOffset(1.3, "XY");
 	xframe->Draw();
-	Bpeak_C->SaveAs( TString::Format("plots/%s/B0_mass_1B0_fit.png", dir.Data()) );
+	Bpeak_C->SaveAs( TString::Format("%s/B0_mass_1B0_fit.png", dir.Data()) );
+
+	cout <<"\nB0 mass from fit = " <<mean.getVal() ;
+	cout <<"\nB0 mass used for the signal region = " <<B0_massFit ;
+	cout <<"\nB0 width from fit = " <<sigma1.getVal() ;
+	cout <<"\nB0 width used for the signal region = " <<B0_sigmaFit <<"\n" <<endl;
 
 	// calculating purity
 	xVar.setRange("signal", mean.getVal() -2*(sigma1.getVal()), mean.getVal() +2*(sigma1.getVal())) ;
 	RooAbsReal* tot_sigRange = totalPDF->createIntegral(xVar, NormSet(xVar), Range("signal")) ;
-	RooAbsReal* sig_sigRange = sigPDF.createIntegral(xVar, NormSet(xVar), Range("signal")) ;
+	RooAbsReal* sig_sigRange = sigPDF->createIntegral(xVar, NormSet(xVar), Range("signal")) ;
 
 	Double_t tot_sigRange_val = tot_sigRange->getVal() ; // compute integral
 	cout <<"\nIntegral of total PDF in signal region = " << nEntries.getVal()*tot_sigRange_val << endl;
@@ -4152,7 +4777,7 @@ void psiPrimePiK_MC::Terminate()
 	    diff_hist2->SetFillColor( kYellow ) ; diff_hist2->Draw("hist same") ;
 	    //diff_hist->SetFillColor( kRed ) ; diff_hist->Draw("hist same") ;
 	    hB0Mass_2B0notTwin->SetLineColor( kBlack ) ; hB0Mass_2B0notTwin->SetLineWidth( 2 ) ; hB0Mass_2B0notTwin->Draw("same") ;
-	    gPad->SaveAs( TString::Format("plots/%s/B0mass_2B0notTwin.png", dir.Data()) );
+	    gPad->SaveAs( TString::Format("%s/B0mass_2B0notTwin.png", dir.Data()) );
 
 	  } else Warning("Terminate", "histogram \"B0Mass_2B0notTwin_matched_dauCh\" not found");
 	} else Warning("Terminate", "histogram \"B0Mass_2B0notTwin_matched\" not found");
@@ -4172,7 +4797,7 @@ void psiPrimePiK_MC::Terminate()
 	    diff_hist2->SetFillColor( kYellow ) ; diff_hist2->Draw("hist same") ;
 	    //diff_hist->SetFillColor( kRed ) ; diff_hist->Draw("hist same") ;
 	    hB0Mass_2B0twin->SetLineColor( kBlack ) ; hB0Mass_2B0twin->SetLineWidth( 2 ) ; hB0Mass_2B0twin->Draw("same") ;
-	    gPad->SaveAs( TString::Format("plots/%s/B0mass_2B0twin.png", dir.Data()) );
+	    gPad->SaveAs( TString::Format("%s/B0mass_2B0twin.png", dir.Data()) );
 
 	  } else Warning("Terminate", "histogram \"B0Mass_2B0twin_matched_dauCh\" not found");
 	} else Warning("Terminate", "histogram \"B0Mass_2B0twin_matched\" not found");
@@ -4180,160 +4805,161 @@ void psiPrimePiK_MC::Terminate()
       //
       
       // hourglass
-      cout <<"\nHourglass plot:" <<endl ;
+      if (doGEN_plots) {
+	cout <<"\nHourglass plot:" <<endl ;
+	TCanvas *twins_C = new TCanvas("twins_C","twins_C", 800, 600) ;  
 
-      if ( ( hDeltaB0Mass_2B0twin[0] = (TH2F*) AlexisOut->Get("DeltaB0Mass_2B0twin")) ) {
-	hDeltaB0Mass_2B0twin[0]->Draw("colz") ;
-	gPad->SaveAs( TString::Format("plots/%s/Hourglass.png", dir.Data()) ) ;
-      } else Warning("Terminate", "histogram \"DeltaB0Mass_2B0twin\" not found");
+	if ( ( hDeltaB0Mass_2B0twin[0] = (TH2F*) AlexisOut->Get("DeltaB0Mass_2B0twin")) ) {
+	  hDeltaB0Mass_2B0twin[0]->Draw("colz") ;
+	  twins_C->SaveAs( TString::Format("%s/Hourglass.png", dir.Data()) ) ;
+	} else Warning("Terminate", "histogram \"DeltaB0Mass_2B0twin\" not found");
 
-      if ( ( hDeltaB0Mass_2B0twin[1] = (TH2F*) AlexisOut->Get("DeltaB0Mass_2B0twin_signalWin")) ) {
-	hDeltaB0Mass_2B0twin[1]->Draw("colz") ;
-	gPad->SaveAs( TString::Format("plots/%s/Hourglass_signalWin.png", dir.Data()) ) ;
-      } else Warning("Terminate", "histogram \"DeltaB0Mass_2B0twin_signalWin\" not found");
+	if ( ( hDeltaB0Mass_2B0twin[1] = (TH2F*) AlexisOut->Get("DeltaB0Mass_2B0twin_signalWin")) ) {
+	  hDeltaB0Mass_2B0twin[1]->Draw("colz") ;
+	  twins_C->SaveAs( TString::Format("%s/Hourglass_signalWin.png", dir.Data()) ) ;
+	} else Warning("Terminate", "histogram \"DeltaB0Mass_2B0twin_signalWin\" not found");
 
-      if ( ( hB0Mass_2B0twin_hourglass[1][1] = (TH1F*) AlexisOut->Get("B0Mass_inside_matchedTwin")) ) {
-	hB0Mass_2B0twin_hourglass[1][1]->SetLineWidth(2) ;
-	hB0Mass_2B0twin_hourglass[1][1]->SetLineColor( kBlack ) ;
-	hB0Mass_2B0twin_hourglass[1][1]->SetStats(0) ;
-	hB0Mass_2B0twin_hourglass[1][1]->Draw() ;
+	if ( ( hB0Mass_2B0twin_hourglass[1][1] = (TH1F*) AlexisOut->Get("B0Mass_inside_matchedTwin")) ) {
+	  hB0Mass_2B0twin_hourglass[1][1]->SetLineWidth(2) ;
+	  hB0Mass_2B0twin_hourglass[1][1]->SetLineColor( kBlack ) ;
+	  hB0Mass_2B0twin_hourglass[1][1]->SetStats(0) ;
+	  hB0Mass_2B0twin_hourglass[1][1]->Draw() ;
 
-	if ( ( hB0Mass_2B0twin_hourglass[1][0] = (TH1F*) AlexisOut->Get("B0Mass_inside_notMatchedTwin")) ) {
-	  //hB0Mass_2B0twin_hourglass[1][0]->SetLineColor(kYellow) ; //hB0Mass_2B0twin_hourglass[1][0]->SetLineWidth(2) ;
-	  hB0Mass_2B0twin_hourglass[1][0]->SetFillColor(kYellow) ; 
-	  hB0Mass_2B0twin_hourglass[1][0]->Draw("same") ; 
+	  if ( ( hB0Mass_2B0twin_hourglass[1][0] = (TH1F*) AlexisOut->Get("B0Mass_inside_notMatchedTwin")) ) {
+	    //hB0Mass_2B0twin_hourglass[1][0]->SetLineColor(kYellow) ; //hB0Mass_2B0twin_hourglass[1][0]->SetLineWidth(2) ;
+	    hB0Mass_2B0twin_hourglass[1][0]->SetFillColor(kYellow) ; 
+	    hB0Mass_2B0twin_hourglass[1][0]->Draw("same") ; 
 
-	  if ( ( hB0Mass_2B0twin_hourglass[0][1] = (TH1F*) AlexisOut->Get("B0Mass_outside_matchedTwin")) ) {
-	    hB0Mass_2B0twin_hourglass[0][1]->SetLineWidth(2) ;
-	    hB0Mass_2B0twin_hourglass[0][1]->SetLineColor(kBlue) ;
-	    hB0Mass_2B0twin_hourglass[0][1]->Draw("same") ;
+	    if ( ( hB0Mass_2B0twin_hourglass[0][1] = (TH1F*) AlexisOut->Get("B0Mass_outside_matchedTwin")) ) {
+	      hB0Mass_2B0twin_hourglass[0][1]->SetLineWidth(2) ;
+	      hB0Mass_2B0twin_hourglass[0][1]->SetLineColor(kBlue) ;
+	      hB0Mass_2B0twin_hourglass[0][1]->Draw("same") ;
 
-	    if ( ( hB0Mass_2B0twin_hourglass[0][0] = (TH1F*) AlexisOut->Get("B0Mass_outside_notMatchedTwin")) ) {
-	      hB0Mass_2B0twin_hourglass[0][0]->SetLineWidth(2) ;
-	      hB0Mass_2B0twin_hourglass[0][0]->SetLineColor(kRed) ;
-	      hB0Mass_2B0twin_hourglass[0][0]->Draw("same") ;
+	      if ( ( hB0Mass_2B0twin_hourglass[0][0] = (TH1F*) AlexisOut->Get("B0Mass_outside_notMatchedTwin")) ) {
+		hB0Mass_2B0twin_hourglass[0][0]->SetLineWidth(2) ;
+		hB0Mass_2B0twin_hourglass[0][0]->SetLineColor(kRed) ;
+		hB0Mass_2B0twin_hourglass[0][0]->Draw("same") ;
 
-	    } else Warning("Terminate", "histogram \"B0Mass_outside_notMatchedTwin\" not found");
-	  } else Warning("Terminate", "histogram \"B0Mass_outside_matchedTwin\" not found");
-	} else Warning("Terminate", "histogram \"B0Mass_inside_notMatchedTwin\" not found");
+	      } else Warning("Terminate", "histogram \"B0Mass_outside_notMatchedTwin\" not found");
+	    } else Warning("Terminate", "histogram \"B0Mass_outside_matchedTwin\" not found");
+	  } else Warning("Terminate", "histogram \"B0Mass_inside_notMatchedTwin\" not found");
 
-	gPad->BuildLegend() ; hB0Mass_2B0twin_hourglass[1][1]->Draw("same") ;
-	gPad->RedrawAxis() ;
-	gPad->SaveAs( TString::Format("plots/%s/B0_mass_2B0twin_hourglass.png", dir.Data()) ) ;
+	  gPad->BuildLegend() ; hB0Mass_2B0twin_hourglass[1][1]->Draw("same") ;
+	  gPad->RedrawAxis() ;
+	  twins_C->SaveAs( TString::Format("%s/B0_mass_2B0twin_hourglass.png", dir.Data()) ) ;
 	
-	gPad->SetLogy() ;
-	gPad->SaveAs( TString::Format("plots/%s/B0_mass_2B0twin_hourglass_logy.png", dir.Data()) ) ;
+	  gPad->SetLogy() ;
+	  twins_C->SaveAs( TString::Format("%s/B0_mass_2B0twin_hourglass_logy.png", dir.Data()) ) ;
 
-      } else Warning("Terminate", "histogram \"B0Mass_inside_matchedTwin\" not found");
-      */
-      /*
-      cout <<"\nDalitz plot:" <<endl ;
-      TString name = "gen_psi2SPi_vs_KPi_dalitz";
-      name = "gen_psi2SPi_vs_KPi_dalitz_BT";
-      //name = "gen_KPi_vs_psi2SK_dalitz_BT";
-      TH2F* dalitzGen = 0 ;
-      if ( (dalitzGen = (TH2F*) AlexisOut->Get("gen_psi2SPi_vs_KPi_dalitz_BT")) ) {
-
-	gStyle->SetOptStat( 10 ) ;
-
-	//dalitzGen->Draw("lego") ;
-	dalitzGen->Draw("colz") ;
-
-	// Dalitz contour
-	Int_t m = 19800;
-	Double_t x[19800], m23_max[19800], m23_min[19800];
-	Double_t E2[19800], E3[19800];
+	} else Warning("Terminate", "histogram \"B0Mass_inside_matchedTwin\" not found");
+      }      
+      //
+      cout <<"\nDalitz plot:" <<endl ;	    
+      TCanvas* dalitzC = new TCanvas("dalitz_C","Dalitz C", 800, 600);
+      dalitzC->SetRightMargin(0.2);
+      if (doGEN_plots) {
+	TString nameGen_squared = "cos_psi2S_helicityAngle_vs_psi2SPi_BT_gen";
+	TH2F* dalitzGen_squared = 0 ;
+	if ( (dalitzGen_squared = (TH2F*) AlexisOut->Get( nameGen_squared.Data() )) ) {
+	  gStyle->SetOptStat( 10 ) ;
 	
-	Double_t m_mother = B0_mass; 
-	//Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = psi2S_mass ; 
-	Double_t m_dau1 = kaonCh_mass, m_dau2 = pionCh_mass, m_dau3 = psi2S_mass ; 
+	  dalitzGen_squared->Draw("colz") ;
+	  dalitzC->SaveAs( TString::Format("%s/%s.png", dir.Data(), nameGen_squared.Data()) );
+	} else Warning("Terminate", TString::Format("histogram %s not found", nameGen_squared.Data()));
+	//
+	nameGen_squared = "cos_psi2S_helicityAngle_vs_KPi_BT_gen";
+	if ( (dalitzGen_squared = (TH2F*) AlexisOut->Get( nameGen_squared.Data() )) ) {
+	  gStyle->SetOptStat( 10 ) ;
 
-	Double_t m12_min = (m_dau1+m_dau2)*(m_dau1+m_dau2);
-	Double_t m12_max = (m_mother-m_dau3)*(m_mother-m_dau3);
-	Double_t step = (m12_max - m12_min)/(m-1);
+	  dalitzGen_squared->Draw("colz") ;
+	  dalitzC->SaveAs( TString::Format("%s/%s.png", dir.Data(), nameGen_squared.Data()) );
+	} else Warning("Terminate", TString::Format("histogram %s not found", nameGen_squared.Data()));
+      }
+      //
+      // Absolute and relative efficiency
+      vector< pair< pair<TString, TString>, TString > > nameGenReco;
+      //nameGenReco.push_back( make_pair( make_pair("psi2SPi_vs_KPi_dalitz_gen","reco_psi2SPi_vs_KPi_dalitz"), "psi2SPi_vs_KPi") );
+      nameGenReco.push_back( make_pair( make_pair("psi2SPi_vs_KPi_dalitz_BT_gen","psi2SPi_vs_KPi_dalitz_1B0"), "psi2SPi_vs_KPi") );
+      nameGenReco.push_back( make_pair( make_pair("psi2SPi_vs_KPi_dalitz_BT_gen","psi2SPi_vs_KPi_dalitz_B0constr_1B0"), "psi2SPi_vs_KPi_B0constr") );
+      nameGenReco.push_back( make_pair( make_pair("cos_psi2S_helicityAngle_vs_KPi_BT_gen","cos_psi2S_helicityAngle_vs_KPi_1B0"), "cos_psi2S_helicityAngle_vs_KPi") );
+      nameGenReco.push_back( make_pair( make_pair("planesAngle_vs_cos_psi2S_helicityAngle_BT_gen","planesAngle_vs_cos_psi2S_helicityAngle_1B0"), "planesAngle_vs_cos_psi2S_helicityAngle") );
+      //nameGen.push_back("gen_KPi_vs_psi2SK_dalitz_BT");
+      for (Int_t iDalitz=0; iDalitz<abs(nameGenReco.size()); ++iDalitz) {
 	
-	x[0] = m12_min + 0.0001;
-	
-	for (Int_t k=1; k<m; k++ ) 
-	  x[k] = x[k-1] + step;
-	
-	Int_t n = 19799;
-	for (Int_t i=0; i<n; i++) {
-	  E2[i] = (x[i] - m_dau1*m_dau1 + m_dau2*m_dau2)/(2*sqrt(x[i]));
-	  E3[i] = (m_mother*m_mother - x[i] - m_dau3*m_dau3)/(2*sqrt(x[i]));
-	  m23_min[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) + sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
-	  m23_max[i] = (E2[i]+E3[i])*(E2[i]+E3[i]) - TMath::Power((sqrt(E2[i]*E2[i] - m_dau2*m_dau2) - sqrt(E3[i]*E3[i] - m_dau3*m_dau3)),2);
-	}
-	
-	TGraph *cont_up = new TGraph(n,x,m23_min); cont_up->SetLineWidth(3);
-	TGraph *cont_down = new TGraph(n,x,m23_max); cont_up->SetLineWidth(3);
-	cont_up->Draw("lsame"); 
-	cont_down->Draw("lsame"); 
-
-	gPad->SaveAs( TString::Format("plots/%s/dalitz_gen.png", dir.Data()) );
-	//dalitzGen->Rebin2D();
-	//gPad->SaveAs( TString::Format("plots/%s/dalitz_gen_rebinned.png", dir.Data()) );
-
-	//TString nameReco = "reco_psi2SPi_vs_KPi_dalitz" ;
-	TString nameReco = "psi2SPi_vs_KPi_dalitz_1B0" ;
 	TH2F* dalitzReco = 0 ;
-	//if ( (psi2SPiSqMass_vs_KPiSqMass_AC = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
-	if ( (dalitzReco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
+	//if ( (psi2SPiSqMass_vs_KPiSqMass_AC = (TH2F*) AlexisOut->Get( nameGenReco[iDalitz].first.second.Data() )) ) {
+	if ( (dalitzReco = (TH2F*) AlexisOut->Get( nameGenReco[iDalitz].first.second.Data() )) ) {
 	  dalitzReco->Draw("colz") ;
-	  cont_up->Draw("lsame"); 
-	  cont_down->Draw("lsame"); 
-
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_reco.png", dir.Data()) );
+	  Bool_t contour = kTRUE;
+	  if (contour) { // Dalitz contour
+	    cont_up->Draw("lsame"); cont_down->Draw("lsame"); 
+	  }  
+	  dalitzC->SaveAs( TString::Format("%s/%s.png", dir.Data(), nameGenReco[iDalitz].first.second.Data()) );
 	  //dalitzReco->Rebin2D();
-	  //gPad->SaveAs( TString::Format("plots/%s/dalitz_reco_rebinned.png", dir.Data()) );
+	  //dalitzC->SaveAs( TString::Format("%s/%s_rebinned.png", dir.Data(), nameGenReco[iDalitz].first.second.Data()) );
 
-	  cout <<"\nCreating efficiency Dalitz" <<endl ;
-	  TH2D *hAbsEff, *hAbsEffErr, *hRelEff;
-	  TH1D *hAbsEffDistr, *hGenDistr, *hRecoDistr;
+	  if (doGEN_plots) {
+	    TH2F* dalitzGen = 0 ;
+	    if ( (dalitzGen = (TH2F*) AlexisOut->Get( nameGenReco[iDalitz].first.first.Data() )) ) {
+
+	      gStyle->SetOptStat( 10 ) ;
+	
+	      //dalitzGen->Draw("lego") ;
+	      dalitzGen->Draw("colz") ;
 	  
-	  Float_t xLow = dalitzGen->GetXaxis()->GetXmin() ;
-	  Float_t xHigh = dalitzGen->GetXaxis()->GetXmax() ;
-	  Int_t nX = dalitzGen->GetNbinsX() ;
-	  Float_t yLow = dalitzGen->GetYaxis()->GetXmin() ;
-	  Float_t yHigh = dalitzGen->GetYaxis()->GetXmax() ;
-	  Int_t nY = dalitzGen->GetNbinsY() ;
-	  hAbsEff = new TH2D ("AbsEff", "AbsEff", nX, xLow, xHigh, nY, yLow, yHigh);
-	  hAbsEff->SetXTitle( dalitzGen->GetXaxis()->GetTitle() );
-	  hAbsEff->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
-	  hRelEff = new TH2D ("RelEff", "RelEff", nX, xLow, xHigh, nY, yLow, yHigh);
-	  hRelEff->SetXTitle( dalitzGen->GetXaxis()->GetTitle() );
-	  hRelEff->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
-	  hAbsEffErr = new TH2D ("AbsEffErr", "AbsEffErr", nX, xLow, xHigh, nY, yLow, yHigh);
-	  hAbsEffErr->SetXTitle( dalitzGen->GetXaxis()->GetTitle() );
-	  hAbsEffErr->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
-	  hAbsEffDistr = new TH1D ("hAbsEffDistr","Efficiency distribution", 100, -0.001, 0.006);
-	  hGenDistr = new TH1D ("hGenDistr","Bins' Gen entries distribution", 100, 0., 25000);
-	  hRecoDistr = new TH1D ("hRecoDistr","Bins' Reco entries distribution", 110, 0., 55.);
-	 	  
-	  Int_t MyPalette[100];
-	  Double_t red[]   = { 1.0, 0.0, 1.0, 1.0 };
-	  Double_t green[] = { 1.0, 0.0, 0.0, 1.0 };
-	  Double_t blue[]  = { 1.0, 1.0, 0.0, 0.0 };
-	  Double_t stop[] = { 0.0, 0.5, 0.9, 1.0 };
-	  Int_t FI = TColor::CreateGradientColorTable(4, stop, red, green, blue, 100);
-	  for (int i=0; i<100; i++)
-	    MyPalette[i] = FI+i;
+	      if ( nameGenReco[iDalitz].first.first.Contains("ngle") )
+		contour = kFALSE;
+	      if ( contour ) { // Dalitz contour
+		cont_up->Draw("lsame"); 
+		cont_down->Draw("lsame"); 
+	      }
+	      dalitzC->SaveAs( TString::Format("%s/%s.png", dir.Data(), nameGenReco[iDalitz].first.first.Data()) );
+	      //dalitzGen->Rebin2D();
+	      //dalitzC->SaveAs( TString::Format("%s/%s_rebinned.png", dir.Data(), nameGenReco[iDalitz].first.first.Data()) );
 	  
-	  gStyle->SetPalette(100, MyPalette);
-	  
-	  // 32 righe & 40 colonne
-	  Double_t genBinCont[nX][nY], recoBinCont[nX][nY];
-	  Double_t absEff[nX][nY], absEffErr[nX][nY];
-	  Double_t absEffSingleValue, absEffErrSingleValue;
-	  Double_t genSingleValue, recoSingleValue;
-	  //
-	  Int_t count=0;
-	  Double_t sumAbsEff = 0, sumAbsEffErr = 0.;
-	  //
-	  for (Int_t i=0; i<nX; i++)
-	    {
-	      for (Int_t j=0; j<nY; j++)
-		{
+	    
+	      cout <<"\nCreating efficiency TH2 for " <<nameGenReco[iDalitz].second <<endl ;
+	      TH2D *hAbsEff, *hAbsEffErr, *hRelEff;
+	      TH1D *hAbsEffDistr, *hGenDistr, *hRecoDistr;
+	    
+	      Float_t xLow = dalitzGen->GetXaxis()->GetXmin() ;
+	      Float_t xHigh = dalitzGen->GetXaxis()->GetXmax() ;
+	      Int_t nX = dalitzGen->GetNbinsX() ;
+	      Float_t yLow = dalitzGen->GetYaxis()->GetXmin() ;
+	      Float_t yHigh = dalitzGen->GetYaxis()->GetXmax() ;
+	      Int_t nY = dalitzGen->GetNbinsY() ;
+	      hAbsEff = new TH2D ( TString::Format("AbsEff_%s",nameGenReco[iDalitz].second.Data()), "AbsEff", nX, xLow, xHigh, nY, yLow, yHigh);
+	      hAbsEff->SetXTitle( dalitzGen->GetXaxis()->GetTitle() ); hAbsEff->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
+	      hRelEff = new TH2D ( TString::Format("RelEff_%s",nameGenReco[iDalitz].second.Data()), "RelEff", nX, xLow, xHigh, nY, yLow, yHigh);
+	      hRelEff->SetXTitle( dalitzGen->GetXaxis()->GetTitle() ); hRelEff->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
+	      hAbsEffErr = new TH2D ( TString::Format("AbsEffErr_%s",nameGenReco[iDalitz].second.Data()), "AbsEffErr", nX, xLow, xHigh, nY, yLow, yHigh);
+	      hAbsEffErr->SetXTitle( dalitzGen->GetXaxis()->GetTitle() ); hAbsEffErr->SetYTitle( dalitzGen->GetYaxis()->GetTitle() );
+	      hAbsEffDistr = new TH1D ( TString::Format("hAbsEffDistr_%s",nameGenReco[iDalitz].second.Data()),"Efficiency distribution", 100, -0.001, 0.006);
+	      hGenDistr = new TH1D ( TString::Format("hGenDistr_%s",nameGenReco[iDalitz].second.Data()),"Bins' Gen entries distribution", 100, 0., 25000);
+	      hRecoDistr = new TH1D ( TString::Format("hRecoDistr_%s",nameGenReco[iDalitz].second.Data()),"Bins' Reco entries distribution", 110, 0., 55.);
+	    
+	      Int_t MyPalette[100];
+	      Double_t red[]   = { 1.0, 0.0, 1.0, 1.0 };
+	      Double_t green[] = { 1.0, 0.0, 0.0, 1.0 };
+	      Double_t blue[]  = { 1.0, 1.0, 0.0, 0.0 };
+	      Double_t stop[] = { 0.0, 0.5, 0.9, 1.0 };
+	      Int_t FI = TColor::CreateGradientColorTable(4, stop, red, green, blue, 100);
+	      for (int i=0; i<100; i++)
+		MyPalette[i] = FI+i;
+	    
+	      gStyle->SetPalette(100, MyPalette);
+	    
+	      // 32 righe & 40 colonne
+	      Double_t genBinCont[nX][nY], recoBinCont[nX][nY];
+	      Double_t absEff[nX][nY], absEffErr[nX][nY];
+	      Double_t absEffSingleValue, absEffErrSingleValue;
+	      Double_t genSingleValue, recoSingleValue;
+	      //
+	      Int_t count=0;
+	      Double_t sumAbsEff = 0, sumAbsEffErr = 0.;
+	      //
+	      for (Int_t i=0; i<nX; i++) {
+		for (Int_t j=0; j<nY; j++) {
 		  genBinCont[i][j] = dalitzGen->GetBinContent(i,j);
 		  recoBinCont[i][j] = dalitzReco->GetBinContent(i,j);
 		  //cout << "riga j=" << j << " e colonna i=" << i << " -> no. candidati generati = " << genBinCont[j][i] << " & no. ricostruiti = " << recoBinCont[j][i] << endl;
@@ -4343,162 +4969,189 @@ void psiPrimePiK_MC::Terminate()
 		  hGenDistr->Fill(genSingleValue);
 		  hRecoDistr->Fill(recoSingleValue);
 		  //
-		  if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
-		    {
-		      absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
-		      absEffSingleValue = absEff[i][j];
-		      hAbsEffDistr->Fill(absEffSingleValue);
-		      absEffErr[i][j] = (1 / genBinCont[i][j] ) * (sqrt( genBinCont[i][j] * absEff[i][j] * (1 - absEff[i][j]) ) );
-		      absEffErrSingleValue = absEffErr[i][j];
-		      //
-		      // calculate weighted mean: two possible intervals: ]0,0.00225[ or ]0,0.005[
-		      //if (absEffSingleValue > 0. && absEffSingleValue < 0.01) //0.005
-		      if (absEffSingleValue > 0.) //0.005
-			{
-			  sumAbsEff = sumAbsEff + (absEffSingleValue/(absEffErrSingleValue * absEffErrSingleValue)) ;
-			  sumAbsEffErr = sumAbsEffErr + (1./(absEffErrSingleValue * absEffErrSingleValue));
-			  count++ ;
-			}
-		      //
-		    } else {
+		  //if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) // fix 500 with sth not hardcoded
+		  if ( genBinCont[i][j] > 0  &&  recoBinCont[i][j] <= genBinCont[i][j] ) {
+		    absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
+		    absEffSingleValue = absEff[i][j];
+		    absEffErr[i][j] = (1 / genBinCont[i][j] ) * (sqrt( genBinCont[i][j] * absEff[i][j] * (1 - absEff[i][j]) ) );
+		    absEffErrSingleValue = absEffErr[i][j];
+		    //
+		    // calculate weighted mean: two possible intervals: ]0,0.00225[ or ]0,0.005[
+		    //if (absEffSingleValue > 0. && absEffSingleValue < 0.01) //0.005
+		    if (absEffSingleValue > 0.  &&  absEffErrSingleValue > 0.) //0.005  &&  -
+		      {
+			sumAbsEff += (absEffSingleValue/(absEffErrSingleValue * absEffErrSingleValue)) ;
+			sumAbsEffErr += (1./(absEffErrSingleValue * absEffErrSingleValue));
+			count++ ;
+		      }
+		    //
+		  } else {
 		    absEff[i][j] = 0.;
 		    absEffErr[i][j] = 0.;
 		    absEffSingleValue = -0.0005;
-		    hAbsEffDistr->Fill(absEffSingleValue);
 		  }
+		  hAbsEffDistr->Fill(absEffSingleValue);
 		  //cout << "raw-j=" << j << " e col-i=" << i << " -> no. gen-cand = " << genBinCont[j][i] << " & no. reco-cand = " << recoBinCont[j][i] << " & eff= " << absEff[j][i] << endl;
 		  //
 		  hAbsEff->SetBinContent(i,j,absEff[i][j]);
 		  hAbsEffErr->SetBinContent(i,j,absEffErr[i][j]);
 		  //
 		} // for (Int_t j=0; j<nY; j++)
-	    } // for (Int_t i=0; i<nX; i++)
-	  //
-	  cout <<"count = " <<count << " with weighted mean = " << sumAbsEff/sumAbsEffErr << " and weighted mean uncertainty = " << 1./sqrt(sumAbsEffErr) << endl; // about 10-3 with error 10-5
-	  //
-	  hAbsEff->Draw("colz"); hAbsEff->SetStats(kFALSE);
-	  cont_up->Draw("lsame"); 
-	  cont_down->Draw("lsame"); 
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_absEff.png", dir.Data()) );
-
-	  hAbsEffErr->Draw("colz"); hAbsEffErr->SetStats(kFALSE);
-	  cont_up->Draw("lsame"); 
-	  cont_down->Draw("lsame"); 
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_absEffErr.png", dir.Data()) );
-
-	  //////////////////////////////////////// RELATIVE EFFICIENCY CALCULATION
-	  //   
-	  Double_t relEff[nX][nY];
-	  //Double_t relEffErr[nX][nY];
-	  //
-	  Double_t weightedMeanEff = sumAbsEff/sumAbsEffErr;
-	  // Double_t weightedMeanEffErr = 1./sqrt(sumAbsEffErr);
-	  //
-	  for (Int_t i=0; i<nX; i++)
-	    {
-	      for (Int_t j=0; j<nY; j++)
-		{
+	      } // for (Int_t i=0; i<nX; i++)
+	      //
+	      cout <<"count = " <<count << " with weighted mean = " << sumAbsEff/sumAbsEffErr << " and weighted mean uncertainty = " << 1./sqrt(sumAbsEffErr) << endl; // about 10-3 with error 10-5
+	      //
+	      hAbsEff->SetMaximum( 0.01 );
+	      hAbsEff->Draw("colz"); hAbsEff->SetStats(kFALSE);
+	      if (contour) { // Dalitz contour
+		cont_up->Draw("lsame"); cont_down->Draw("lsame"); }
+	      dalitzC->SaveAs( TString::Format("%s/%s_absEff.png", dir.Data(), nameGenReco[iDalitz].second.Data()) );
+	    
+	      hAbsEffErr->Draw("colz"); hAbsEffErr->SetStats(kFALSE);
+	      if (contour) { // Dalitz contour
+		cont_up->Draw("lsame"); cont_down->Draw("lsame"); }
+	      dalitzC->SaveAs( TString::Format("%s/%s_absEffErr.png", dir.Data(), nameGenReco[iDalitz].second.Data()) );
+	    
+	      //////////////////////////////////////// RELATIVE EFFICIENCY CALCULATION
+	      //   
+	      Double_t relEff[nX][nY];
+	      //Double_t relEffErr[nX][nY];
+	      //
+	      Double_t weightedMeanEff = sumAbsEff/sumAbsEffErr;
+	      // Double_t weightedMeanEffErr = 1./sqrt(sumAbsEffErr);
+	      //
+	      for (Int_t i=0; i<nX; i++) {
+		for (Int_t j=0; j<nY; j++) {
 		  //genBinCont[i][j] = dalitzGen->GetBinContent(i,j);
 		  //recoBinCont[i][j] = dalitzReco->GetBinContent(i,j);	   
-		  if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
-		    {
-		      //absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
-		      if (absEff[i][j] > 0. && absEff[i][j] < 0.05) // 0. && 0.005
-			{
-			  relEff[i][j] = absEff[i][j]/weightedMeanEff;
-			}
-		      else 
-			relEff[i][j] = 0. ;
-		    }
+		  //if ( genBinCont[i][j] > 500. && recoBinCont[i][j] <= genBinCont[i][j] ) 
+		  if ( recoBinCont[i][j] <= genBinCont[i][j] ) {
+		    //absEff[i][j] = recoBinCont[i][j] / genBinCont[i][j];
+		    //if (absEff[i][j] > 0. && absEff[i][j] < 0.05) // 0. && 0.005
+		    relEff[i][j] = absEff[i][j]/weightedMeanEff;
+		  }
 		  else
 		    relEff[i][j] = 0. ;
 		  hRelEff->SetBinContent(i,j,relEff[i][j]);
 		}
-	    }
-	  //
-	  hRelEff->Draw("colz"); hRelEff->SetStats(kFALSE);
-	  hRelEff->SetMinimum(0.); hRelEff->SetMaximum(2.2);
-	  cont_up->Draw("lsame"); cont_down->Draw("lsame"); 
-	  gPad->SaveAs( TString::Format("plots/%s/dalitz_relEff.png", dir.Data()) );
+	      }
+	      //
+	      hRelEff->Draw("colz"); hRelEff->SetStats(kFALSE);
+	      hRelEff->SetMinimum(0.); hRelEff->SetMaximum(2.2);
+	      if (contour) { // Dalitz contour
+		cont_up->Draw("lsame"); cont_down->Draw("lsame"); } 
+	      dalitzC->SaveAs( TString::Format("%s/%s_relEff.png", dir.Data(), nameGenReco[iDalitz].second.Data()) );
+	    
+	      hAbsEffDistr->Draw() ;
+	    } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameGenReco[iDalitz].first.first.Data()));
+	  } // if (doGen_plots)
+	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameGenReco[iDalitz].first.second.Data())); 
+      } // for (Int_t iDalitz=0; iDalitz<abs(nameGen.size()); ++iDalitz)
 
-	  hAbsEffDistr->Draw() ;
-	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
 
-      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
-      */		
       cout <<"\nAngles plot:" <<endl ;
       // psi helicity angle
-      TH1F* helicityAngleGen = 0, *cosHelicityAngleGen = 0 ;
-      TString name = "psi2S_helicityAngle_BT_gen";
-      TString nameCos = "cos_psi2S_helicityAngle_BT_gen";
-      if ( (helicityAngleGen = (TH1F*) AlexisOut->Get( name.Data() )) ) {
-	gStyle->SetOptStat( 10 ) ;
-	helicityAngleGen->Draw() ;
-	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), helicityAngleGen->GetName()) );
-
-	if ( (cosHelicityAngleGen = (TH1F*) AlexisOut->Get( nameCos.Data() )) ) {
-	  cosHelicityAngleGen->Draw() ;
-	  gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), cosHelicityAngleGen->GetName()) );
-	  
-	  TH2F* helicityAngleReco = 0, *cosHelicityAngleReco = 0 ;
-	  TString nameReco = "psi2S_helicityAngle" ;
-	  TString nameRecoCos = "cos_psi2S_helicityAngle" ;
-	  if ( (helicityAngleReco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
-	    helicityAngleReco->Draw() ;
-	    gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), helicityAngleReco->GetName()) );
-
-	    if ( (cosHelicityAngleReco = (TH2F*) AlexisOut->Get( nameRecoCos.Data() )) ) {
-	      cosHelicityAngleReco->Draw() ;
-	      gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), cosHelicityAngleReco->GetName()) );
-
-	      TH1F* cosHelicityAngleEff = (TH1F*) cosHelicityAngleReco->Clone("cos_psi2S_helicityAngle_Eff"); cosHelicityAngleEff->SetTitle("efficiency of #psi' helicity angle cosine") ;
-	      cosHelicityAngleEff->Divide( cosHelicityAngleReco, cosHelicityAngleGen, 1,1,"B") ;
-	      cosHelicityAngleEff->Draw() ;
-	      gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), cosHelicityAngleEff->GetName()) );
-
-	    } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameRecoCos.Data()));
-	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+      TH1F* helicityAngleReco = 0, *cosHelicityAngleReco = 0 ;
+      TString nameReco = "psi2S_helicityAngle" ;
+      TString nameRecoCos = "cos_psi2S_helicityAngle" ;
+      if ( (helicityAngleReco = (TH1F*) AlexisOut->Get( nameReco.Data() )) ) {
+	helicityAngleReco->Draw() ;
+	gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), helicityAngleReco->GetName()) );
 	
-	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameCos.Data()));
-      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
+	if ( (cosHelicityAngleReco = (TH1F*) AlexisOut->Get( nameRecoCos.Data() )) ) {
+	  cosHelicityAngleReco->Draw() ;
+	  gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), cosHelicityAngleReco->GetName()) );
+
+	  if (doGEN_plots) {
+	    TString nameGen ;
+	    TH1F* helicityAngleGen = 0, *cosHelicityAngleGen = 0 ;
+	    nameGen = "psi2S_helicityAngle_BT_gen";
+	    TString nameGenCos = "cos_psi2S_helicityAngle_BT_gen";
+	    if ( (helicityAngleGen = (TH1F*) AlexisOut->Get( nameGen.Data() )) ) {
+	      gStyle->SetOptStat( 10 ) ;
+	      helicityAngleGen->Draw() ;
+	      gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), helicityAngleGen->GetName()) );
+	      
+	      if ( (cosHelicityAngleGen = (TH1F*) AlexisOut->Get( nameGenCos.Data() )) ) {
+		cosHelicityAngleGen->Draw() ;
+		gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), cosHelicityAngleGen->GetName()) );
+		
+		TH1F* cosHelicityAngleEff = (TH1F*) cosHelicityAngleReco->Clone("cos_psi2S_helicityAngle_Eff"); cosHelicityAngleEff->SetTitle("efficiency of cos("+mumu_label+" helicity angle)") ;
+		cosHelicityAngleEff->Divide( cosHelicityAngleReco, cosHelicityAngleGen, 1,1,"B") ;
+		cosHelicityAngleEff->Draw() ;
+		gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), cosHelicityAngleEff->GetName()) );
+		
+	      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameGenCos.Data()));
+	    } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameGen.Data()));
+	  } // if (doGen_plots)
+	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameRecoCos.Data()));
+      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
       //
       // planes angle
-      TH1F* planesAngleGen = 0 ;
-      name = "planesAngle_BT_gen";
-      if ( (planesAngleGen = (TH1F*) AlexisOut->Get( name.Data() )) ) {
-
-	gStyle->SetOptStat( 10 ) ;
-
-	planesAngleGen->Draw() ;
-	gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), planesAngleGen->GetName()) );
-
-	TH2F* planesAngleReco = 0 ;
-	TString nameReco = "planesAngle" ;
-	if ( (planesAngleReco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
-
-	  planesAngleReco->Draw() ;
-	  gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), planesAngleReco->GetName()) );
-
-	  TH1F* planesAngleEff = (TH1F*) planesAngleReco->Clone("planesAngle_Eff"); planesAngleEff->SetTitle("efficiency of #phi angle") ;
-	  planesAngleEff->Divide( planesAngleReco, planesAngleGen, 1,1,"B") ;
-	  planesAngleEff->Draw() ;
-	  gPad->SaveAs( TString::Format("plots/%s/%s.png", dir.Data(), planesAngleEff->GetName()) );
-
-	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+      TH1F* planesAngleReco = 0 ;
+      nameReco = "planesAngle" ;
+      if ( (planesAngleReco = (TH1F*) AlexisOut->Get( nameReco.Data() )) ) {
 	
-      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
-      
-    } else Error("Terminate", "could not open file: %s", outputFile.Data()) ;
-    
-  }
-  else Warning("Terminate", "file \"26Jan_histos.root\" not found");
+	planesAngleReco->Draw() ;
+	gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), planesAngleReco->GetName()) );
 
+	if (doGEN_plots) {
+	  TH1F* planesAngleGen = 0 ;
+	  TString nameGen = "planesAngle_BT_gen";
+	  if ( (planesAngleGen = (TH1F*) AlexisOut->Get( nameGen.Data() )) ) {
+	    
+	    gStyle->SetOptStat( 10 ) ;
+	    
+	    planesAngleGen->Draw() ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), planesAngleGen->GetName()) );
+	    
+	    TH1F* planesAngleEff = (TH1F*) planesAngleReco->Clone("planesAngle_Eff"); planesAngleEff->SetTitle("efficiency of #phi angle") ;
+	    planesAngleEff->Divide( planesAngleReco, planesAngleGen, 1,1,"B") ;
+	    planesAngleEff->Draw() ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), planesAngleEff->GetName()) );
+
+	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameGen.Data()));
+	}
+      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+      //
+      // scatter plot
+      TH2F* angles_scatterPlot_reco = 0 ;
+      nameReco = "planesAngle_vs_cos_psi2S_helicityAngle_1B0" ;
+      if ( (angles_scatterPlot_reco = (TH2F*) AlexisOut->Get( nameReco.Data() )) ) {
+	
+	angles_scatterPlot_reco->Draw("colz") ;
+	gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), angles_scatterPlot_reco->GetName()) );
+
+	if (doGEN_plots) {
+	  TH2F* angles_scatterPlot_BT_gen = 0;
+	  TString nameGen = "planesAngle_vs_cos_psi2S_helicityAngle_BT_gen";
+	  if ( (angles_scatterPlot_BT_gen = (TH2F*) AlexisOut->Get( nameGen.Data() )) ) {
+	    
+	    gStyle->SetOptStat( 10 ) ;
+	    
+	    angles_scatterPlot_BT_gen->Draw("colz") ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), angles_scatterPlot_BT_gen->GetName()) );
+	    
+	    TH2F* planesAngle_vs_cos_psi2S_helicityAngle_eff = (TH2F*) angles_scatterPlot_reco->Clone("planesAngle_vs_cos_psi2S_helicityAngle_Eff"); planesAngle_vs_cos_psi2S_helicityAngle_eff->SetTitle("efficiency of #phi angle vs cos("+mumu_label+" helicity angle)") ;
+	    planesAngle_vs_cos_psi2S_helicityAngle_eff->Divide( angles_scatterPlot_reco, angles_scatterPlot_BT_gen, 1,1,"B") ;
+	    planesAngle_vs_cos_psi2S_helicityAngle_eff->Draw("colz") ;
+	    gPad->SaveAs( TString::Format("%s/%s.png", dir.Data(), planesAngle_vs_cos_psi2S_helicityAngle_eff->GetName()) );
+
+	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameGen.Data()));
+	}
+      } else Warning("Terminate", TString::Format("histogram \"%s\" not found", nameReco.Data()));
+
+
+    } else Error("Terminate", "could not open file: %s", outputFile.Data()) ;
+
+  } else Warning("Terminate", "file \""+ fileName +"\" not found");
+  
   cout <<endl ;
   
   // Primary vertex plots
   /*
   cout <<"\nPrimary vertex plots:" <<endl ;
-  gSystem->mkdir(TString::Format("plots/%s/priVtx", dir.Data()), true);
+  gSystem->mkdir(TString::Format("%s/priVtx", dir.Data()), true);
 
   if ( (OutFile = dynamic_cast<TProofOutputFile*>(fOutput->FindObject("officialMC_Bd2Psi2SKpi.root"))) ) {
     TString outputFile(OutFile->GetOutputFileName());
@@ -4516,7 +5169,7 @@ void psiPrimePiK_MC::Terminate()
       TString name = TString::Format("priVtx%s_z", type[i].Data()) ;
       if ( (priVtx_z[i] = (TH1F*) fOut->Get( name.Data() )) ) {
 	priVtx_z[i]->Draw() ;
-	gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx_z[i]->GetName()));
+	gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx_z[i]->GetName()));
       } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data() ));
     }
 
@@ -4531,21 +5184,21 @@ void psiPrimePiK_MC::Terminate()
 	  priVtx_delta[j][i]->Draw() ; gPad->SetLogy() ;
 	  if (i==2 && j==1)
 	    priVtx_delta[j][i]->GetXaxis()->SetRangeUser(-0.0002, 0.0002) ;
-	  gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx_delta[j][i]->GetName()));
+	  gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx_delta[j][i]->GetName()));
 	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
 
 	// priVtx_B0_delta
 	name = TString::Format("priVtx_B0_delta%s%s", XYZ[i].Data(), zoom[j].Data()) ;
 	if ( (priVtx_B0_delta[j][i] = (TH1F*) fOut->Get( name.Data() )) ) {
 	  priVtx_B0_delta[j][i]->Draw() ; gPad->SetLogy() ;
-	  gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx_B0_delta[j][i]->GetName()));
+	  gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx_B0_delta[j][i]->GetName()));
 	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
 
 	// priVtx_B0Less_delta
 	name = TString::Format("priVtxB0Less_delta%s%s", XYZ[i].Data(), zoom[j].Data()) ;
 	if ( (priVtxB0Less_delta[j][i] = (TH1F*) fOut->Get( name.Data() )) ) {
 	  priVtxB0Less_delta[j][i]->Draw() ; gPad->SetLogy() ;
-	  gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtxB0Less_delta[j][i]->GetName()));
+	  gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtxB0Less_delta[j][i]->GetName()));
 	} else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
 
 	// dim = 2D, 3D
@@ -4554,14 +5207,14 @@ void psiPrimePiK_MC::Terminate()
 	  name = TString::Format("priVtx_B0CosAlpha%s_delta%s%s", dim[k].Data(), XYZ[i].Data(), zoom[j].Data()) ;
 	  if ( (priVtx_B0CosAlpha_delta[k][j][i] = (TH1F*) fOut->Get( name.Data() )) ) {
 	    priVtx_B0CosAlpha_delta[k][j][i]->Draw() ; gPad->SetLogy() ;
-	    gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx_B0CosAlpha_delta[k][j][i]->GetName()));
+	    gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx_B0CosAlpha_delta[k][j][i]->GetName()));
 	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
 	  
 	  // priVtx_B0Less_B0CosAlpha_delta
 	  name = TString::Format("priVtxB0Less_B0CosAlpha%s_delta%s%s", dim[k].Data(), XYZ[i].Data(), zoom[j].Data()) ;
 	  if ( (priVtxB0Less_B0CosAlpha_delta[k][j][i] = (TH1F*) fOut->Get( name.Data() )) ) {
 	    priVtxB0Less_B0CosAlpha_delta[k][j][i]->Draw() ; gPad->SetLogy() ;
-	    gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtxB0Less_B0CosAlpha_delta[k][j][i]->GetName()));
+	    gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtxB0Less_B0CosAlpha_delta[k][j][i]->GetName()));
 	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name.Data()));
 	
 	  // same
@@ -4569,7 +5222,7 @@ void psiPrimePiK_MC::Terminate()
 	  priVtx_B0CosAlpha_delta[k][j][i]->Draw("same") ;
 	  priVtxB0Less_delta[j][i]->Draw("same") ;
 	  priVtxB0Less_B0CosAlpha_delta[k][j][i]->Draw("same") ;
-	  gPad->SaveAs( TString::Format("plots/%s/priVtx/priVtx_all%s_delta%s%s.png", dir.Data(), dim[k].Data(), XYZ[i].Data(), zoom[j].Data()));
+	  gPad->SaveAs( TString::Format("%s/priVtx/priVtx_all%s_delta%s%s.png", dir.Data(), dim[k].Data(), XYZ[i].Data(), zoom[j].Data()));
 	}
 
       }
@@ -4587,7 +5240,7 @@ void psiPrimePiK_MC::Terminate()
       priVtx_diff[0][i]->SetFillColor( priVtxB0Less_delta[isZoom][i]->GetLineColor() ) ;
       priVtx_diff[0][i]->Draw("hist") ;
       gPad->SetLogy(0) ;
-      gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx_diff[0][i]->GetName()));
+      gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx_diff[0][i]->GetName()));
 
       // 3D
       for (Int_t j=0; j<3; j++) {
@@ -4607,7 +5260,7 @@ void psiPrimePiK_MC::Terminate()
 	}	
 	priVtx3D_diff[j][i]->Draw("hist") ;
 	gPad->SetLogy(0) ;
-	gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx3D_diff[j][i]->GetName()));
+	gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx3D_diff[j][i]->GetName()));
       }    
     }
     isZoom = 0 ;
@@ -4616,12 +5269,330 @@ void psiPrimePiK_MC::Terminate()
     priVtx_diffZ->SetTitle( TString::Format("#Delta%s(B^{0}_less PV) - #Delta%s(standard B^{0} PV);#Delta%s [cm]", xyz[2].Data(), xyz[2].Data(), xyz[2].Data()) ) ;
     priVtx_diffZ->SetFillColor( priVtxB0Less_delta[isZoom][2]->GetLineColor() ) ;
     priVtx_diffZ->Draw("hist") ;
-    gPad->SaveAs( TString::Format("plots/%s/priVtx/%s.png", dir.Data(), priVtx_diffZ->GetName()) );
+    gPad->SaveAs( TString::Format("%s/priVtx/%s.png", dir.Data(), priVtx_diffZ->GetName()) );
 
   } else Warning("Terminate", "file \"officialMC_Bd2Psi2SKpi.root\" not found");
   */
   //gROOT->ProcessLine(".x b_peak/b_peakFit.C++");
+
+  if (option.Contains("officialMC"))
+    fileName = option+"_tightCuts_"+B0limits+".root";
+  else if (option == "MC")
+    fileName = "TightCuts_histos_"+option+".root";
+  else
+    fileName = option+"_tightCuts.root";
+  if ( (tightCutsFile = dynamic_cast<TProofOutputFile*>(fOutput->FindObject( fileName.Data() ))) ) {
+    // Open the file
+    TString tightCutsName(tightCutsFile->GetName());
+
+    if ( (tightCutsOut = TFile::Open(tightCutsName)) ) {
+      Printf("Managed to open file: %s\n", tightCutsName.Data());
+
+      /*
+      // need to copy values from SlaveBegin
+      KPt_B0.push_back(0.5) ; KPt_B0.push_back(1.0) ; KPt_B0.push_back(1.5) ; KPt_B0.push_back(2.0) ; KPt_B0.push_back(2.5) ; KPt_B0.push_back(3.0) ; KPt_B0.push_back(3.5) ; KPt_B0.push_back(4.0) ; KPt_B0.push_back(4.5) ; KPt_B0.push_back(5.0) ;
+      Int_t nPoints = KPt_B0.size();
+      myMuMuKPiMass_KPt.resize(nPoints, 0);
+      Double_t oneMinusAlpha_KpT[nPoints];
+      Double_t beta_KpT[nPoints];
+
+      for (Int_t i = 0; i < nPoints; ++i) {
+	TString name = TString::Format("myMuMuKPiMass_kPT_%.1f", KPt_B0[i] ) ; name.ReplaceAll(".","p") ;
+	//TString title = TString::Format("myMuMuKPiMass with p_{T}(K^{+}) > %.1f GeV;m(#mu^{+}#mu^{-}K^{+}#pi^{-}) [GeV]", KPt_B0[i] ) ;
+	if ( (myMuMuKPiMass_KPt[i] = (TH1F*) tightCutsOut->Get(name)) ) {
+
+	  TCanvas *Bpeak_C = new TCanvas(name, name, 800, 600) ;  
+
+	  Double_t xMin = myMuMuKPiMass_KPt[i]->GetXaxis()->GetXmin();
+	  Double_t xMax = myMuMuKPiMass_KPt[i]->GetXaxis()->GetXmax();
+	  Int_t nBins = myMuMuKPiMass_KPt[i]->GetNbinsX();
+	  Double_t bin_width = (xMax-xMin)/nBins ;
+  
+	  RooRealVar xVar("xVar", myMuMuKPiMass_KPt[i]->GetXaxis()->GetTitle(), xMin, xMax) ;  xVar.setBins(nBins) ;  
+	  RooDataHist *RooB0Mass_KPt_i = new RooDataHist(myMuMuKPiMass_KPt[i]->GetName(), myMuMuKPiMass_KPt[i]->GetTitle(), RooArgSet(xVar), Import(*myMuMuKPiMass_KPt[i], kFALSE)) ;
+	  RooConstVar nEntries("Entries", "Total number of entries", myMuMuKPiMass_KPt[i]->Integral()) ;
+	  Double_t fitMax = xMax, fitMin = xMin ;
+
+	  RooRealVar mean("m", "mean", 5.28, 5.25, 5.31) ;
+	  RooRealVar sigma1("#sigma_{1}", "sigma1", 0.01, 0.001, 0.02);
+	  //RooRealVar sigma2("#sigma_{2}", "sigma2", 0.02, 0.01, 0.2);
+	
+	  RooGaussian sigPDF("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
+	  //RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
+	  //RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
+	  //RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
+	  //RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
+	  
+	  RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+5);
+
+	  RooRealVar c1("c_{1}", "c1", +0.02, -10, 10);
+	  RooRealVar c2("c_{2}", "c2", -0.001, -10, 10);
+	  RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2));
+	  RooRealVar nBkg("nBkg", "Bkg component", 1e+3, 1e+2, 1e+4);     
+	  
+	  RooAddPdf *totalPDF = new RooAddPdf("totalPDF", "totalPDF", RooArgList(sigPDF, bkgPDF), RooArgList(nSig, nBkg));  // with 5 sigma
+	  cout <<"\n\n---------------  Fitting histo \"" <<RooB0Mass_KPt_i->GetTitle() <<"\"  ---------------\n" <<endl;
+  
+	  totalPDF->fitTo(*RooB0Mass_KPt_i, Range(fitMin, fitMax), Extended(kTRUE));
+  
+	  RooPlot* xframe = xVar.frame();
+	  //xframe->SetAxisRange(fitMin, xMax) ;
+	  xframe->SetTitle( RooB0Mass_KPt_i->GetTitle() ) ;
+	  xframe->SetYTitle( TString::Format("Candidates / %.1f MeV/c^{2}", bin_width*1000) ) ;
+	  
+	  RooB0Mass_KPt_i->plotOn(xframe);
+	  totalPDF->plotOn(xframe);
+	  totalPDF->plotOn(xframe, Components(RooArgSet(sigPDF)), LineColor(kRed));
+	  //totalPDF->plotOn(xframe, Components(RooArgSet(sig1PDF)), LineColor(kOrange));
+	  //totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
+
+	  totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9)) ;
+	  //totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
+	  
+	  xframe->SetTitleOffset(1.3, "XY");
+	  xframe->Draw();
+	  Bpeak_C->SaveAs( TString::Format("%s/K_pT/%s.png", dir.Data(), name.Data()) );
+
+	  // calculating purity
+	  xVar.setRange("signal", mean.getVal() -2*(sigma1.getVal()), mean.getVal() +2*(sigma1.getVal())) ;
+	  RooAbsReal* tot_sigRange = totalPDF->createIntegral(xVar, NormSet(xVar), Range("signal")) ;
+	  RooAbsReal* sig_sigRange = sigPDF.createIntegral(xVar, NormSet(xVar), Range("signal")) ;
+	  
+	  Double_t tot_sigRange_val = tot_sigRange->getVal() ; // compute integral
+	  //cout <<"\nIntegral of total PDF in signal region = " << nEntries.getVal()*tot_sigRange_val << endl;
+	  //cout <<"\nIntegral of signal PDF in signal region = " << nSig.getVal()*(sig_sigRange->getVal()) << endl;
+	  //cout <<"\nBackground events in signal region = " << nEntries.getVal()*tot_sigRange_val << " - " << nSig.getVal()*(sig_sigRange->getVal()) << " = " << nEntries.getVal()*tot_sigRange_val - nSig.getVal()*(sig_sigRange->getVal()) << endl;
+	  
+	  oneMinusAlpha_KpT[i] = nSig.getVal()*(sig_sigRange->getVal()) ;
+	  beta_KpT[i] = nEntries.getVal()*tot_sigRange_val - nSig.getVal()*(sig_sigRange->getVal()) ;
+
+	} else Warning("Terminate", "histogram \""+ name +"\" not found");
+      } // for (Int_t i = 0; i < abs(KPt_B0.size()); ++i)
+
+      */
+
+      // compute signal/background yields
+      histName = "myMuMuKPiMassAltZoom"; histName = "myMuMuKPiMassNairitSelAlt";
+      Double_t nB0Background = 0.; 
+      if ( (hmyPsiPKPiMassAltZoom = (TH1F*) tightCutsOut->Get(histName)) ) {
+
+	Double_t xMin = hmyPsiPKPiMassAltZoom->GetXaxis()->GetXmin();
+	Double_t xMax = hmyPsiPKPiMassAltZoom->GetXaxis()->GetXmax();
+	Int_t nBins = hmyPsiPKPiMassAltZoom->GetNbinsX();
+	Double_t bin_width = (xMax-xMin)/nBins ;
+  
+	RooRealVar xVar("xVar", hmyPsiPKPiMassAltZoom->GetXaxis()->GetTitle(), xMin, xMax) ;  xVar.setBins(nBins) ;  
+	RooDataHist *RooPsiPKPiMassSelAltZoom = new RooDataHist(hmyPsiPKPiMassAltZoom->GetName(), hmyPsiPKPiMassAltZoom->GetTitle(), RooArgSet(xVar), Import(*hmyPsiPKPiMassAltZoom, kFALSE)) ;
+	RooConstVar nEntries("Entries", "Total number of entries", hmyPsiPKPiMassAltZoom->Integral()) ;
+  
+	Double_t fitMax = xMax, fitMin = xMin ;
+
+	RooRealVar mean("m", "mean", 5.28, 5.25, 5.31) ;
+	RooRealVar sigma1("#sigma_{1}", "sigma1", 0.02, 0.01, 0.5);
+	//RooRealVar sigma2("#sigma_{2}", "sigma2", 0.02, 0.01, 0.2);
+	RooGaussian sigPDF("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
+	//RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
+	//RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
+	//RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
+	//RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
+
+	RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+6);
+
+	RooRealVar c1("c_{1}", "c1", +0.02, -10, 10);
+	RooRealVar c2("c_{2}", "c2", -0.001, -10, 10);
+	RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2));
+	RooRealVar nBkg("nBkg", "Bkg component", 1e+6, 1e+2, 1e+8);     
+  
+	RooAddPdf *totalPDF = new RooAddPdf("totalPDF", "totalPDF", RooArgList(sigPDF, bkgPDF), RooArgList(nSig, nBkg));  // with 5 sigma
+	cout <<"\n\n---------------  Fitting histo \"" <<RooPsiPKPiMassSelAltZoom->GetTitle() <<"\"  ---------------\n" <<endl;
+	
+	totalPDF->fitTo(*RooPsiPKPiMassSelAltZoom, Range(fitMin, fitMax), Extended(kTRUE));
+	
+	Float_t nSigma = 2; //nSigma = 3;
+	xVar.setRange("signal", mean.getVal() -nSigma*(0.012), mean.getVal() +nSigma*0.012) ;
+	RooAbsReal* tot_sigRange = totalPDF->createIntegral(xVar, NormSet(xVar), Range("signal")) ;
+	RooAbsReal* sig_sigRange = sigPDF.createIntegral(xVar, NormSet(xVar), Range("signal")) ;
+	
+	RooPlot* xframe = xVar.frame();
+	//xframe->SetAxisRange(fitMin, xMax) ;
+	xframe->SetTitle( RooPsiPKPiMassSelAltZoom->GetTitle() ) ;
+	xframe->SetYTitle( TString::Format("Candidates / %.1f MeV/c^{2}", bin_width*1000) ) ;
+
+	RooPsiPKPiMassSelAltZoom->plotOn(xframe);
+	totalPDF->plotOn(xframe); 	
+	totalPDF->plotOn(xframe, Components(RooArgSet(sigPDF)), LineColor(kRed)); 
+	//totalPDF->plotOn(xframe, Components(RooArgSet(sig1PDF)), LineColor(kOrange));
+	//totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
+	totalPDF->plotOn(xframe, Components(RooArgSet(bkgPDF)), LineColor(kBlue), LineStyle(2));
+
+	Double_t tot_sigRange_val = tot_sigRange->getVal() ; // compute integral
+	Double_t purity = 100 * nSig.getVal()*(sig_sigRange->getVal()) / (nEntries.getVal()*tot_sigRange_val) ;
+
+	totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1)), ShowConstants(kTRUE), Layout(0.55,0.9,0.9), Label(TString::Format("Purity in +/-%.1f#sigma: %.1f%%", nSigma, purity))) ;
+	//totalPDF->paramOn(xframe, Parameters(RooArgSet(nSig,mean,sigma1,sigma2)), Layout(0.55,0.9,0.9)) ;
+
+	xframe->Draw();
+	gPad->SaveAs( TString::Format("%s/"+histName+"_fit.png", dir.Data()) );
+
+	cout <<"\nGaussian mean = " <<mean.getVal() <<endl;
+	cout <<"Gaussian sigma = " <<sigma1.getVal() <<endl;
+	cout <<"\nDefining the signal region as mean +/-" <<nSigma <<" sigma:" <<endl;
+	cout <<"\nIntegral of total PDF in signal region = " << nEntries.getVal()*tot_sigRange_val << endl;
+	cout <<"\nIntegral of signal PDF in signal region = " << nSig.getVal()*(sig_sigRange->getVal()) << endl;
+	nB0Background = nEntries.getVal()*tot_sigRange_val - nSig.getVal()*(sig_sigRange->getVal());
+	cout <<"\nB0Background events in signal region = " << nEntries.getVal()*tot_sigRange_val << " - " << nSig.getVal()*(sig_sigRange->getVal()) << " = " << nB0Background << endl;
+	cout <<"Purity is = " << purity <<"%" << endl;
+
+      } else Warning("Terminate", "histogram \""+histName+"\" not found");
+      //
+      // ROC
+      /*
+      vector< pair<TString, TString> > nameROC_TH1F ;
+      //nameROC_TH1F.push_back( make_pair("kaonPt","K^{+} p_{T}") );
+      //nameROC_TH1F.push_back( make_pair("pionPt","#pi^{-} p_{T}") );
+      nameROC_TH1F.push_back( make_pair("lowerPtTrk","soft track p_{T}") );
+      nameROC_TH1F.push_back( make_pair("higherPtTrk","hard track p_{T}") );
+      nameROC_TH1F.push_back( make_pair("B0Pt","B^{0} p_{T}") );
+      nameROC_TH1F.push_back( make_pair("B0VtxCL","B^{0} vtx CL") );
+      nameROC_TH1F.push_back( make_pair("B0_PVCTau","c*#tau_{PV} / #sigma(c*#tau_{PV})") );
+      nameROC_TH1F.push_back( make_pair("B0_BSCTau","c*#tau_{BS} / #sigma(c*#tau_{BS})") );
+      nameROC_TH1F.push_back( make_pair("B0_pointingAnglePV","B^{0} cos(#alpha) wrt PV") );
+
+      Int_t yOffsetFactor = 1;
+      TString label[2], sample[2];
+      label[0] = "signal";
+      label[1] = "bkg";
+      if (option.Contains("MC")) {
+	sample[0] = "MC"; sample[1] = "MC";
+      } else {
+	sample[0] = "Data"; sample[1] = "Data";
+      }
+      //
+      TCanvas *var_C = new TCanvas("var_C","", 2*600, 2*400); var_C->Divide(2,2);
+      for (Int_t iVar = 0; iVar < abs(nameROC_TH1F.size()); ++iVar) {
+	TString nameSig = nameROC_TH1F[iVar].first+"_fromB0peak";
+	TString nameSb = nameROC_TH1F[iVar].first+"_fromB0sb";
+	TH1F* histoPeak = 0; TH1F* histoSb = 0;
+	
+	if ( (histoPeak = (TH1F*) tightCutsOut->Get(nameSig)) ) {
+	  if ( (histoSb = (TH1F*) tightCutsOut->Get(nameSb)) ) {
+	    
+	    TH1F* hB0Signal = (TH1F*) histoPeak->Clone("hB0Signal_sbSubtr") ; hB0Signal->Sumw2() ;
+	    histoSb->Scale(nB0Background/histoSb->Integral());
+	    hB0Signal->Add(histoSb, -1) ;
+	    hB0Signal->SetTitle( nameROC_TH1F[iVar].second+" sidebands subtracted" ) ;
+	    
+	    TH1F *hVar[2];
+	    hVar[0] = histoPeak; label[0] = "signal";
+	    hVar[1] = histoSb; label[1] = "bkg";
+	    hVar[1]->Scale(hVar[0]->Integral()/hVar[1]->Integral());
+	    TH1F *hRatio[2];
+	    //
+	    Double_t TotIntegral[2];
+	    Double_t PartIntegral[2];
+	    Double_t Eff[2];
+	    Double_t IntegralCounts[2][500];
+	    //
+	    Int_t nBins = 0;
+	    vector< pair<Int_t,TString> > cutLabel;
+	    for (int i=0; i<2; i++) {
+	      nBins = hVar[i]->GetNbinsX();
+	      TotIntegral[i] = hVar[i]->Integral(1,nBins);
+	      cout << "\nVariable: " <<nameROC_TH1F[iVar].first <<" " <<sample[i] <<" " <<label[i] <<endl;
+	      cout << "# of bins = " << nBins << endl;
+	      hRatio[i] = new TH1F(TString::Format("%s_ratio_%s_%s",hVar[i]->GetName(),sample[i].Data(),label[i].Data()),"Partial integral over total for "+sample[i]+" "+label[i],nBins,0.,1.);
+	      for(int j=1; j<nBins+1; j++)
+		{
+		  PartIntegral[i] = hVar[i]->Integral(j,nBins);
+		  Eff[i] = PartIntegral[i]/TotIntegral[i];
+		  IntegralCounts[i][j-1] = Eff[i];
+		  if ( j==nBins ) cout << "i = " << i << " , j = " << j << " : eff1 = " << IntegralCounts[i][j-1] << endl;
+		  hRatio[i]->Fill(Eff[i]); // non estremamente significativo; per i=0/segnale picca ad 1
+		  //
+		  if (i==0)
+		    if (!( (j-1+10)%(nBins/5) )) {
+		      if (!(nameROC_TH1F[iVar].first.Contains("pointingAngle")))
+			cutLabel.push_back( make_pair(j,TString::Format("%s > %.1f",hVar[i]->GetXaxis()->GetTitle(),hVar[i]->GetBinLowEdge(j))) );
+		      else
+			cutLabel.push_back( make_pair(j,TString::Format("%s > %.4f",hVar[i]->GetXaxis()->GetTitle(),hVar[i]->GetBinLowEdge(j))) );
+		    }
+		}
+	    }
+	    
+	    TGraph *var_ROC = new TGraph(nBins,IntegralCounts[1],IntegralCounts[0]);
+	    var_ROC->SetTitle(nameROC_TH1F[iVar].second+" ROC;B^{0} background efficiency;B^{0} signal efficiency;");
+	    var_C->SetTitle(nameROC_TH1F[iVar].second+" distributions");
+	    var_C->cd(1);
+	    histoPeak->SetTitle( sample[0]+" "+histoPeak->GetTitle() );
+	    histoSb->SetTitle( sample[1]+" "+histoSb->GetTitle() );
+	    if (histoPeak->GetMaximum() > histoSb->GetMaximum()) {
+	      histoPeak->Draw(); histoSb->Draw("same"); }
+	    else {
+	      histoSb->Draw(); histoPeak->Draw("same"); }
+	    histoSb->SetLineColor(kRed);
+	    TLegend* leg = gPad->BuildLegend(0.4, 0.67, 0.87, 0.88) ; // with CMSSW_5_3_22 ROOT version gives error: 'class TVirtualPad' has no member named 'BuildLegend'
+	    leg->SetTextSize(0.03);
+	    histoPeak->SetTitle(nameROC_TH1F[iVar].second); histoSb->SetTitle(nameROC_TH1F[iVar].second);
+	    var_C->cd(2);
+	    hB0Signal->Draw();
+	    var_C->cd(3);
+	    if (hRatio[0]->GetMaximum() > hRatio[1]->GetMaximum()) {
+	      hRatio[0]->Draw(); hRatio[1]->Draw("same"); gPad->BuildLegend(0.4, 0.67, 0.85, 0.88); hRatio[0]->SetTitle("Partial integral over total"); }
+	    else {
+	      hRatio[1]->Draw(); hRatio[0]->Draw("same"); gPad->BuildLegend(0.4, 0.67, 0.85, 0.88); hRatio[1]->SetTitle("Partial integral over total"); }
+	    hRatio[1]->SetLineColor(kRed);
+	    var_C->cd(4);
+	    var_ROC->Draw("AC*");
+	    for (Int_t j=0; j<=abs(cutLabel.size())/2; ++j) {
+	      Int_t iCutLabel = j;
+	      if (nameROC_TH1F[iVar].first.Contains("pointingAngle") || nameROC_TH1F[iVar].first.Contains("B0Pt")) iCutLabel = j + cutLabel.size()/2;
+	      if (nameROC_TH1F[iVar].first.Contains("pointingAngle")) yOffsetFactor = j+1;
+	      TPaveText *pt = new TPaveText(IntegralCounts[1][cutLabel[iCutLabel].first] +0.03,IntegralCounts[0][cutLabel[iCutLabel].first]-0.07 -0.04*yOffsetFactor,IntegralCounts[1][cutLabel[iCutLabel].first]+0.2 +0.03,IntegralCounts[0][cutLabel[iCutLabel].first] -0.04*yOffsetFactor);
+	      TLine *ptLine = new TLine(IntegralCounts[1][cutLabel[iCutLabel].first],IntegralCounts[0][cutLabel[iCutLabel].first],pt->GetX1(),pt->GetY2());
+	      ptLine->Draw();
+	      pt->SetFillColor(0); pt->SetLineColor(1); pt->SetBorderSize(1);
+	      pt->AddText(cutLabel[iCutLabel].second);
+	      pt->Draw();	  
+	    } gPad->Update();
+	    TLine *vertLine = new TLine(1,gPad->GetUymin(),1,1); vertLine->SetLineColor(kBlue); vertLine->Draw();
+	    TLine *horizLine = new TLine(gPad->GetUxmin(),1,1,1); horizLine->SetLineColor(kBlue); horizLine->Draw();
+	    TLine *diagLine = new TLine(TMath::Max(gPad->GetUxmin(),gPad->GetUymin()),TMath::Max(gPad->GetUxmin(),gPad->GetUymin()),1,1); diagLine->SetLineColor(kRed); diagLine->Draw();
+	     
+	    //gPad->Update(); gPad->Modified(); gPad->Update(); gPad->Modified();
+	    //gPad->Print( TString::Format("%s/ROC/ROC_"+nameROC_TH1F[iVar].first, dir.Data()), "png" );
+	    //gPad->Print( TString::Format("%s/ROC/ROC_"+nameROC_TH1F[iVar].first, dir.Data()), "pdf" );
+	    var_C->SaveAs( TString::Format("%s/ROC/"+nameROC_TH1F[iVar].first+"_distributions.png", dir.Data()) );
+	    var_C->Clear();
+	  } else Warning("Terminate", "histogram \""+ nameSb +"\" not found");
+	} else Warning("Terminate", "histogram \""+ nameSig +"\" not found");
+      } // for (Int_t i = 0; i < abs(nameROC_TH1F.size()); ++i)
+      */
+
+      // sideband subtracted histos
+      if ( (psi2SPiSqMass_vs_KPiSqMass_NairitPeak = (TH2F*) tightCutsOut->Get("MuMuPi_vs_KPi_dalitz_NairitPeak")) ) {
+	if ( (psi2SPiSqMass_vs_KPiSqMass_NairitSb = (TH2F*) tightCutsOut->Get("MuMuPi_vs_KPi_dalitz_NairitSb")) ) {
+
+	  TH2F *histoPeak = (TH2F*)psi2SPiSqMass_vs_KPiSqMass_NairitPeak->Clone();
+	  TH2F *histoSb = (TH2F*)psi2SPiSqMass_vs_KPiSqMass_NairitSb->Clone();
+
+	  histoSb->Scale(nB0Background/histoSb->Integral());
+	  histoPeak->Add(histoSb, -1); 
+	  histoPeak->Draw("colz");
+	  cont_up->Draw("lsame"); 
+	  cont_down->Draw("lsame"); 
+	    
+	  gPad->SaveAs( TString::Format("%s/dalitzSbSubtr_NairitSel.png", dir.Data()) );
+      
+	} else Warning("Terminate", "histogram \"MuMuPi_vs_KPi_dalitz_NairitSb\" not found");
+      } else Warning("Terminate", "histogram \"MuMuPi_vs_KPi_dalitz_NairitPeak\" not found");
+            
+
+    } else Error("Terminate", "could not open file: %s", tightCutsName.Data()) ;
+  } else Warning("Terminate", "file \""+ fileName +"\" not found");
+  
+  cout <<"\nEnd of Terminate" <<endl;
 }
+
 
 
 int psiPrimePiK_MC::getXVarType(const double jpsivar, vector<double> vectbin) {
@@ -4712,7 +5683,7 @@ double psiPrimePiK_MC::getAleMumuHelicityAngle(TLorentzVector mumu, TLorentzVect
   TVector3 mu_rotated = muMBoosted.Vect();
   mu_rotated.Transform(rotation);
   
-return mu_rotated.CosTheta() ;
+  return mu_rotated.CosTheta() ;
   //return TMath::ACos( mu_rotated.CosTheta() );
   //muphi_hx = mu_rotated.Phi()>0. ? mu_rotated.Phi() : mu_rotated.Phi()+2.*TMath::Pi(); // radians
 }
@@ -4720,14 +5691,22 @@ return mu_rotated.CosTheta() ;
 double psiPrimePiK_MC::getPlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP) {
 
   TLorentzVector KBoosted = K, PiBoosted = Pi, muMBoosted = muM, muPBoosted = muP ;
-  K.Boost( -B0.BoostVector() ) ;
-  PiBoosted.Boost( -B0.BoostVector() ) ;
   muPBoosted.Boost( -B0.BoostVector() ) ;
   muMBoosted.Boost( -B0.BoostVector() ) ;
-  TVector3 KPiplane_normal = PiBoosted.Vect().Cross( K.Vect() ) ;
-  TVector3 MuMuplane_normal = muMBoosted.Vect().Cross( muPBoosted.Vect() ) ;
+  KBoosted.Boost( -B0.BoostVector() ) ;
+  PiBoosted.Boost( -B0.BoostVector() ) ;
+  TVector3 MuMuPlane_normal = muPBoosted.Vect().Cross( muMBoosted.Vect() ) ;
+  TVector3 KPiPlane_normal = KBoosted.Vect().Cross( PiBoosted.Vect() ) ;
+  Double_t angle = 10. ;
+  /*
+          TVector3 KstPlane  = LoreVecK.Vect().Cross(LoreVecPi.Vect());
+  */
+  if (MuMuPlane_normal.Cross(KPiPlane_normal).Dot( -B0.Vect() ) > 0.0)
+    angle = MuMuPlane_normal.Angle(KPiPlane_normal);
+  else
+    angle = -MuMuPlane_normal.Angle(KPiPlane_normal);
 
-  return KPiplane_normal.Angle( MuMuplane_normal );
+  return angle;
 }
 
 double psiPrimePiK_MC::getBellePlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP) {
@@ -4746,4 +5725,154 @@ double psiPrimePiK_MC::getBellePlanesAngle(TLorentzVector B0, TLorentzVector K, 
   return aKplus.Angle( aMuplus );
 }
 
-//rsync -vut --existing psiPrimePiK_MC.C cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/psiPrimePiK_MC.C
+float psiPrimePiK_MC::GetThetaMuMu(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG) {
+  //cout <<"\nInside GetThetaMuMu function" <<endl ;
+  TVector3 JPsiInBFrame, MuInBFrame, MuInJPsiFrame, MuInJPsiFromBFrame;
+  TLorentzVector JPsiInBFrameTLVec, MuInBFrameTLVec;
+  /*
+  // Alessandra
+  // get the momentum of the X in the in the B rest-frame : XInBFrame
+  GetMomentumInMotherFrame( BVec , XVec , BeamEnergy, XInBFrame);
+  XInBFrameTLVec.SetPtEtaPhiM(XInBFrame.Perp() , XInBFrame.Eta(),  XInBFrame.Phi() ,XCandPDG);
+  // get the momentum of the J/psi int he X rest-frame with two steps in cascade:
+  // 1) step 1 : apply B boost in lab
+  GetMomentumInMotherFrame( BVec , JPsiVec, BeamEnergy, JPsiInBFrame);
+  JPsiInBFrameTLVec.SetPtEtaPhiM( JPsiInBFrame.Perp() , JPsiInBFrame.Eta(),JPsiInBFrame.Phi() ,JPsiPDG );
+  // 2) step 2: apply X boost in B rest-frame
+  GetMomentumInMotherFrame( XInBFrameTLVec, JPsiInBFrameTLVec, BeamEnergy, JPsiInXFromBFrame);
+  JPsiInXFromBFrameTLVec.SetPtEtaPhiM(JPsiInXFromBFrame.Perp() ,JPsiInXFromBFrame.Eta(),JPsiInXFromBFrame.Phi() ,JPsiPDG );
+  */
+
+  // B0 - >J/psi K pi
+  
+  // get the momentum of the J/psi in the in the B rest-frame : JPsiInBFrame
+  GetMomentumInMotherFrame( BVec , JPsiVec , BeamEnergy, JPsiInBFrame);
+  JPsiInBFrameTLVec.SetPtEtaPhiM(JPsiInBFrame.Perp() , JPsiInBFrame.Eta(),  JPsiInBFrame.Phi() , JPsiPDG);
+
+  // get momentum of the mu+ in JPsi rest-frame
+  GetMomentumInMotherFrame( BVec , MuPlusVec, BeamEnergy, MuInBFrame); // B boost
+  MuInBFrameTLVec.SetPtEtaPhiM(MuInBFrame.Perp() , MuInBFrame.Eta(),  MuInBFrame.Phi() ,muonPDG);
+  //GetMomentumInMotherFrame(XInBFrameTLVec, MuInBFrameTLVec, BeamEnergy, MuInXFromBFrame); // X in B r.f. boost
+  //MuInXFromBFrameTLVec.SetPtEtaPhiM(MuInXFromBFrame.Perp() ,MuInXFromBFrame.Eta(), MuInXFromBFrame.Phi() ,muonPDG);
+  //GetMomentumInMotherFrame( JPsiInXFromBFrameTLVec, MuInXFromBFrameTLVec, BeamEnergy, MuInJPsiFromXFromBFrame);
+  GetMomentumInMotherFrame( JPsiInBFrameTLVec, MuInBFrameTLVec, BeamEnergy, MuInJPsiFromBFrame);
+
+  float thetaJPsi = MuInJPsiFromBFrame.Angle(JPsiInBFrame);
+  
+  /*
+  // lab frame
+  GetMomentumInMotherFrame( JPsiVec , MuPlusVec, BeamEnergy, MuInJPsiFrame); // B boost
+  float thetaJPsi = MuInJPsiFrame.Angle(JPsiVec.Vect());
+  */
+  //cout <<"\nEnd of GetThetaMuMu function" <<endl ;
+  return thetaJPsi;
+
+}
+
+float psiPrimePiK_MC::GetThetaMuMuLab(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG) {
+
+  TVector3 JPsiInBFrame, MuInBFrame, MuInJPsiFrame, MuInJPsiFromBFrame;
+  TLorentzVector JPsiInBFrameTLVec, MuInBFrameTLVec;
+
+  // B0 - >J/psi K pi
+  
+  // get the momentum of the J/psi in the in the B rest-frame: JPsiInBFrame
+  GetMomentumInMotherFrame( BVec , JPsiVec , BeamEnergy, JPsiInBFrame);
+  JPsiInBFrameTLVec.SetPtEtaPhiM(JPsiInBFrame.Perp() , JPsiInBFrame.Eta(),  JPsiInBFrame.Phi() , JPsiPDG);
+
+  // get momentum of the mu+ in JPsi rest-frame: MuInBFrame
+  GetMomentumInMotherFrame( BVec , MuPlusVec, BeamEnergy, MuInBFrame); // B boost
+  MuInBFrameTLVec.SetPtEtaPhiM(MuInBFrame.Perp() , MuInBFrame.Eta(),  MuInBFrame.Phi(), muonPDG);
+  // get momentum of the mu+ in JPsi rest-frame: MuInJPsiFromBFrame
+  GetMomentumInMotherFrame( JPsiInBFrameTLVec, MuInBFrameTLVec, BeamEnergy, MuInJPsiFromBFrame);
+
+  float thetaJPsi = MuInJPsiFromBFrame.Angle(JPsiVec.Vect());
+  
+  return thetaJPsi;
+
+}
+
+void psiPrimePiK_MC::GetMomentumInMotherFrame( TLorentzVector Mother,TLorentzVector Particle, double BeamEnergy , TVector3 &Particle_rotated){
+  //Mother momentum in lab frame
+  TVector3 bMother = Mother.BoostVector();
+  TLorentzVector beam1(0., 0.,  BeamEnergy, BeamEnergy); // beam momentum in lab frame
+  TLorentzVector beam2(0., 0., -BeamEnergy, BeamEnergy); // beam momentum in lab frame
+  beam1.Boost(-bMother);      // beam momentum in JPsi rest frame
+  beam2.Boost(-bMother);     // beam momentum in JPsi rest frame
+  TVector3 beam1_dir = beam1.Vect().Unit();  // beam direction in Mother rest frame
+  TVector3 beam2_dir = beam2.Vect().Unit();  // beam direction in Mother rest frame
+
+  TVector3 Y = beam1_dir.Cross( beam2_dir ).Unit(); // the production plane normal
+  TVector3 Z = Mother.Vect().Unit();         // Mother direction in lab frame
+  TVector3 X = Y.Cross(Z).Unit();         // completes the right-handed coordinate
+
+  Particle.Boost(-bMother);     // Particle momentum in Mother rest frame
+
+
+  TRotation rotation;
+  rotation.SetToIdentity();
+  rotation.RotateAxes(X,Y,Z);
+  rotation.Invert(); // transforms coordinates from the "xyz" frame to the new frame
+  //TVector3 Particle_rotated = Particle.Vect(); // io: particle coordinates in the rotated frame
+  Particle_rotated = Particle.Vect();
+  //Particle_rotated.Transform(rotation);
+
+}
+
+float psiPrimePiK_MC::GetThetaMuMu_rot(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG) {
+
+  TVector3 JPsiInBFrame, MuInBFrame, MuInJPsiFrame, MuInJPsiFromBFrame;
+  TLorentzVector JPsiInBFrameTLVec, MuInBFrameTLVec;
+  
+  // B0 - >J/psi K pi
+  // get the momentum of the J/psi in the in the B rest-frame : JPsiInBFrame
+  GetMomentumInMotherFrame_rot( BVec , JPsiVec , BeamEnergy, JPsiInBFrame);
+  JPsiInBFrameTLVec.SetPtEtaPhiM(JPsiInBFrame.Perp() , JPsiInBFrame.Eta(),  JPsiInBFrame.Phi() , JPsiPDG);
+
+  // get momentum of the mu+ in JPsi rest-frame
+  GetMomentumInMotherFrame_rot( BVec , MuPlusVec, BeamEnergy, MuInBFrame); // B boost
+  MuInBFrameTLVec.SetPtEtaPhiM(MuInBFrame.Perp() , MuInBFrame.Eta(),  MuInBFrame.Phi() ,muonPDG);
+    
+  GetMomentumInMotherFrame_rot( JPsiInBFrameTLVec, MuInBFrameTLVec, BeamEnergy, MuInJPsiFromBFrame);
+  float thetaJPsi = MuInJPsiFromBFrame.Angle(JPsiInBFrame);
+  
+  return thetaJPsi;
+
+}
+
+void psiPrimePiK_MC::GetMomentumInMotherFrame_rot( TLorentzVector Mother,TLorentzVector Particle, double BeamEnergy , TVector3 &Particle_rotated){
+  //Mother momentum in lab frame
+  TVector3 bMother = Mother.BoostVector();
+  TLorentzVector beam1(0., 0.,  BeamEnergy, BeamEnergy); // beam momentum in lab frame
+  TLorentzVector beam2(0., 0., -BeamEnergy, BeamEnergy); // beam momentum in lab frame
+  beam1.Boost(-bMother);      // beam momentum in JPsi rest frame
+  beam2.Boost(-bMother);     // beam momentum in JPsi rest frame
+  TVector3 beam1_dir = beam1.Vect().Unit();  // beam direction in Mother rest frame
+  TVector3 beam2_dir = beam2.Vect().Unit();  // beam direction in Mother rest frame
+
+  TVector3 Y = beam1_dir.Cross( beam2_dir ).Unit(); // the production plane normal
+  TVector3 Z = Mother.Vect().Unit();         // Mother direction in lab frame
+  TVector3 X = Y.Cross(Z).Unit();         // completes the right-handed coordinate
+
+  Particle.Boost(-bMother);     // Particle momentum in Mother rest frame
+
+
+  TRotation rotation;
+  rotation.SetToIdentity();
+  rotation.RotateAxes(X,Y,Z);
+  rotation.Invert(); // transforms coordinates from the "xyz" frame to the new frame
+  //TVector3 Particle_rotated = Particle.Vect(); // io: particle coordinates in the rotated frame
+  Particle_rotated = Particle.Vect();
+  Particle_rotated.Transform(rotation);
+
+}
+/*
+float psiPrimePiK_MC::GetCosThetaMuMu_fromMasses(Float_t mother, Float_t charmonium, Float_t referenceTrk, Float_t otherTrk, Float_t sameSide, Float_t oppositeSide) {
+
+  Float_t num = (sameSide/2)*(mother + referenceTrk - oppositeSide) - (1./4.)*(mother - charmonium + sameSide)*(sameSide - otherTrk + referenceTrk) ;
+  Float_t denom2 = ((1./4.)*pow(mother - charmonium + sameSide,2) - sameSide*mother) * ((1./4.)*pow(sameSide - otherTrk + referenceTrk,2) - sameSide*referenceTrk) ;
+
+  return num / sqrt(denom2) ;
+}
+*/
+//rsync -vut --existing psiPrimePiK_MC.C cristella@cmssusy.ba.infn.it:/lustrehome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/psiPrimePiK_MC.C

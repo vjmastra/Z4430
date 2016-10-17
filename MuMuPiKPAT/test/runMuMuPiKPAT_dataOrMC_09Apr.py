@@ -12,37 +12,39 @@ process.options = cms.untracked.PSet(
 process.load('FWCore/MessageService/MessageLogger_cfi')
 process.MessageLogger.suppressInfo = cms.untracked.vstring( "mkcands" )
 process.MessageLogger.suppressWarning = cms.untracked.vstring( "mkcands" )
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 MC = False
 MC = True
 noPtEtaCut = False
-noPtEtaCut = True
+#noPtEtaCut = True
 #
 doReco = True
 #doReco = False
 doGen = True
-doGen = False
+#doGen = False
 
 if MC:
-        official = False
+        #official = False
         official = True
-	genericMC = False
+	#genericMC = False
 	genericMC = True
 
-BdId = 511 # B0 (=anti-B0)
-BsId = 531
-BuId = 521
+BdId    = 511 # B0 (=anti-B0)
+BsId    = 531
+BuId    = 521
+Lambdab = 5122
 
-#MCMotherId = BdId 
-MCMotherId = BuId 
+MCMotherId = BdId 
+#MCMotherId = BuId 
 #MCDaughtersN = 2
 #MCMotherId = BsId
+#MCMotherId = Lambdab
 #
-#MCDaughterID = array.array('I', [443, 321, 211]) # J/psi K+ pi-
-MCDaughterID = array.array('I', [100443, 321, 211]) # psi(2S) K+ pi-
+MCDaughterID = array.array('I', [443, 321, 211]) # J/psi K+ pi-
+#MCDaughterID = array.array('I', [100443, 321, 211]) # psi(2S) K+ pi-
 #
-#MCDaughterID = array.array('I', [443, 313]) # J/psi K*
+#MCDaughterID = array.array('I', [443, 313]) # J/psi K*_1(892)
+#MCDaughterID = array.array('I', [443, 315]) # J/psi K*_2(1430)
 #
 #MCDaughterID = array.array('I', [443, 2212, 2212]) # J/psi p+ p-
 #
@@ -51,9 +53,9 @@ MCDaughterID = array.array('I', [100443, 321, 211]) # psi(2S) K+ pi-
 MCDaughtersN = len(MCDaughterID)
 
 #if MCMotherId == BdId or MCMotherId == BuId:
-MCExclusiveDecay = True
+MCExclusiveDecay = True # this assumes a decay ok this kind: B -> mumu K- Pi+ where K- and Pi+ can come from a K*
 #elif MCMotherId == BsId and official:
-if (MCMotherId == BsId and official) or genericMC:
+if (MCMotherId == BsId and official) or (genericMC and MCMotherId != BdId):
     MCExclusiveDecay = False
 
 if (MCMotherId == BdId) :
@@ -65,18 +67,26 @@ elif (MCMotherId == BsId) :
 elif (MCMotherId == BuId) :
         bMin = 0.0
         bMax = 100.8
+elif (MCMotherId == Lambdab) :
+        bMin = 0.0
+        bMax = 100.8
 
 pentaQuark = False
 #pentaQuark = True
 
 # Input source
 process.source = cms.Source("PoolSource",
-                            skipEvents = cms.untracked.uint32( 1000 ), #with 11976 Processing run: 201707 lumi: 281 event: 383901681
+                            #skipEvents = cms.untracked.uint32( 1000 ), #with 11976 Processing run: 201707 lumi: 281 event: 383901681
                             fileNames = cms.untracked.vstring()
 )
 
 #print "Skipping " process.PoolSource.skipEvents " events!"
 
+import FWCore.Utilities.FileUtils as FileUtils
+Kstar_2_1430 = FileUtils.loadListFromFile('/lustre/cms/store/user/nsur/CRAB_PrivateMC/Bd_JpsiK_2_1430_mumuKpi_GEN/160711_054116/list.txt')
+#official_BdToPsi2SKPi = FileUtils.loadListFromFile('') # to complete
+
+# redirector: root://eoscms.cern.ch/ ;   global redirector: root://cms-xrd-global.cern.ch/ ;   european redirector: root://xrootd-cms.infn.it/ ;   US redirector: root://cmsxrootd.fnal.gov/ 
 if (not MC):
     sourceFiles = cms.untracked.vstring( # 'root://cms-xrd-global.cern.ch/' prefix could help sometimes
             # Sanjay
@@ -126,7 +136,8 @@ elif MC:
                         elif MCDaughtersN == 2:
                                 sourceFiles = cms.untracked.vstring(
                                 #'file:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/PYTHIA6_Bd2JpsiVLLKstar_mumuKpi_TuneZ2star_8TeV_noPtEtaCuts__GEN_100k.root'
-                                'file:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/PYTHIA6_Bd2JpsiVLLKstar_mumuKpi_TuneZ2star_8TeV_noPtEtaCuts__GEN_1M.root'
+                                #'file:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/PYTHIA6_Bd2JpsiVLLKstar_mumuKpi_TuneZ2star_8TeV_noPtEtaCuts__GEN_1M.root'
+				*Kstar_2_1430
                                 )
 	else: # offcial MC
 		if (pentaQuark):
@@ -149,6 +160,10 @@ elif MC:
                                                 sourceFiles = cms.untracked.vstring(
                                                         '/store/mc/Summer12_DR53X/BpToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/00388EB8-FDF9-E111-83E3-0030487F1BD7.root'
                                                         )
+                                        elif (MCMotherId == Lambdab) :
+                                                sourceFiles = cms.untracked.vstring(
+							'/store/mc/Summer12_DR53X/LambdaBToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v2/0000/003E1158-0AE3-E111-9A35-00A0D1EE8EE0.root'
+							)
 				else:
                         		if (MCMotherId == BsId):
                                 		sourceFiles = cms.untracked.vstring(
@@ -284,15 +299,18 @@ process.source.inputCommands = cms.untracked.vstring(
         "drop *_MEtoEDMConverter_*_*"
 	)
 
+maxEvents = -1 # 256Kb in 2' for 100 events, 2Mb in 5' for 1k events, 6Mb in 50' for 8650 events, 11Mb in 66' for 10k events, 100Mb in 14h for 150k events, 1.4Gb in 4 days for 1.2M events of official MC
+	       # = 5718Kb # timeout after 3700 for Run2012A/MuOnia
+maxEvents = 24000 # = 870Kb # timeout after 24500 for Run2012A/MuOnia
+maxEvents = 1000 # 781Mb in 15' for 1M events, 310Kb in 3' for 1k events of private MC
+                 # = 3Mb for 6546 events, 85Kb for 100, 800kb for 1k events of BsToPsiMuMu
+#maxEvents = 100 # = 20Mb in 2h for 15k events, 2Mb in 10' for 1k events of Run2012C/MuOniaParked/AOD/22Jan2013-v1
+#maxEvents = 10
 process.maxEvents = cms.untracked.PSet(
-        #input = cms.untracked.int32( -1 ) # 256Kb in 2' for 100 events, 2Mb in 5' for 1k events, 6Mb in 50' for 8650 events, 11Mb in 66' for 10k events, 100Mb in 14h for 150k events, 1.4Gb in 4 days for 1.2M events of official MC
-        input = cms.untracked.int32( 1000 ) # 781Mb in 15' for 1M events, 310Kb in 3' for 1k events of private MC
-        #input = cms.untracked.int32( 100 ) # = 20Mb in 2h for 15k events, 2Mb in 10' for 1k events of Run2012C/MuOniaParked/AOD/22Jan2013-v1
-	#input = cms.untracked.int32( 1000 ) # = 3Mb for 6546 events, 85Kb for 100, 800kb for 1k events of BsToPsiMuMu
-	#input = cms.untracked.int32( 24000 ) # = 870Kb # timeout after 24500 for Run2012A/MuOnia
-	#input = cms.untracked.int32( -1 ) # = 5718Kb # timeout after 3700 for Run2012A/MuOnia
+	input = cms.untracked.int32( maxEvents )
 	)
 #Output size of CRAB jobs ~200MB usually works well. (max 300-500 Mb according to Cesare) 
+process.MessageLogger.cerr.FwkReport.reportEvery = maxEvents/10
 
 process.load('Configuration.Geometry.GeometryIdeal_cff') # 53x
 
@@ -515,8 +533,8 @@ process.PATfilter = cms.EDFilter("Z4430FilterPAT")
 
 process.mkcands = cms.EDAnalyzer("MuMuPiKPAT",
                                  HLTriggerResults = cms.untracked.InputTag("TriggerResults","","HLT"),
-                                 inputGEN  = cms.untracked.InputTag("genParticles"),
-                                 VtxSample   = cms.untracked.string('offlinePrimaryVertices'),
+                                 inputGEN = cms.untracked.InputTag("genParticles"),
+                                 VtxSample = cms.untracked.string('offlinePrimaryVertices'),
                                  SameSign = cms.untracked.bool(False),
                                  #DoReconstruction = cms.untracked.bool( True ),
                                  DoReconstruction = cms.untracked.bool( doReco ),
@@ -630,7 +648,10 @@ if (not MC):
 		process.TFileService.fileName = cms.string('MuOniaRun2012C_25Apr_MuMuPPbarPAT_ntpl.root')
 else:
 	if MCMotherId == BuId:
+                #process.TFileService.fileName = cms.string('BuToPsiMuMu_03Mar_MuMuPiKPAT_ntpl.root')
 		process.TFileService.fileName = cms.string('BuToJpsiK_18Mar_MuMuPiKPAT_ntpl.root')
+                if genericMC:
+                        process.TFileService.fileName = cms.string('officialBuToPsiMuMu_noPtEtaCut_MuMuPiKPAT_ntpl.root')
 	elif MCMotherId == BdId:
 		if (not official):
 			if (not pentaQuark):
@@ -654,10 +675,9 @@ else:
 		process.TFileService.fileName = cms.string('BsToPsiMuMu_03Mar_MuMuPiKPAT_ntpl.root')
 		if genericMC:
 			process.TFileService.fileName = cms.string('officialBsToPsiMuMu_noPtEtaCut_MuMuPiKPAT_ntpl.root')
-	elif MCMotherId == BuId:
-                process.TFileService.fileName = cms.string('BuToPsiMuMu_03Mar_MuMuPiKPAT_ntpl.root')
-                if genericMC:
-                        process.TFileService.fileName = cms.string('officialBuToPsiMuMu_noPtEtaCut_MuMuPiKPAT_ntpl.root')
+	elif (MCMotherId == Lambdab) :
+		if genericMC:
+			process.TFileService.fileName = cms.string('officialLambdabToPsiMuMu_noPtEtaCut_MuMuPiKPAT_ntpl.root')
 
 	
 # turn off MC matching for the process

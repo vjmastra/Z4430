@@ -203,7 +203,7 @@ private:
   vector<float>       *MCpionPx, *MCpionPy, *MCpionPz;
   vector<float>       *MCkaonPx, *MCkaonPy, *MCkaonPz;
   vector<float>       *MCkaonStarPx, *MCkaonStarPy, *MCkaonStarPz, *MCkaonStarMass;
-  vector<int>         *MCpionCh, *MCkaonCh, *MCkaonStarCh;
+  vector<int>         *MCpionCh, *MCkaonCh, *MCkaonStarCh, *MCkaonStarId;
   vector<float>       *MCPx, *MCPy, *MCPz;
 
   //// Generic Muons

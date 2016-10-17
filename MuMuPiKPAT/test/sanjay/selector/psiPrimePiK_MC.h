@@ -29,6 +29,9 @@
 #include <TH1.h>
 #include <TH2.h>
 #include <TF1.h>
+#include <TNtupleD.h>
+#include <TLine.h>
+#include <TPad.h>
 
 #include <iostream>
 #include <fstream>
@@ -67,169 +70,98 @@ public :
    UInt_t          evtNum;
    UInt_t          runNum;
    UInt_t          lumiNum;
-   Float_t         priVtx_X;
-   Float_t         priVtx_Y;
-   Float_t         priVtx_Z;
-   Float_t         priVtx_XE;
-   Float_t         priVtx_YE;
-   Float_t         priVtx_ZE;
-   Float_t         priVtx_NormChi2;
-   Float_t         priVtx_Chi2;
+   Float_t         priVtx_X, priVtx_Y, priVtx_Z;
+   Float_t         priVtx_XE, priVtx_YE, priVtx_ZE;
+   Float_t         priVtx_NormChi2, priVtx_Chi2;
    Float_t         priVtx_CL;
    UInt_t          priVtx_tracks;
    // MC Analysis
    UInt_t          nMCAll ;
    vector<int>     *MCPdgIdAll;
    UInt_t          nMCB0 ;
-   vector<float>   *PriVtxGen_X ;
-   vector<float>   *PriVtxGen_Y ;
-   vector<float>   *PriVtxGen_Z ;
-   vector<float>   *PriVtxGen_EX ;
-   vector<float>   *PriVtxGen_EY ;
-   vector<float>   *PriVtxGen_EZ ;
-   vector<float>   *PriVtxGen_Chi2 ;
-   vector<float>   *PriVtxGen_CL ;
+   vector<float>   *PriVtxGen_X, *PriVtxGen_Y, *PriVtxGen_Z ;
+   vector<float>   *PriVtxGen_EX, *PriVtxGen_EY, *PriVtxGen_EZ ;
+   vector<float>   *PriVtxGen_Chi2, *PriVtxGen_CL ;
    vector<int>     *PriVtxGen_Ndof ;
    vector<int>     *PriVtxGen_tracks ;
    //
-   vector<float>   *genEvtVtx_X ;
-   vector<float>   *genEvtVtx_Y ;
-   vector<float>   *genEvtVtx_Z ;
+   vector<float>   *genEvtVtx_X, *genEvtVtx_Y, *genEvtVtx_Z ;
    vector<int>     *genEvtVtx_particlesOut ;
    //
-   vector<float>   *MCpsi2SPx ;
-   vector<float>   *MCpsi2SPy ;
-   vector<float>   *MCpsi2SPz ;
-   vector<float>   *MCmupPx ;
-   vector<float>   *MCmupPy ;
-   vector<float>   *MCmupPz ;
-   vector<float>   *MCmumPx ;
-   vector<float>   *MCmumPy ;
-   vector<float>   *MCmumPz ;
-   vector<float>   *MCpionPx ;
-   vector<float>   *MCpionPy ;
-   vector<float>   *MCpionPz ;
-   vector<float>   *MCkaonPx ;
-   vector<float>   *MCkaonPy ;
-   vector<float>   *MCkaonPz ;
-   vector<float>   *MCPx;
-   vector<float>   *MCPy;
-   vector<float>   *MCPz;
+   vector<float>   *MCpsi2SPx, *MCpsi2SPy, *MCpsi2SPz ;
+   vector<float>   *MCmupPx, *MCmupPy, *MCmupPz ;
+   vector<float>   *MCmumPx, *MCmumPy, *MCmumPz ;
+   vector<float>   *MCpionPx, *MCpionPy, *MCpionPz ;
+   vector<float>   *MCkaonPx, *MCkaonPy, *MCkaonPz ;
+   vector<float>   *MCPx, *MCPy, *MCPz;
    vector<int>     *MCpionCh;
    vector<int>     *MCkaonCh;
 
    // Generic Muons
    UInt_t          nMu;
-   vector<float>   *muPx;
-   vector<float>   *muPy;
-   vector<float>   *muPz;
-   vector<float>   *muD0;
-   vector<float>   *muDz;
+   vector<float>   *muPx, *muPy, *muPz;
+   vector<float>   *muD0, *muDz;
    vector<float>   *muChi2;
    vector<int>     *muNDF;
-   vector<int>     *muPhits;
-   vector<int>     *muShits;
-   vector<int>     *muLayersTr;
-   vector<int>     *muLayersPix;
-   vector<float>   *muD0E;
-   vector<float>   *muDzVtxErr;
+   vector<int>     *muPhits, *muShits;
+   vector<int>     *muLayersTr, *muLayersPix;
+   vector<float>   *muD0E, *muDzVtxErr;
    vector<unsigned int> *muKey;
    vector<int>     *muGlMuHits;
    vector<float>   *muGlChi2;
    vector<int>     *muGlNDF;
    vector<int>     *muGlMatchedStation;
-   vector<float>   *muGlDzVtx;
-   vector<float>   *muGlDxyVtx;
+   vector<float>   *muGlDzVtx, *muGlDxyVtx;
    vector<int>     *muType;
    vector<int>     *muQual;
    vector<int>     *muTrack;
    vector<float>   *muCharge;
    vector<float>   *mufHits;
-   vector<bool>    *muFirstBarrel;
-   vector<bool>    *muFirstEndCap;
-   vector<float>   *muDzVtx;
-   vector<float>   *muDxyVtx;
-   vector<float>   *trNotRef;
-   vector<float>   *trRef;
-   vector<float>   *trackPx;
-   vector<float>   *trackPy;
-   vector<float>   *trackPz;
+   vector<bool>    *muFirstBarrel, *muFirstEndCap;
+   vector<float>   *muDzVtx, *muDxyVtx;
+   vector<float>   *trNotRef, *trRef;
+   vector<float>   *trackPx, *trackPy, *trackPz;
    vector<float>   *trackEnergy;
    vector<int>     *trackNDF;
-   vector<int>     *trackPhits;
-   vector<int>     *trackShits;
+   vector<int>     *trackPhits, *trackShits;
    vector<float>   *trackChi2;
-   vector<float>   *trackD0;
-   vector<float>   *trackD0Err;
+   vector<float>   *trackD0, *trackD0Err;
    vector<float>   *trackCharge;
-   vector<int>     *TrackHighPurity;
-   vector<int>     *TrackTight;
+   vector<int>     *TrackHighPurity, *TrackTight;
    vector<float>   *trackfHits;
-   vector<bool>    *trackFirstBarrel;
-   vector<bool>    *trackFirstEndCap;
-   vector<float>   *trackDzVtx;
-   vector<float>   *trackDxyVtx;
+   vector<bool>    *trackFirstBarrel, *trackFirstEndCap;
+   vector<float>   *trackDzVtx, *trackDxyVtx;
    vector<double>  *tr_nsigdedx;
-   vector<float>   *tr_dedx;
-   vector<float>   *tr_dedxMass;
-   vector<float>   *tr_theo;
-   vector<float>   *tr_sigma;
-   vector<float>   *tr_dedx_byHits;
-   vector<float>   *tr_dedxErr_byHits;
-   vector<int>     *tr_saturMeas_byHits;
-   vector<int>     *tr_Meas_byHits;
+   vector<float>   *tr_dedx, *tr_dedxMass;
+   vector<float>   *tr_theo, *tr_sigma;
+   vector<float>   *tr_dedx_byHits, *tr_dedxErr_byHits;
+   vector<int>     *tr_saturMeas_byHits, *tr_Meas_byHits;
    UInt_t          nMuMu;
    vector<float>   *MuMuMass;
-   vector<float>   *MuMuPx;
-   vector<float>   *MuMuPy;
-   vector<float>   *MuMuPz;
-   vector<float>   *MuMuVtx_CL;
-   vector<float>   *MuMuVtx_Chi2;
-   vector<float>   *MuMuDecayVtx_X;
-   vector<float>   *MuMuDecayVtx_Y;
-   vector<float>   *MuMuDecayVtx_Z;
-   vector<float>   *MuMuDecayVtx_XE;
-   vector<float>   *MuMuDecayVtx_YE;
-   vector<float>   *MuMuDecayVtx_ZE;
-   vector<int>     *mu1Idx;
-   vector<int>     *mu2Idx;
-   vector<float>   *mu1Px_MuMu;
-   vector<float>   *mu1Py_MuMu;
-   vector<float>   *mu1Pz_MuMu;
+   vector<float>   *MuMuPx, *MuMuPy, *MuMuPz;
+   vector<float>   *MuMuVtx_CL, *MuMuVtx_Chi2;
+   vector<float>   *MuMuDecayVtx_X, *MuMuDecayVtx_Y, *MuMuDecayVtx_Z;
+   vector<float>   *MuMuDecayVtx_XE, *MuMuDecayVtx_YE, *MuMuDecayVtx_ZE;
+   vector<int>     *mu1Idx, *mu2Idx;
+   vector<float>   *mu1Px_MuMu, *mu1Py_MuMu, *mu1Pz_MuMu;
    vector<float>   *mu1Chi_MuMu2;
    vector<int>     *mu1NDF_MuMu;
-   vector<float>   *mu2Px_MuMu;
-   vector<float>   *mu2Py_MuMu;
-   vector<float>   *mu2Pz_MuMu;
+   vector<float>   *mu2Px_MuMu, *mu2Py_MuMu, *mu2Pz_MuMu;
    vector<float>   *mu2Chi2_MuMu;
    vector<int>     *mu2NDF_MuMu;
    vector<int>     *MuMuType;
    vector<bool>    *MuMuMuonTrigMatch;
-   vector<float>   *PriVtxMuMuCorr_X;
-   vector<float>   *PriVtxMuMuCorr_Y;
-   vector<float>   *PriVtxMuMuCorr_Z;
-   vector<double>  *PriVtxMuMuCorr_EX;
-   vector<double>  *PriVtxMuMuCorr_EY;
-   vector<double>  *PriVtxMuMuCorr_EZ;
-   vector<float>   *PriVtxMuMuCorr_Chi2;
-   vector<float>   *PriVtxMuMuCorr_CL;
+   vector<float>   *PriVtxMuMuCorr_X, *PriVtxMuMuCorr_Y, *PriVtxMuMuCorr_Z;
+   vector<double>  *PriVtxMuMuCorr_EX, *PriVtxMuMuCorr_EY, *PriVtxMuMuCorr_EZ;
+   vector<float>   *PriVtxMuMuCorr_Chi2, *PriVtxMuMuCorr_CL;
    vector<int>     *PriVtxMuMuCorr_tracks;
    UInt_t          nB0;
    vector<float>   *B0Mass;
-   vector<float>   *B0Px;
-   vector<float>   *B0Py;
-   vector<float>   *B0Pz;
-   vector<double>  *B0PxE;
-   vector<double>  *B0PyE;
-   vector<double>  *B0PzE;
-   vector<float>   *B0Vtx_CL;
-   vector<float>   *B0Vtx_Chi2;
-   vector<float>   *B0DecayVtx_X;
-   vector<float>   *B0DecayVtx_Y;
-   vector<float>   *B0DecayVtx_Z;
-   vector<double>  *B0DecayVtx_XE;
-   vector<double>  *B0DecayVtx_YE;
-   vector<double>  *B0DecayVtx_ZE;
+   vector<float>   *B0Px, *B0Py, *B0Pz;
+   vector<double>  *B0PxE, *B0PyE, *B0PzE;
+   vector<float>   *B0Vtx_CL, *B0Vtx_Chi2;
+   vector<float>   *B0DecayVtx_X, *B0DecayVtx_Y, *B0DecayVtx_Z;
+   vector<double>  *B0DecayVtx_XE, *B0DecayVtx_YE, *B0DecayVtx_ZE;
    // Primary Vertex with largest B0_cos(alpha)
    vector<float>   *PriVtx_B0CosAlpha_X, *PriVtx_B0CosAlpha_Y, *PriVtx_B0CosAlpha_Z ; 
    vector<double>  *PriVtx_B0CosAlpha_EX, *PriVtx_B0CosAlpha_EY, *PriVtx_B0CosAlpha_EZ ;
@@ -282,176 +214,101 @@ public :
    vector<float>   *kaon_dedx, *kaon_dedxMass, *kaon_theo, *kaon_sigma;
    vector<float>   *kaon_dedx_byHits, *kaon_dedxErr_byHits;
    vector<int>     *kaon_saturMeas_byHits, *kaon_Meas_byHits;
+   // B0 mass constraint
+   vector<float>   *Muon1Px_MuMuPiK_B0Mass, *Muon1Py_MuMuPiK_B0Mass, *Muon1Pz_MuMuPiK_B0Mass, *Muon1E_MuMuPiK_B0Mass;
+   vector<float>   *Muon2Px_MuMuPiK_B0Mass, *Muon2Py_MuMuPiK_B0Mass, *Muon2Pz_MuMuPiK_B0Mass, *Muon2E_MuMuPiK_B0Mass;
+   vector<float>   *PionPx_MuMuPiK_B0Mass, *PionPy_MuMuPiK_B0Mass, *PionPz_MuMuPiK_B0Mass, *PionE_MuMuPiK_B0Mass;
+   vector<float>   *KaonPx_MuMuPiK_B0Mass, *KaonPy_MuMuPiK_B0Mass, *KaonPz_MuMuPiK_B0Mass, *KaonE_MuMuPiK_B0Mass;
 
    // List of branches
    TBranch        *b_TrigRes;   //!
    TBranch        *b_TrigNames;   //!
    TBranch        *b_MatchTriggerNames;   //!
    TBranch        *b_L1TrigRes;   //!
-   TBranch        *b_evtNum;   //!
-   TBranch        *b_runNum;   //!
-   TBranch        *b_lumiNum;   //!
-   TBranch        *b_priVtx_X;   //!
-   TBranch        *b_priVtx_Y;   //!
-   TBranch        *b_priVtx_Z;   //!
-   TBranch        *b_priVtx_XE;   //!
-   TBranch        *b_priVtx_YE;   //!
-   TBranch        *b_priVtx_ZE;   //!
-   TBranch        *b_priVtx_NormChi2;   //!
-   TBranch        *b_priVtx_Chi2;   //!
-   TBranch        *b_priVtx_CL;   //!
+   TBranch        *b_evtNum, *b_runNum, *b_lumiNum;   //!
+   TBranch        *b_priVtx_X, *b_priVtx_Y, *b_priVtx_Z;   //!
+   TBranch        *b_priVtx_XE, *b_priVtx_YE, *b_priVtx_ZE;   //!
+   TBranch        *b_priVtx_NormChi2, *b_priVtx_Chi2, *b_priVtx_CL;   //!
    TBranch        *b_priVtx_tracks;   //!
    // MC Analysis
    TBranch        *b_nMCAll ;
    TBranch        *b_MCPdgIdAll ;
    TBranch        *b_nMCB0 ;
-   TBranch        *b_PriVtxGen_X ;
-   TBranch        *b_PriVtxGen_Y ;
-   TBranch        *b_PriVtxGen_Z ;
-   TBranch        *b_PriVtxGen_EX ;
-   TBranch        *b_PriVtxGen_EY ;
-   TBranch        *b_PriVtxGen_EZ ;
-   TBranch        *b_PriVtxGen_Chi2 ;
-   TBranch        *b_PriVtxGen_CL ;
-   TBranch        *b_PriVtxGen_Ndof ;
+   TBranch        *b_PriVtxGen_X, *b_PriVtxGen_Y, *b_PriVtxGen_Z ;
+   TBranch        *b_PriVtxGen_EX, *b_PriVtxGen_EY, *b_PriVtxGen_EZ ;
+   TBranch        *b_PriVtxGen_Chi2, *b_PriVtxGen_CL, *b_PriVtxGen_Ndof ;
    TBranch        *b_PriVtxGen_tracks ;
-   TBranch        *b_genEvtVtx_X ;
-   TBranch        *b_genEvtVtx_Y ;
-   TBranch        *b_genEvtVtx_Z ;
+   TBranch        *b_genEvtVtx_X, *b_genEvtVtx_Y, *b_genEvtVtx_Z ;
    TBranch        *b_genEvtVtx_particlesOut ;
-   TBranch        *b_MCpsi2SPx ;
-   TBranch        *b_MCpsi2SPy ;
-   TBranch        *b_MCpsi2SPz ;
-   TBranch        *b_MCmupPx ;
-   TBranch        *b_MCmupPy ;
-   TBranch        *b_MCmupPz ;
-   TBranch        *b_MCmumPx ;
-   TBranch        *b_MCmumPy ;
-   TBranch        *b_MCmumPz ;
-   TBranch        *b_MCpionPx ;
-   TBranch        *b_MCpionPy ;
-   TBranch        *b_MCpionPz ;
-   TBranch        *b_MCkaonPx ;
-   TBranch        *b_MCkaonPy ;
-   TBranch        *b_MCkaonPz ;
-   TBranch        *b_MCPx;   
-   TBranch        *b_MCPy;   
-   TBranch        *b_MCPz;   
+   TBranch        *b_MCpsi2SPx, *b_MCpsi2SPy, *b_MCpsi2SPz ;
+   TBranch        *b_MCmupPx, *b_MCmupPy, *b_MCmupPz ;
+   TBranch        *b_MCmumPx, *b_MCmumPy, *b_MCmumPz ;
+   TBranch        *b_MCpionPx, *b_MCpionPy, *b_MCpionPz ;
+   TBranch        *b_MCkaonPx, *b_MCkaonPy, *b_MCkaonPz ;
+   TBranch        *b_MCPx, *b_MCPy, *b_MCPz;   
    TBranch        *b_MCpionCh;
    TBranch        *b_MCkaonCh;
 
    // Generic Muons
    TBranch        *b_nMu;   //!
-   TBranch        *b_muPx;   //!
-   TBranch        *b_muPy;   //!
-   TBranch        *b_muPz;   //!
-   TBranch        *b_muD0;   //!
-   TBranch        *b_muDz;   //!
-   TBranch        *b_muChi2;   //!
-   TBranch        *b_muNDF;   //!
-   TBranch        *b_muPhits;   //!
-   TBranch        *b_muShits;   //!
-   TBranch        *b_muLayersTr;   //!
-   TBranch        *b_muLayersPix;   //!
-   TBranch        *b_muD0E;   //!
-   TBranch        *b_muDzVtxErr;   //!
+   TBranch        *b_muPx, *b_muPy, *b_muPz;   //!
+   TBranch        *b_muD0, *b_muDz;   //!
+   TBranch        *b_muChi2, *b_muNDF;   //!
+   TBranch        *b_muPhits, *b_muShits;   //!
+   TBranch        *b_muLayersTr, *b_muLayersPix;   //!
+   TBranch        *b_muD0E, *b_muDzVtxErr;   //!
    TBranch        *b_muKey;   //!
    TBranch        *b_muGlMuHits;   //!
-   TBranch        *b_muGlChi2;   //!
-   TBranch        *b_muGlNDF;   //!
+   TBranch        *b_muGlChi2, *b_muGlNDF;   //!
    TBranch        *b_muGlMatchedStation;   //!
-   TBranch        *b_muGlDzVtx;   //!
-   TBranch        *b_muGlDxyVtx;   //!
+   TBranch        *b_muGlDzVtx, *b_muGlDxyVtx;   //!
    TBranch        *b_muType;   //!
    TBranch        *b_muQual;   //!
    TBranch        *b_muTrack;   //!
    TBranch        *b_muCharge;   //!
    TBranch        *b_mufHits;   //!
-   TBranch        *b_muFirstBarrel;   //!
-   TBranch        *b_muFirstEndCap;   //!
-   TBranch        *b_muDzVtx;   //!
-   TBranch        *b_muDxyVtx;   //!
-   TBranch        *b_trNotRef;   //!
-   TBranch        *b_trRef;   //!
-   TBranch        *b_trackPx;   //!
-   TBranch        *b_trackPy;   //!
-   TBranch        *b_trackPz;   //!
+   TBranch        *b_muFirstBarrel, *b_muFirstEndCap;   //!
+   TBranch        *b_muDzVtx, *b_muDxyVtx;   //!
+   TBranch        *b_trNotRef, *b_trRef;   //!
+   TBranch        *b_trackPx, *b_trackPy, *b_trackPz;   //!
    TBranch        *b_trackEnergy;   //!
-   TBranch        *b_trackNDF;   //!
-   TBranch        *b_trackPhits;   //!
-   TBranch        *b_trackShits;   //!
-   TBranch        *b_trackChi2;   //!
-   TBranch        *b_trackD0;   //!
-   TBranch        *b_trackD0Err;   //!
+   TBranch        *b_trackPhits, *b_trackShits;   //!
+   TBranch        *b_trackChi2, *b_trackNDF;   //!
+   TBranch        *b_trackD0, *b_trackD0Err;   //!
    TBranch        *b_trackCharge;   //!
-   TBranch        *b_TrackHighPurity;   //!
-   TBranch        *b_TrackTight;   //!
+   TBranch        *b_TrackHighPurity, *b_TrackTight;   //!
    TBranch        *b_trackfHits;   //!
-   TBranch        *b_trackFirstBarrel;   //!
-   TBranch        *b_trackFirstEndCap;   //!
-   TBranch        *b_trackDzVtx;   //!
-   TBranch        *b_trackDxyVtx;   //!
+   TBranch        *b_trackFirstBarrel, *b_trackFirstEndCap;   //!
+   TBranch        *b_trackDzVtx, *b_trackDxyVtx;   //!
    TBranch        *b_tr_nsigdedx;   //!
-   TBranch        *b_tr_dedx;   //!
-   TBranch        *b_tr_dedxMass;   //!
-   TBranch        *b_tr_theo;   //!
-   TBranch        *b_tr_sigma;   //!
-   TBranch        *b_tr_dedx_byHits;   //!
-   TBranch        *b_tr_dedxErr_byHits;   //!
-   TBranch        *b_tr_saturMeas_byHits;   //!
-   TBranch        *b_tr_Meas_byHits;   //!
+   TBranch        *b_tr_dedx, *b_tr_dedxMass;   //!
+   TBranch        *b_tr_theo, *b_tr_sigma;   //!
+   TBranch        *b_tr_dedx_byHits, *b_tr_dedxErr_byHits;   //!
+   TBranch        *b_tr_saturMeas_byHits, *b_tr_Meas_byHits;   //!
    TBranch        *b_nMuMu;   //!
    TBranch        *b_MuMuMass;   //!
-   TBranch        *b_MuMuPx;   //!
-   TBranch        *b_MuMuPy;   //!
-   TBranch        *b_MuMuPz;   //!
-   TBranch        *b_MuMuVtx_CL;   //!
-   TBranch        *b_MuMuVtx_Chi2;   //!
-   TBranch        *b_MuMuDecayVtx_X;   //!
-   TBranch        *b_MuMuDecayVtx_Y;   //!
-   TBranch        *b_MuMuDecayVtx_Z;   //!
-   TBranch        *b_MuMuDecayVtx_XE;   //!
-   TBranch        *b_MuMuDecayVtx_YE;   //!
-   TBranch        *b_MuMuDecayVtx_ZE;   //!
-   TBranch        *b_mu1Idx;   //!
-   TBranch        *b_mu2Idx;   //!
-   TBranch        *b_mu1Px_MuMu;   //!
-   TBranch        *b_mu1Py_MuMu;   //!
-   TBranch        *b_mu1Pz_MuMu;   //!
-   TBranch        *b_mu1Chi_MuMu2;   //!
-   TBranch        *b_mu1NDF_MuMu;   //!
-   TBranch        *b_mu2Px_MuMu;   //!
-   TBranch        *b_mu2Py_MuMu;   //!
-   TBranch        *b_mu2Pz_MuMu;   //!
-   TBranch        *b_mu2Chi2_MuMu;   //!
-   TBranch        *b_mu2NDF_MuMu;   //!
+   TBranch        *b_MuMuPx, *b_MuMuPy, *b_MuMuPz;   //!
+   TBranch        *b_MuMuVtx_CL, *b_MuMuVtx_Chi2;   //!
+   TBranch        *b_MuMuDecayVtx_X, *b_MuMuDecayVtx_Y, *b_MuMuDecayVtx_Z;   //!
+   TBranch        *b_MuMuDecayVtx_XE, *b_MuMuDecayVtx_YE, *b_MuMuDecayVtx_ZE;   //!
+   TBranch        *b_mu1Idx, *b_mu2Idx;   //!
+   TBranch        *b_mu1Px_MuMu, *b_mu1Py_MuMu, *b_mu1Pz_MuMu;   //!
+   TBranch        *b_mu1Chi_MuMu2, *b_mu1NDF_MuMu;   //!
+   TBranch        *b_mu2Px_MuMu, *b_mu2Py_MuMu, *b_mu2Pz_MuMu;   //!
+   TBranch        *b_mu2Chi2_MuMu, *b_mu2NDF_MuMu;   //!
    TBranch        *b_MuMuType;   //!
    TBranch        *b_MuMuMuonTrigMatch;   //!
-   TBranch        *b_PriVtxMuMuCorr_X;   //!
-   TBranch        *b_PriVtxMuMuCorr_Y;   //!
-   TBranch        *b_PriVtxMuMuCorr_Z;   //!
-   TBranch        *b_PriVtxMuMuCorr_EX;   //!
-   TBranch        *b_PriVtxMuMuCorr_EY;   //!
-   TBranch        *b_PriVtxMuMuCorr_EZ;   //!
-   TBranch        *b_PriVtxMuMuCorr_Chi2;   //!
-   TBranch        *b_PriVtxMuMuCorr_CL;   //!
+   TBranch        *b_PriVtxMuMuCorr_X, *b_PriVtxMuMuCorr_Y, *b_PriVtxMuMuCorr_Z;   //!
+   TBranch        *b_PriVtxMuMuCorr_EX, *b_PriVtxMuMuCorr_EY, *b_PriVtxMuMuCorr_EZ;   //!
+   TBranch        *b_PriVtxMuMuCorr_Chi2, *b_PriVtxMuMuCorr_CL;   //!
    TBranch        *b_PriVtxMuMuCorr_tracks;   //!
    TBranch        *b_nB0;   //!
    TBranch        *b_B0Mass;   //!
-   TBranch        *b_B0Px;   //!
-   TBranch        *b_B0Py;   //!
-   TBranch        *b_B0Pz;   //!
-   TBranch        *b_B0PxE;   //!
-   TBranch        *b_B0PyE;   //!
-   TBranch        *b_B0PzE;   //!
-   TBranch        *b_B0Vtx_CL;   //!
-   TBranch        *b_B0Vtx_Chi2;   //!
-   TBranch        *b_B0DecayVtx_X;   //!
-   TBranch        *b_B0DecayVtx_Y;   //!
-   TBranch        *b_B0DecayVtx_Z;   //!
-   TBranch        *b_B0DecayVtx_XE;   //!
-   TBranch        *b_B0DecayVtx_YE;   //!
-   TBranch        *b_B0DecayVtx_ZE;   //!
+   TBranch        *b_B0Px, *b_B0Py, *b_B0Pz;   //!
+   TBranch        *b_B0PxE, *b_B0PyE, *b_B0PzE;   //!
+   TBranch        *b_B0Vtx_CL, *b_B0Vtx_Chi2;   //!
+   TBranch        *b_B0DecayVtx_X, *b_B0DecayVtx_Y, *b_B0DecayVtx_Z;   //!
+   TBranch        *b_B0DecayVtx_XE, *b_B0DecayVtx_YE, *b_B0DecayVtx_ZE;   //!
    // Primary Vertex with largest B0_cos(alpha)
    TBranch        *b_PriVtx_B0CosAlpha_X, *b_PriVtx_B0CosAlpha_Y, *b_PriVtx_B0CosAlpha_Z ; 
    TBranch        *b_PriVtx_B0CosAlpha_EX, *b_PriVtx_B0CosAlpha_EY, *b_PriVtx_B0CosAlpha_EZ ;
@@ -500,6 +357,11 @@ public :
    TBranch        *b_KaonPx_MuMuPiK, *b_KaonPy_MuMuPiK, *b_KaonPz_MuMuPiK, *b_KaonE_MuMuPiK;   //!
    TBranch        *b_kaon_nsigdedx, *b_kaon_dedx, *b_kaon_dedxMass, *b_kaon_theo, *b_kaon_sigma;   //!
    TBranch        *b_kaon_dedx_byHits, *b_kaon_dedxErr_byHits, *b_kaon_saturMeas_byHits, *b_kaon_Meas_byHits;   //!
+   // B0 mass ocnstraint
+   TBranch        *b_Muon1Px_MuMuPiK_B0Mass, *b_Muon1Py_MuMuPiK_B0Mass, *b_Muon1Pz_MuMuPiK_B0Mass, *b_Muon1E_MuMuPiK_B0Mass;   //!
+   TBranch        *b_Muon2Px_MuMuPiK_B0Mass, *b_Muon2Py_MuMuPiK_B0Mass, *b_Muon2Pz_MuMuPiK_B0Mass, *b_Muon2E_MuMuPiK_B0Mass;   //!
+   TBranch        *b_PionPx_MuMuPiK_B0Mass, *b_PionPy_MuMuPiK_B0Mass, *b_PionPz_MuMuPiK_B0Mass, *b_PionE_MuMuPiK_B0Mass;   //!
+   TBranch        *b_KaonPx_MuMuPiK_B0Mass, *b_KaonPy_MuMuPiK_B0Mass, *b_KaonPz_MuMuPiK_B0Mass, *b_KaonE_MuMuPiK_B0Mass;   //!
 
    psiPrimePiK_MC(TTree * /*tree*/ =0) : fChain(0) { }
    virtual ~psiPrimePiK_MC() { }
@@ -528,6 +390,13 @@ public :
    virtual double   getAleMumuHelicityAngle(TLorentzVector mumu, TLorentzVector muM);
    virtual double   getPlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP);
    virtual double   getBellePlanesAngle(TLorentzVector B0, TLorentzVector K, TLorentzVector Pi, TLorentzVector muM, TLorentzVector muP);
+   virtual float    GetThetaMuMu(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG);
+   virtual float    GetThetaMuMuLab(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG);
+   virtual void     GetMomentumInMotherFrame(TLorentzVector Mother, TLorentzVector Particle, double BeamEnergy , TVector3 &Particle_rotated);
+   virtual float    GetThetaMuMu_rot(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG);
+   virtual void     GetMomentumInMotherFrame_rot(TLorentzVector Mother, TLorentzVector Particle, double BeamEnergy , TVector3 &Particle_rotated);
+   //virtual float    GetCosThetaMuMu_fromMasses(Float_t mother, Float_t charmonium, Float_t referenceTrK, Float_t otherTrK, Float_t sameSide, Float_t oppositeSide);
+
    ///////////////////////////////////////// adde here my stuff
 
    ///////////// Input file //////////////////
@@ -536,8 +405,11 @@ public :
    ///////////// Output files //////////////////
    TProofOutputFile *OutFile, *SaraFile, *AlexisFile, *tightCutsFile ;
    TFile            *fOut, *SaraOut, *AlexisOut, *tightCutsOut ;
+   TNtupleD *_nt;
+   TTree *mva_variables_sig, *mva_variables_bkg, *mva_variables_all ;
+   vector< Float_t > mva_vars_sig, mva_vars_bkg, mva_vars_all ;
    Bool_t newSoftMuonID, only1psiPrime;
-   Bool_t MC, officialMC, oldNtuple, priVtxsInfo, Kai_cuts, HLT_Displaced, fixedMassWind, sideband ;
+   Bool_t MC, officialMC, oldNtuple, priVtxsInfo, B0massConstr, Kai_cuts, HLT_Displaced, fixedMassWind, sideband ;
 
    //TProofOutputFile *myOutFile, *myOutFileA, *myOutFileB;
    //ofstream *myoutfile, *myoutfileA, *myoutfileB; // works!
@@ -568,27 +440,21 @@ public :
    // HLT7_v*
    TH1F* myInclusiveMuMuMass_HLT_7_v1, *myInclusiveMuMuMass_HLT_7_v2, *myInclusiveMuMuMass_HLT_7_v3 ;
    TH1F* myInclusiveMuMuMass_HLT_7_v3C, *myInclusiveMuMuMass_HLT_7_v2v3C, *myInclusiveMuMuMass_HLT_7_v3D ;
+   // HLT8_v*
+   TH1F* myInclusiveMuMuMass_HLT_8_v3, *myInclusiveMuMuMass_HLT_8_v4, *myInclusiveMuMuMass_HLT_8_v5, *myInclusiveMuMuMass_HLT_8_v6, *myInclusiveMuMuMass_HLT_8_v7 ;
    // datasets
    TH1F* myInclusiveMuMuMass_12A;
-   TH1F* myInclusiveMuMuMass_12A_HLT_0_v3;
-   TH1F* myInclusiveMuMuMass_12A_HLT_5_v3;
-   TH1F* myInclusiveMuMuMass_12A_HLT_9_v9;
+   TH1F* myInclusiveMuMuMass_12A_HLT_0_v3, *myInclusiveMuMuMass_12A_HLT_5_v3, *myInclusiveMuMuMass_12A_HLT_9_v9;
    //
    TH1F* myInclusiveMuMuMass_12B;
-   TH1F* myInclusiveMuMuMass_12B_HLT_0_v3v4;
-   TH1F* myInclusiveMuMuMass_12B_HLT_5_v3v4;
-   TH1F* myInclusiveMuMuMass_12B_HLT_7_v1_9_v9;
+   TH1F* myInclusiveMuMuMass_12B_HLT_0_v3v4, *myInclusiveMuMuMass_12B_HLT_5_v3v4, *myInclusiveMuMuMass_12B_HLT_7_v1_9_v9;
    //
    TH1F* myInclusiveMuMuMass_12C;
-   TH1F* myInclusiveMuMuMass_12C_HLT_0_v5;
-   TH1F* myInclusiveMuMuMass_12C_HLT_5_v5;
-   TH1F* myInclusiveMuMuMass_12C_HLT_7_v2;
+   TH1F* myInclusiveMuMuMass_12C_HLT_0_v5, *myInclusiveMuMuMass_12C_HLT_5_v5, *myInclusiveMuMuMass_12C_HLT_7_v2;
    TH1F* myInclusiveMuMuMass_12C_HLT_5_v5_or_7_v2;
    //
    TH1F* myInclusiveMuMuMass_12D;
-   TH1F* myInclusiveMuMuMass_12D_HLT_0_v6;
-   TH1F* myInclusiveMuMuMass_12D_HLT_5_v6;
-   TH1F* myInclusiveMuMuMass_12D_HLT_7_v3;
+   TH1F* myInclusiveMuMuMass_12D_HLT_0_v6, *myInclusiveMuMuMass_12D_HLT_5_v6, *myInclusiveMuMuMass_12D_HLT_7_v3;
    TH1F* myInclusiveMuMuMass_out;
    //
    TH1F* myMuMuMass, *myMuMuMass_noMuID, *myMuMuMass_MuID, *myMuMuMass_Mu1ID, *myMuMuMass_Mu2ID ;
@@ -611,8 +477,12 @@ public :
    TH1F* MuMuKMass_Nairit, *MuMuKMass_sb, *trk_pT_test_h ;
    // K*
    TH1F* myExclusiveMuMuKPiMass ;
-   TH1F* trk_dxy, *trk_dz, *hmyPsiPMassSel, *hPsiPrimefromBMassSel, *hmyPsiPKPiMassSelAlt, *hmyPsiPKPiMassSelAltZoom, *hmyPsiPKPiMassSelZoom ;
+   TH1F* trk_dxy, *trk_dz, *hmyPsiPMassSel, *hPsiPrimefromBMassSel, *hmyPsiPKPiMassAlt, *hmyPsiPKPiMassAltZoom, *hmyPsiPKPiMassZoom, *hmyPsiPKPiMassNairitSelAlt ;
+   TH2F* psi2SPiSqMass_vs_KPiSqMass_NairitPeak, *psi2SPiSqMass_vs_KPiSqMass_NairitSb ;
    TH2F* psi2SPiSqMass_vs_KPiSqMass_AC ;
+   // MVA
+   TH1F* hPionPt_fromB0peak, *hKaonPt_fromB0peak, *hPionPtPlusKaonPt_fromB0peak, *hLowerPt_fromB0peak, *hHigherPt_fromB0peak, *hPsiDeltaRHigherPtTrk_fromB0peak, *hPsiDeltaRLowerPtTrk_fromB0peak, *hPionDeltaRKaon_fromB0peak, *hPsiDeltaRKPi_fromB0peak, *KPiMass_fromB0peak, *hB0Pt_fromB0peak, *hB0VtxCL_fromB0peak, *B0_PVCTau_fromB0peak, *B0_BSCTau_fromB0peak, *B0_pointingAnglePV_fromB0peak;
+   TH1F* hPionPt_fromB0sb, *hKaonPt_fromB0sb, *hPionPtPlusKaonPt_fromB0sb, *hLowerPt_fromB0sb, *hHigherPt_fromB0sb, *hPsiDeltaRHigherPtTrk_fromB0sb, *hPsiDeltaRLowerPtTrk_fromB0sb, *hPionDeltaRKaon_fromB0sb, *hPsiDeltaRKPi_fromB0sb, *KPiMass_fromB0sb, *hB0Pt_fromB0sb, *hB0VtxCL_fromB0sb, *B0_PVCTau_fromB0sb, *B0_BSCTau_fromB0sb, *B0_pointingAnglePV_fromB0sb;
    // tight cuts
    vector <Float_t> piPt_B0, KPt_B0, vtxCL_B0, cTau_B0 ;
    vector <TH1F*> myMuMuKPiMass_piPt, myMuMuKPiMass_KPt, myMuMuKPiMass_vtxCL, myMuMuKPiMass_cTau ;
@@ -630,16 +500,19 @@ public :
    TH1I* priVtx_matched ;
    //
    TH2F* kaonP_vs_pionP, *kaonPt_vs_pionPt ;
+   TH2I* kaonIdx_vs_pionIdx ;
    TH1F* hmyPsiPKPiMass_B0pTtest, *hPionFromKstar_p, *hKaonFromKstar_p ;
    TH1F* hmyPsiPKPiMass_deltaRtest, *hmyPsiPKPiMass_B0cTautest ;
    TH1F* hmyPsiPKPiMassBaseSelAlt ;
    TH1F* hmyPsiPKPiMass, *hmyPsiPKPiMass_KPiExchanged, *hmyPsiPKPiMass_bothComb ;
-   TH1F* hB0VtxCL, *hB0_Pt ;
+   TH1F* hmyPiPiMass, *hmyPiKMass, *hmyKKMass, *hmyPsiPPiPiMass, *hmyPsiPPiKMass, *hmyPsiPPiKMass_zoom, *hmyPsiPKKMass, *hmyPsiPPhiMass, *hmyPsiPPiKMass_fromBs, *hmyPsiPPiKMass_fromBs_zoom ; 
+   TH2F* hmyPiPiMass_vs_KKMass, *hmyPsiPPiPiMass_vs_PiPiMass, *hmyPsiPKKMass_vs_KKMass ;
+   TH1F* hB0VtxCL, *hB0Pt ;
    TH1F* hB0CTauPVSignif, *hB0CTauPVXSignif ;
    TH1F* hPsiPrimefromBMass, *hPsiPrime_fromB_Pt, *hmyPsiP_Pt ;
-   TH1F* hPionfromBpt, *hKaonfromBpt, *hPionFromKstar_pT, *hKaonFromKstar_pT, *hPionFromKstar_ex_pT, *hKaonFromKstar_ex_pT, *hPionFromKstar_sb_pT, *hKaonFromKstar_sb_pT ;
+   TH1F* hPionfromB0pt, *hKaonfromB0pt, *hPionFromKstar_pT, *hKaonFromKstar_pT, *hPionFromKstar_ex_pT, *hKaonFromKstar_ex_pT, *hPionFromKstar_sb_pT, *hKaonFromKstar_sb_pT ;
    TH1F* myExclMuMuKPiMassSel, *hmyPsiPKPiMass_bothCombSel ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_ABaseC ;
+   TH2F* psi2SPiSqMass_vs_KPiSqMass_ABaseC, *psi2SPiSqMass_vs_KPiSqMass_B0constr_ABaseC ;
    TH1F* hmyPsiPKPiMass_fromKstar, *hmyPsiPKPiMass_fromKstar_ex_noRange, *hmyPsiPKPiMass_fromKstar_diff, *hmyPsiPKPiMass_fromKstar_ex, *hmyPsiPKPiMass_fromKstar_sb ;
    TH1F* hmyKPiMass, *hmyKPiMass_ex, *hmyKPiMass_KpTcut, *hmyKPiMass_ex_KpTcut, *hmyKPiMass_sb;
    TH1F* hmyKPiMass_KpTcut_tightTr, *hmyKPiMass_ex_KpTcut_tightTr, *hmyKPiMass_KpTcut_HP, *hmyKPiMass_ex_KpTcut_HP ;
@@ -663,14 +536,20 @@ public :
    // Z- variables
    TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0AC_signalWin_h, *nB0AC_purityWin_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
    TH1F* hB0Mass_1B0, *hB0Mass_1B0matched[2][2], *hB0Mass_noTwins_noSignalWinNotTwins ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_1B0[2] ;
-   TH1F* psi2S_helicityAngle, *cos_psi2S_helicityAngle, *planesAngle ;
+   TH2F* psi2SPiSqMass_vs_KPiSqMass_1B0[2], *psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[2] ;
+   TH1F* cos_Kstar_helicityAngle;
+   TH1F* psi2S_helicityAngle, *cos_psi2S_helicityAngle, *cos_psi2S_helicityAngleLabB0peak, *cos_psi2S_helicityAngleLabB0sb, *cos_psi2S_helicityAngle_rot, *planesAngle ;
+   TH2F* cosKstar_vs_cosPsi2S_helicityAngles, *cosKstar_vs_cosPsi2S_helicityAngles_BT_gen, *planesAngle_vs_cos_psi2S_helicityAngle, *planesAngle_vs_cos_psi2S_helicityAngle_BT_gen;
+   TH2F* cos_psi2S_helicityAngle_vs_KPiMass ;
    TH1F* hB0CTau_1B0, *hB0CTau_1B0matched ;
    TH1F* B0_gen_p_h, *B0_gen_pT_h, *psi2S_gen_p_h, *psi2S_gen_pT_h, *K_gen_p_h, *K_gen_pT_h, *pi_gen_p_h, *pi_gen_pT_h ;
    TH1F* hMCDeltaRPi_2B0, *hMCDeltaRK_2B0 ;
    TH1F* B0_gen_mass_h ;
    TH2F* psi2SPiSqMass_vs_KPiSqMass_gen, *psi2SPiSqMass_vs_KPiSqMass_BT_gen, *KPiSqMass_vs_psi2SKSqMass_BT_gen, *piCh_vs_KCh_gen ;
-   TH1F* psi2S_helicityAngle_BT_gen, *cos_psi2S_helicityAngle_BT_gen, *planesAngle_BT_gen ;
+   TH2F* psi2S_vs_mu_pT;
+   TH1F* cos_Kstar_helicityAngle_BT_gen, *cos_Kstar_helicityAngle_BT_gen_fromMasses;
+   TH1F* psi2S_helicityAngle_BT_gen, *cos_psi2S_helicityAngle_BT_gen, *cos_psi2S_helicityAngle_BT_gen_bias, *cos_psi2S_helicityAngle_BT_gen_rot, *planesAngle_BT_gen, *planesAngle_BT_gen_bias ;
+   TH2F* cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen, *cos_psi2S_helicityAngle_vs_KPiMass_BT_gen, *cos_psi2S_helicityAngle_BT_gen_rotVSnotRot, *cos_psi2S_helicityAngle_rotVSnotRot ;
    TH2F* B0CosAlpha_2Dvs3D[4] ;
    TH1F* priVtx_z[7] ;
    TH1F* priVtx_delta[2][3], *priVtx_deltaX_test, *priVtx_deltaY_test, *priVtx_B0_delta[2][3], *priVtx_B0CosAlpha_delta[2][2][3], *priVtxB0Less_delta[2][3], *priVtxB0Less_B0CosAlpha_delta[2][2][3] ;
@@ -748,9 +627,13 @@ public :
    
    //////// CUT THRESHOLDS & CONSTANTS /////////////
    Int_t B0_Id, psi2S_Id, Kaon_Id, pion_Id, muon_Id ;
-   Double_t muon_mass, phi_mass, jpsi_mass, psi2S_mass, pionCh_mass, kaonCh_mass, B0_mass;
+   Double_t beam_energy, muon_mass, phi_mass, jpsi_mass, psi2S_mass, pionCh_mass, kaonCh_mass, Kstar0_mass, B0_mass;
+   Double_t mumu_mass;
    Float_t B0_massFit, B0_sigmaFit ;
+   Float_t B0_signal, innerSB, outerSB;
    //Double_t Bplus_mass;
+   //
+   Float_t phi_left, phi_right, Bs_left, Bs_right;
 
    Float_t rapid_min, rapid_max, rapid_binSize ;  Int_t rapid_bins;
    Float_t psiPrimeMass_min, psiPrimeMass_max ;  Int_t psiPrimeMass_bins ; 
@@ -782,46 +665,49 @@ public :
 #ifdef psiPrimePiK_MC_cxx
 void psiPrimePiK_MC::Init(TTree *tree)
 {
-   // The Init() function is called when the selector needs to initialize
-   // a new tree or chain. Typically here the branch addresses and branch
-   // pointers of the tree will be set.
-   // It is normally not necessary to make changes to the generated
-   // code, but the routine can be extended by the user if needed.
-   // Init() will be called many times when running on PROOF
-   // (once per file to be processed).
+   // The Init() function is called when the selector needs to initialize a new tree or chain. Typically here the branch addresses and branch pointers of the tree will be set.
+   // It is normally not necessary to make changes to the generated code, but the routine can be extended by the user if needed.
+   // Init() will be called many times when running on PROOF (once per file to be processed).
 
-  // all these varables cannot be read from SlaveBegin method because of this structure: https://root.cern.ch/drupal/content/developing-tselector
+  // all these varables cannot be read by the SlaveBegin method because of this structure: https://root.cern.ch/developing-tselector#Local_sequential_query
   ////////////////////////////////
   //MC = kFALSE ; oldNtuple = kTRUE ; // for June 2014 ntuples
   //MC = kTRUE ; oldNtuple = kFALSE ; // for late 2014 MC
   TString option = GetOption();
-  if (option == "MC" || option == "officialMC") {
+  if (option.Contains("MC")) {
     MC = kTRUE ;
-    if (option == "officialMC") 
+    if (option.Contains("officialMC")) 
       officialMC = kTRUE ;
   } else {
     MC = kFALSE ;  
     officialMC = kFALSE ;  
   }
 
-  if ( MC || officialMC )
+  if ( MC || officialMC || (option.Contains("Data") && option.Contains("JPsi")) )
     oldNtuple = kFALSE ;
   else 
     oldNtuple = kTRUE ;
 
-  priVtxsInfo = kFALSE ; priVtxsInfo = kTRUE ;
+  priVtxsInfo = kFALSE ; //priVtxsInfo = kTRUE ;
+  B0massConstr = kFALSE ; //B0massConstr = kTRUE ;
 
   B0_Id = 511 ; psi2S_Id = 100443 ; Kaon_Id = 321; pion_Id = 211; muon_Id = 13;
   
+  beam_energy = 4000;
   muon_mass = 0.1056583715;
   // phi_mass = 1.019455;
-  // jpsi_mass = 3.0967;
+  jpsi_mass = 3.0967;
   psi2S_mass = 3.686109 ;
   pionCh_mass = 0.13957018;
-  kaonCh_mass = 0.493677 ; 
+  kaonCh_mass = 0.493677 ;
+  Kstar0_mass = 0.8961 ; // from evt.pdl 
   // Bplus_mass = 5.27925;
   B0_mass = 5.27958;
-  B0_massFit = 5.27967; B0_sigmaFit = 0.01167;
+  //B0_massFit = 5.27967; B0_sigmaFit = 0.01167;
+  B0_massFit = 5.2797; B0_sigmaFit = 0.012;
+  //
+  phi_left = 1.01; phi_right = 1.03;
+  Bs_left = 5.3; Bs_right = 5.43;
   /*
   rapid_min = -2.4;
   rapid_max = 2.4;
@@ -830,6 +716,14 @@ void psiPrimePiK_MC::Init(TTree *tree)
   psiPrimeMass_max = 4.0 ;
   psiPrimeMass_bins = 120 ;
   */
+  if (option.Contains("psi2S"))
+    mumu_mass = psi2S_mass;
+  else if (option.Contains("JPsi"))
+    mumu_mass = jpsi_mass;
+  else {
+    cout <<"\ndir is neither \"psi2S\" nor \"JPsi\", please check." <<endl; return;
+  }
+
   ///////////////////////////////
 
    // Set object pointer
@@ -956,6 +850,11 @@ void psiPrimePiK_MC::Init(TTree *tree)
    KaonPx_MuMuPiK = 0; KaonPy_MuMuPiK = 0; KaonPz_MuMuPiK = 0; KaonE_MuMuPiK = 0;
    kaon_nsigdedx = 0; kaon_dedx = 0; kaon_dedxMass = 0; kaon_theo = 0; kaon_sigma = 0;
    kaon_dedx_byHits = 0; kaon_dedxErr_byHits = 0; kaon_saturMeas_byHits = 0; kaon_Meas_byHits = 0;
+   // B0 mass constraint
+   Muon1Px_MuMuPiK_B0Mass = 0; Muon1Py_MuMuPiK_B0Mass = 0; Muon1Pz_MuMuPiK_B0Mass = 0; Muon1E_MuMuPiK_B0Mass = 0;
+   Muon2Px_MuMuPiK_B0Mass = 0; Muon2Py_MuMuPiK_B0Mass = 0; Muon2Pz_MuMuPiK_B0Mass = 0; Muon2E_MuMuPiK_B0Mass = 0;
+   PionPx_MuMuPiK_B0Mass = 0; PionPy_MuMuPiK_B0Mass = 0; PionPz_MuMuPiK_B0Mass = 0; PionE_MuMuPiK_B0Mass = 0;
+   KaonPx_MuMuPiK_B0Mass = 0; KaonPy_MuMuPiK_B0Mass = 0; KaonPz_MuMuPiK_B0Mass = 0; KaonE_MuMuPiK_B0Mass = 0;
    // Set branch addresses and branch pointers
    if (!tree) return;
    fChain = tree;
@@ -1159,13 +1058,15 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0DecayVtx_ZE", &B0DecayVtx_ZE, &b_B0DecayVtx_ZE);
    //
    fChain->SetBranchAddress("B0CosAlphaBS", &B0CosAlphaBS, &b_B0CosAlphaBS);
-   fChain->SetBranchAddress("B0CosAlpha3DBS", &B0CosAlpha3DBS, &b_B0CosAlpha3DBS);
+   if (!oldNtuple)
+     fChain->SetBranchAddress("B0CosAlpha3DBS", &B0CosAlpha3DBS, &b_B0CosAlpha3DBS);
    fChain->SetBranchAddress("B0CTauBS", &B0CTauBS, &b_B0CTauBS);
    fChain->SetBranchAddress("B0CTauBSE", &B0CTauBSE, &b_B0CTauBSE);
    fChain->SetBranchAddress("B0LxyBS", &B0LxyBS, &b_B0LxyBS);
    //
    fChain->SetBranchAddress("B0CosAlphaPV", &B0CosAlphaPV, &b_B0CosAlphaPV);
-   fChain->SetBranchAddress("B0CosAlpha3DPV", &B0CosAlpha3DPV, &b_B0CosAlpha3DPV);
+   if (!oldNtuple)
+     fChain->SetBranchAddress("B0CosAlpha3DPV", &B0CosAlpha3DPV, &b_B0CosAlpha3DPV);
    fChain->SetBranchAddress("B0CTauPV", &B0CTauPV, &b_B0CTauPV);
    fChain->SetBranchAddress("B0CTauPVE", &B0CTauPVE, &b_B0CTauPVE);
    fChain->SetBranchAddress("B0LxyPV", &B0LxyPV, &b_B0LxyPV);
@@ -1184,19 +1085,21 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0CTauPVCosAlphaE", &B0CTauPVCosAlphaE, &b_B0CTauPVCosAlphaE);
    fChain->SetBranchAddress("B0LxyPVCosAlpha", &B0LxyPVCosAlpha, &b_B0LxyPVCosAlpha);
    // 3D
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_X", &PriVtx_B0CosAlpha3D_X, &b_PriVtx_B0CosAlpha3D_X);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Y", &PriVtx_B0CosAlpha3D_Y, &b_PriVtx_B0CosAlpha3D_Y);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Z", &PriVtx_B0CosAlpha3D_Z, &b_PriVtx_B0CosAlpha3D_Z);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EX", &PriVtx_B0CosAlpha3D_EX, &b_PriVtx_B0CosAlpha3D_EX);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EY", &PriVtx_B0CosAlpha3D_EY, &b_PriVtx_B0CosAlpha3D_EY);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EZ", &PriVtx_B0CosAlpha3D_EZ, &b_PriVtx_B0CosAlpha3D_EZ);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Chi2", &PriVtx_B0CosAlpha3D_Chi2, &b_PriVtx_B0CosAlpha3D_Chi2);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_CL", &PriVtx_B0CosAlpha3D_CL, &b_PriVtx_B0CosAlpha3D_CL);
-   fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_tracks", &PriVtx_B0CosAlpha3D_tracks, &b_PriVtx_B0CosAlpha3D_tracks);
-   fChain->SetBranchAddress("B0CosAlphaPVCosAlpha3D", &B0CosAlphaPVCosAlpha3D, &b_B0CosAlphaPVCosAlpha3D);
-   fChain->SetBranchAddress("B0CTauPVCosAlpha3D", &B0CTauPVCosAlpha3D, &b_B0CTauPVCosAlpha3D);
-   fChain->SetBranchAddress("B0CTauPVCosAlpha3DE", &B0CTauPVCosAlpha3DE, &b_B0CTauPVCosAlpha3DE);
-   fChain->SetBranchAddress("B0LxyPVCosAlpha3D", &B0LxyPVCosAlpha3D, &b_B0LxyPVCosAlpha3D);
+   if (!oldNtuple) {
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_X", &PriVtx_B0CosAlpha3D_X, &b_PriVtx_B0CosAlpha3D_X);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Y", &PriVtx_B0CosAlpha3D_Y, &b_PriVtx_B0CosAlpha3D_Y);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Z", &PriVtx_B0CosAlpha3D_Z, &b_PriVtx_B0CosAlpha3D_Z);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EX", &PriVtx_B0CosAlpha3D_EX, &b_PriVtx_B0CosAlpha3D_EX);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EY", &PriVtx_B0CosAlpha3D_EY, &b_PriVtx_B0CosAlpha3D_EY);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_EZ", &PriVtx_B0CosAlpha3D_EZ, &b_PriVtx_B0CosAlpha3D_EZ);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_Chi2", &PriVtx_B0CosAlpha3D_Chi2, &b_PriVtx_B0CosAlpha3D_Chi2);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_CL", &PriVtx_B0CosAlpha3D_CL, &b_PriVtx_B0CosAlpha3D_CL);
+     fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_tracks", &PriVtx_B0CosAlpha3D_tracks, &b_PriVtx_B0CosAlpha3D_tracks);
+     fChain->SetBranchAddress("B0CosAlphaPVCosAlpha3D", &B0CosAlphaPVCosAlpha3D, &b_B0CosAlphaPVCosAlpha3D);
+     fChain->SetBranchAddress("B0CTauPVCosAlpha3D", &B0CTauPVCosAlpha3D, &b_B0CTauPVCosAlpha3D);
+     fChain->SetBranchAddress("B0CTauPVCosAlpha3DE", &B0CTauPVCosAlpha3DE, &b_B0CTauPVCosAlpha3DE);
+     fChain->SetBranchAddress("B0LxyPVCosAlpha3D", &B0LxyPVCosAlpha3D, &b_B0LxyPVCosAlpha3D);
+   }
    //
    if (priVtxsInfo) {
      fChain->SetBranchAddress("B0LessPV_tracksPtSq", &B0LessPV_tracksPtSq, &b_B0LessPV_tracksPtSq);
@@ -1306,6 +1209,25 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("kaon_dedxErr_byHits", &kaon_dedxErr_byHits, &b_kaon_dedxErr_byHits);
      fChain->SetBranchAddress("kaon_saturMeas_byHits", &kaon_saturMeas_byHits, &b_kaon_saturMeas_byHits);
      fChain->SetBranchAddress("kaon_Meas_byHits", &kaon_Meas_byHits, &b_kaon_Meas_byHits);
+   }
+   if (B0massConstr) {
+     // B0 mass constrint
+     fChain->SetBranchAddress("Muon1Px_MuMuPiK_B0Mass", &Muon1Px_MuMuPiK_B0Mass, &b_Muon1Px_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon1Py_MuMuPiK_B0Mass", &Muon1Py_MuMuPiK_B0Mass, &b_Muon1Py_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon1Pz_MuMuPiK_B0Mass", &Muon1Pz_MuMuPiK_B0Mass, &b_Muon1Pz_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon1E_MuMuPiK_B0Mass", &Muon1E_MuMuPiK_B0Mass, &b_Muon1E_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon2Px_MuMuPiK_B0Mass", &Muon2Px_MuMuPiK_B0Mass, &b_Muon2Px_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon2Py_MuMuPiK_B0Mass", &Muon2Py_MuMuPiK_B0Mass, &b_Muon2Py_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon2Pz_MuMuPiK_B0Mass", &Muon2Pz_MuMuPiK_B0Mass, &b_Muon2Pz_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("Muon2E_MuMuPiK_B0Mass", &Muon2E_MuMuPiK_B0Mass, &b_Muon2E_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("PionPx_MuMuPiK_B0Mass", &PionPx_MuMuPiK_B0Mass, &b_PionPx_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("PionPy_MuMuPiK_B0Mass", &PionPy_MuMuPiK_B0Mass, &b_PionPy_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("PionPz_MuMuPiK_B0Mass", &PionPz_MuMuPiK_B0Mass, &b_PionPz_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("PionE_MuMuPiK_B0Mass", &PionE_MuMuPiK_B0Mass, &b_PionE_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("KaonPx_MuMuPiK_B0Mass", &KaonPx_MuMuPiK_B0Mass, &b_KaonPx_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("KaonPy_MuMuPiK_B0Mass", &KaonPy_MuMuPiK_B0Mass, &b_KaonPy_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("KaonPz_MuMuPiK_B0Mass", &KaonPz_MuMuPiK_B0Mass, &b_KaonPz_MuMuPiK_B0Mass);
+     fChain->SetBranchAddress("KaonE_MuMuPiK_B0Mass", &KaonE_MuMuPiK_B0Mass, &b_KaonE_MuMuPiK_B0Mass);
    }
 }
 
