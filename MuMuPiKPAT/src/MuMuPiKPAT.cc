@@ -1314,7 +1314,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
 		    //////////////////// last cuts ////////////////////
-		    if ( Track1->p4().M() > 0.9  &&  Track2->p4().M() > 0.9)
+		    if ( Track1->p4().M() > 0.9  &&  Track2->p4().M() > 0.9) // for pentaquark
 		      if ( !(B0_ctau/B0_ctauErr > 2.8) || !(B0_cosAlpha > 0.8) )
 			continue ;
 

@@ -33,9 +33,11 @@ void b_peakFit() {
   TGaxis::SetMaxDigits(3) ;
 
   TString fileName = "26Jan_histos.root"; fileName = "HLT5_full.root"; fileName = "HLT5.root"; 
+  fileName = "Data_JPsi_2p0Sig_6p0to9p0SB.root";
   TFile *f = TFile::Open("../"+fileName);
 
   TString histName = "myPsiPKPiMassAltZoom"; histName = "B0Mass_1B0"; histName = "myPsiPKPiMassNairitSelAlt";
+  histName = "myMuMuKPiMassCutsSelAlt";
   TH1F* histB0 = (TH1F*) f->Get(histName) ;
   
   TCanvas *Bpeak_C = new TCanvas("Bpeak_C","Bpeak_C", 800, 600) ;  
@@ -57,16 +59,19 @@ void b_peakFit() {
   
   RooRealVar mean("m", "mean", meanval[0], meanval[1], meanval[2]) ;
   RooRealVar sigma1("#sigma_{1}", "sigma1", sigma1val[0], sigma1val[1], sigma1val[2]);
+  /*
   RooRealVar sigma2("#sigma_{2}", "sigma2", 0.02, 0.01, 0.2);
-  
-  //RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
-  //RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
-  //RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
-  //RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
-  //RooRealVar nSig1("N", "Number of 1^{st} signal", 1e+2, 1e+1, 3e+2);
-  //RooRealVar nSig2("N_{2}", "Number of 2^{nd} signal", 1e+5, 2e+3, 1e+7);
-
-  //RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), RooArgList(nSig1, nSig2)) ;
+  *//*
+  RooGaussian sig1PDF("sig1PDF", "Signal component 1", xVar, mean, sigma1);
+  RooGaussian sig2PDF("sig2PDF", "Signal component 2", xVar, mean, sigma2);
+    *//*
+  RooRealVar ratio("sig1frac", "fraction of component 1 in signal", 0.1, 0, 0.2);
+  RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), ratio);
+      *//*
+  RooRealVar nSig1("N", "Number of 1^{st} signal", 1e+2, 1e+1, 3e+2);
+  RooRealVar nSig2("N_{2}", "Number of 2^{nd} signal", 1e+5, 2e+3, 1e+7);
+  RooAddPdf sigPDF("sigPDF", "Signal component", RooArgList(sig1PDF, sig2PDF), RooArgList(nSig1, nSig2)) ;
+	*/
   RooGaussian sigPDF("sigPDF", "Signal component", xVar, mean, sigma1); sigma1.SetNameTitle("#sigma","sigma");
   
   RooRealVar nSig("N_{Sig}", "Number of signal candidates", 2.5e+3, 1e+2, 1e+5);
@@ -79,9 +84,9 @@ void b_peakFit() {
   //RooRealVar c1("c_{1}", "c1", -0.02, -10, 10);
   //RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1));  // with 5 sigma
   RooRealVar c2("c_{2}", "c2", -0.001, -10, 10);
-  RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2));
-  //RooRealVar c3("c_{3}", "c3", -0.001, -10, 10);
-  //RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2,c3));
+  //RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2));
+  RooRealVar c3("c_{3}", "c3", -0.001, -10, 10);
+  RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2,c3));
   //RooRealVar c4("c_{4}", "c4", -0.001, -10, 10);
   //RooChebychev bkgPDF("bkgPDF", "bkgPDF", xVar, RooArgSet(c1,c2,c3,c4));
   /* // not with Kai BF
@@ -111,8 +116,8 @@ void b_peakFit() {
   MuMuPiKHist->plotOn(xframe);
   totalPDF->plotOn(xframe);
   totalPDF->plotOn(xframe, Components(RooArgSet(sigPDF)), LineColor(kRed));
-  //totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
-  //totalPDF->plotOn(xframe, Components(RooArgSet(sigPDF)), LineColor(kRed));  // not with Kai BF 
+  //totalPDF->plotOn(xframe, Components(RooArgSet(sig1PDF)), LineColor(kMagenta));
+  //totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kRed));  // not with Kai BF 
   //totalPDF->plotOn(xframe, Components(RooArgSet(sig2PDF)), LineColor(kMagenta));
   //totalPDF->plotOn(xframe, Components(RooArgSet(bumpPDF)), LineColor(kGreen));  // not with Kai BF 
   totalPDF->plotOn(xframe, Components(RooArgSet(bkgPDF)), LineColor(kBlue), LineStyle(2));  // with Kai BF

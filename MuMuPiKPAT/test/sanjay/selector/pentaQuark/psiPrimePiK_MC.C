@@ -401,7 +401,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   }
   //
   // PV matching
-  priVtx_deltaZ = new TH1F("priVtx_deltaZ", "#Deltaz(standard PV, B^{0}_cos(#alpha) PV);#Deltaz", 300, 0, 30) ;
+  priVtx_deltaZ = new TH1F("hpriVtx_deltaZ", "#Deltaz(standard PV, B^{0}_cos(#alpha) PV);#Deltaz", 300, 0, 30) ;
   B0_pointingAngle_PVvsB0LessPV[0] = new TH2F("B0_cosAlpha_PVvsB0less_pT", "B^{0} cos(#alpha) wrt PV vs wrt B0LessPV (best #Sigma(p_{T}^{2}));B^{0} cos(#alpha) wrt PV;B^{0} cos(#alpha) wrt B^{0}LessPV", 1000, 0.995, 1., 1000, 0.995, 1.) ;
   B0_pointingAngle_PVvsB0LessPV[1] = new TH2F("B0_cosAlpha_PVvsB0less_cos", "B^{0} cos(#alpha) wrt PV vs wrt B0LessPV (best cos(#alpha));B^{0} cos(#alpha) wrt PV;B^{0} cos(#alpha) wrt B^{0}LessPV", 1000, 0.995, 1., 1000, 0.995, 1.) ; 
   z_PVvsB0LessPV[0] = new TH2F("z_PVvsB0less_pT", "z(PV) vs wrt z(B0LessPV) (best #Sigma(p_{T}^{2}));z(PV) [cm];z(B0LessPV) [cm]", 100,-25,25, 100,-25,25) ;
@@ -436,7 +436,7 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   exclMuMuKPiMassSel = new TH1F("exclMuMuKPiMassSel","MuMuKPiMass  AFTER selection", 220, 4.6, 6.8);
   hmyPsiPKPiMass_bothCombSel = new TH1F("myPsiPKPiMass_bothCombSel","myPsiPKPiMass both tracks combination after sel", 220, 4.6, 9.0); //check
   psi2SPiSqMass_vs_KPiSqMass_ABaseC = new TH2F("reco_psi2SPi_vs_KPi_dalitz","#psi'#pi^{-} vs K^{+}#pi^{-} reco;m^{2}(K^{+}#pi^{-});m^{2}(#psi'#pi^{-})", 45,0.2,3.8, 56,12.3,36.3) ;
-  hmyMuMuPiMass = new TH1F("myMuMuPiMass","pentaQuark;m(J/#psi#pi^{-}) [GeV]", 120,4.0,5.2) ;
+  hmyMuMuPiMass = new TH1F("hmyMuMuPiMass","pentaQuark;m(J/#psi#pi^{-}) [GeV]", 120,4.0,5.2) ;
   hmyKPiMass = new TH1F("myKPiMass","K*;m(K^{+}#pi^{-}) [GeV]", 110,1.4,2.5) ;
   hmyKPiMass_ex = new TH1F("myKPiMass_ex","K* exchanged;m(K^{+}#pi^{-}) [GeV]", 110,1.4,2.5) ;
   hmyKPiMass_sb = new TH1F("myKPiMass_sb","myKPiMass sidebands;m(K^{+}#pi^{-}) [GeV]", 200, 0., 2.) ;
@@ -4527,7 +4527,7 @@ void psiPrimePiK_MC::Terminate()
 
       name_TH.push_back( make_pair("myInclusiveMuMuMass_noTrigg","TH1F") );
       name_TH.push_back( make_pair("myInclusiveMuMuMass_HLT_8_Jpsi","TH1F") );
-      name_TH.push_back( make_pair("B0_Pt","TH1F") );
+      name_TH.push_back( make_pair("B0_pT","TH1F") );
       name_TH.push_back( make_pair("exclusiveMuMuKPiMass","TH1F") );
       name_TH.push_back( make_pair("myPsiPKPiMassBaseSelAlt","TH1F") );
       name_TH.push_back( make_pair("reco_psi2SPi_vs_KPi_dalitz","TH2F") );
@@ -4545,7 +4545,7 @@ void psiPrimePiK_MC::Terminate()
       name_TH.push_back( make_pair("kaonPt_vs_pionPt_1B0","TH2F") );
       name_TH.push_back( make_pair("dEdx_vs_p_KAndPiFromB0","TH2F") );
       name_TH.push_back( make_pair("dEdx_vs_pT_KAndPiFromB0","TH2F") );
-      name_TH.push_back( make_pair("myMuMuPiMass","TH1F") );
+      name_TH.push_back( make_pair("hmyMuMuPiMass","TH1F") );
       name_TH.push_back( make_pair("myKPiMass","TH1F") );
       name_TH.push_back( make_pair("myKPiMass_ex","TH1F") );
       name_TH.push_back( make_pair("Armenteros_Kstar","TH2F") );
@@ -4599,7 +4599,7 @@ void psiPrimePiK_MC::Terminate()
 	else if ( name_TH[i].second.EqualTo("TH2F") )
 	  if ( (histo2F = (TH2F*) fOut->Get( name_TH[i].first.Data() )) ) {
 	    histo2F->Draw() ;
-	    histo1I->Draw("colz") ; gPad->SetLogy(0) ;
+	    histo2F->Draw("colz") ; gPad->SetLogy(0) ;
 	    gPad->SaveAs( TString::Format("plots/%s.png", histo2F->GetName()) );
 	  } else Warning("Terminate", TString::Format("histogram \"%s\" not found", name_TH[i].first.Data() )) ;
 	else Warning("Terminate", "histogram type is neither \"TH1I\" nor \"TH1F\" nor \"TH2F\"!") ;

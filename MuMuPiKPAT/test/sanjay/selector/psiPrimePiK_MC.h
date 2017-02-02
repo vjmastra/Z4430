@@ -16,7 +16,7 @@
 #include <TSystem.h>
 #include <TTree.h>
 #include <TBranch.h>
-#include <TCint.h>
+//#include <TCint.h> // not found with ROOT = 6.06.08
 #include <TRandom.h>
 #include <TMath.h>
 #include <TDirectory.h>
@@ -215,6 +215,7 @@ public :
    vector<float>   *kaon_dedx_byHits, *kaon_dedxErr_byHits;
    vector<int>     *kaon_saturMeas_byHits, *kaon_Meas_byHits;
    // B0 mass constraint
+   vector<bool>    *validB0MassConstr;
    vector<float>   *Muon1Px_MuMuPiK_B0Mass, *Muon1Py_MuMuPiK_B0Mass, *Muon1Pz_MuMuPiK_B0Mass, *Muon1E_MuMuPiK_B0Mass;
    vector<float>   *Muon2Px_MuMuPiK_B0Mass, *Muon2Py_MuMuPiK_B0Mass, *Muon2Pz_MuMuPiK_B0Mass, *Muon2E_MuMuPiK_B0Mass;
    vector<float>   *PionPx_MuMuPiK_B0Mass, *PionPy_MuMuPiK_B0Mass, *PionPz_MuMuPiK_B0Mass, *PionE_MuMuPiK_B0Mass;
@@ -358,6 +359,7 @@ public :
    TBranch        *b_kaon_nsigdedx, *b_kaon_dedx, *b_kaon_dedxMass, *b_kaon_theo, *b_kaon_sigma;   //!
    TBranch        *b_kaon_dedx_byHits, *b_kaon_dedxErr_byHits, *b_kaon_saturMeas_byHits, *b_kaon_Meas_byHits;   //!
    // B0 mass ocnstraint
+   TBranch        *b_validB0MassConstr;
    TBranch        *b_Muon1Px_MuMuPiK_B0Mass, *b_Muon1Py_MuMuPiK_B0Mass, *b_Muon1Pz_MuMuPiK_B0Mass, *b_Muon1E_MuMuPiK_B0Mass;   //!
    TBranch        *b_Muon2Px_MuMuPiK_B0Mass, *b_Muon2Py_MuMuPiK_B0Mass, *b_Muon2Pz_MuMuPiK_B0Mass, *b_Muon2E_MuMuPiK_B0Mass;   //!
    TBranch        *b_PionPx_MuMuPiK_B0Mass, *b_PionPy_MuMuPiK_B0Mass, *b_PionPz_MuMuPiK_B0Mass, *b_PionE_MuMuPiK_B0Mass;   //!
@@ -420,12 +422,14 @@ public :
    ofstream myoutfileB("DatasetB_KaonTrackRefit.txt"); // in.C
    */
 
+   TSelectorList* fOutput_public; // Public list of objects created during processing
+
    ///////////// Histograms //////////////////
    // 2011
    vector< vector<TH1F*> > myInclusiveMuMuMass_2011_HLT ;
    //
    // 2012
-   TH1F* myInclusiveMuMuMass, *myInclusiveMuMuMass_noTrigg;
+   TH1F* myInclusiveMuMuMass_noTrigg, *myInclusiveMuMuMass_vtxCut;
    //
    // HLT0_v*
    TH1F* myInclusiveMuMuMass_HLT_0_v3, *myInclusiveMuMuMass_HLT_0_v4, *myInclusiveMuMuMass_HLT_0_v5, *myInclusiveMuMuMass_HLT_0_v6 ;
@@ -477,12 +481,21 @@ public :
    TH1F* MuMuKMass_Nairit, *MuMuKMass_sb, *trk_pT_test_h ;
    // K*
    TH1F* myExclusiveMuMuKPiMass ;
-   TH1F* trk_dxy, *trk_dz, *hmyPsiPMassSel, *hPsiPrimefromBMassSel, *hmyPsiPKPiMassAlt, *hmyPsiPKPiMassAltZoom, *hmyPsiPKPiMassZoom, *hmyPsiPKPiMassNairitSelAlt ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_NairitPeak, *psi2SPiSqMass_vs_KPiSqMass_NairitSb ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_AC ;
+   TH1F* trk_dxy, *trk_dz, *hmyPsiPMassSel, *hPsiPrimefromBMassSel, *hmyPsiPKPiMassAlt, *hmyPsiPKPiMassAltZoom, *hmyPsiPKPiMassZoom, *hmyPsiPKPiMassZoom_B0MassC, *hmyPsiPKPiMassCutsSelAlt, *hmyPsiPPiPiMassCutsSelAlt ;
+   TH2F* psi2SPiMassSq_vs_KPiMassSq_CutsPeak, *psi2SPiMassSq_vs_KPiMassSq_CutsSb ;
+   TH2F* psi2SPiMassSq_vs_KPiMassSq_AC, *psi2SPiMassSq_vs_KPiMassSq_B0constr_AC ;
    // MVA
-   TH1F* hPionPt_fromB0peak, *hKaonPt_fromB0peak, *hPionPtPlusKaonPt_fromB0peak, *hLowerPt_fromB0peak, *hHigherPt_fromB0peak, *hPsiDeltaRHigherPtTrk_fromB0peak, *hPsiDeltaRLowerPtTrk_fromB0peak, *hPionDeltaRKaon_fromB0peak, *hPsiDeltaRKPi_fromB0peak, *KPiMass_fromB0peak, *hB0Pt_fromB0peak, *hB0VtxCL_fromB0peak, *B0_PVCTau_fromB0peak, *B0_BSCTau_fromB0peak, *B0_pointingAnglePV_fromB0peak;
+   TH1F* hPionPt_fromB0peak, *hKaonPt_fromB0peak, *hPionPtPlusKaonPt_fromB0peak, *hLowerPt_fromB0peak, *hHigherPt_fromB0peak, *hPsiDeltaRHigherPtTrk_fromB0peak, *hPsiDeltaRLowerPtTrk_fromB0peak, *hPionDeltaRKaon_fromB0peak, *hPsiDeltaRKPi_fromB0peak, *KPiMass_fromB0peak, *hB0Pt_fromB0peak, *hB0VtxCL_fromB0peak, *B0_PVCTau_fromB0peak, *B0_BSCTau_fromB0peak, *B0_pointingAnglePV_fromB0peak, *hmyKKMass_fromB0peak, *hmyPiPiMass_fromB0peak, *hmyPsiPPiPiMass_fromB0peak;
+   TH2F* hmyPiPiMass_vs_PiKMass_fromB0peak, *hmyKKMass_vs_PiKMass_fromB0peak, *hmyPKMass_vs_PiKMass_fromB0peak, *hmyPKMass_vs_PiPiMass_fromB0peak, *hmyPKMass_vs_KKMass_fromB0peak, *hmyPiPMass_vs_PiKMass_fromB0peak, *hmyPiPMass_vs_PiPiMass_fromB0peak, *hmyPiPMass_vs_KKMass_fromB0peak;
    TH1F* hPionPt_fromB0sb, *hKaonPt_fromB0sb, *hPionPtPlusKaonPt_fromB0sb, *hLowerPt_fromB0sb, *hHigherPt_fromB0sb, *hPsiDeltaRHigherPtTrk_fromB0sb, *hPsiDeltaRLowerPtTrk_fromB0sb, *hPionDeltaRKaon_fromB0sb, *hPsiDeltaRKPi_fromB0sb, *KPiMass_fromB0sb, *hB0Pt_fromB0sb, *hB0VtxCL_fromB0sb, *B0_PVCTau_fromB0sb, *B0_BSCTau_fromB0sb, *B0_pointingAnglePV_fromB0sb;
+   TH2F* psi2SPiMassSq_vs_KPiMassSq_sbs, *psi2SPiMassSq_vs_KPiMassSq_leftSb, *psi2SPiMassSq_vs_KPiMassSq_rightSb;
+   TH2F* psi2SPiMass_vs_KPiMass_sbs, *psi2SPiMass_vs_KPiMass_leftSb, *psi2SPiMass_vs_KPiMass_rightSb;
+   TH2F* psi2SKMass_vs_KPiMass_sbs, *psi2SKMass_vs_KPiMass_leftSb, *psi2SKMass_vs_KPiMass_rightSb;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_KPiMass_sbs, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMass_leftSb, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMass_rightSb;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq_sbs, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq_leftSb, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq_rightSb;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_psiPiMass_sbs, *cos_Kstar_helicityAngle_fromMasses_vs_psiPiMass_leftSb, *cos_Kstar_helicityAngle_fromMasses_vs_psiPiMass_rightSb;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_psiPiMassSq_sbs, *cos_Kstar_helicityAngle_fromMasses_vs_psiPiMassSq_leftSb, *cos_Kstar_helicityAngle_fromMasses_vs_psiPiMassSq_rightSb;
+   TH2F* planesAngle_vs_cos_psi2S_helicityAngle_sbs, *planesAngle_vs_cos_psi2S_helicityAngle_leftSb, *planesAngle_vs_cos_psi2S_helicityAngle_rightSb ;
    // tight cuts
    vector <Float_t> piPt_B0, KPt_B0, vtxCL_B0, cTau_B0 ;
    vector <TH1F*> myMuMuKPiMass_piPt, myMuMuKPiMass_KPt, myMuMuKPiMass_vtxCL, myMuMuKPiMass_cTau ;
@@ -505,14 +518,34 @@ public :
    TH1F* hmyPsiPKPiMass_deltaRtest, *hmyPsiPKPiMass_B0cTautest ;
    TH1F* hmyPsiPKPiMassBaseSelAlt ;
    TH1F* hmyPsiPKPiMass, *hmyPsiPKPiMass_KPiExchanged, *hmyPsiPKPiMass_bothComb ;
-   TH1F* hmyPiPiMass, *hmyPiKMass, *hmyKKMass, *hmyPsiPPiPiMass, *hmyPsiPPiKMass, *hmyPsiPPiKMass_zoom, *hmyPsiPKKMass, *hmyPsiPPhiMass, *hmyPsiPPiKMass_fromBs, *hmyPsiPPiKMass_fromBs_zoom ; 
-   TH2F* hmyPiPiMass_vs_KKMass, *hmyPsiPPiPiMass_vs_PiPiMass, *hmyPsiPKKMass_vs_KKMass ;
+   // Reflections
+   TH1F* hmyPiKMass, *hmyPiKMass_leftSb, *hmyPiKMass_rightSb, *hmyPsiPPiKMass, *hmyPsiPPiKMass_zoom;
+   TH1F* hmyPiPiMass, *hmyPiPiMass_leftSb, *hmyPiPiMass_rightSb, *hmyPsiPPiPiMass, *hmyPsiPPiPiMass_rightSb;
+   TH2F* hmyPiPiMass_vs_KKMass, *hmyPiPiMass_vs_KKMass_aV, *hmyPsiPPiPiMass_vs_PiPiMass, *hmyPsiPKKMass_vs_KKMass ;
+   // kaon -> pion
+   TH2F* hmyPiPiMass_vs_PiKMass, *hmyPiPiMass_vs_PiKMass_aV, *hmyPiPiMass_vs_PiKMass_leftSb, *hmyPiPiMass_vs_PiKMass_rightSb;
+   // pion -> kaon
+   TH2F* hmyKKMass_vs_PiKMass, *hmyKKMass_vs_PiKMass_aV, *hmyKKMass_vs_PiKMass_leftSb, *hmyKKMass_vs_PiKMass_rightSb;
+   // pion -> proton
+   TH2F* hmyPKMass_vs_PiKMass, *hmyPKMass_vs_PiKMass_aV, *hmyPKMass_vs_PiKMass_leftSb, *hmyPKMass_vs_PiKMass_rightSb;
+   TH2F* hmyPKMass_vs_PiPiMass, *hmyPKMass_vs_PiPiMass_aV, *hmyPKMass_vs_PiPiMass_leftSb, *hmyPKMass_vs_PiPiMass_rightSb;
+   TH2F* hmyPKMass_vs_KKMass, *hmyPKMass_vs_KKMass_aV, *hmyPKMass_vs_KKMass_leftSb, *hmyPKMass_vs_KKMass_rightSb;
+   // kaon -> proton
+   TH2F* hmyPiPMass_vs_PiKMass, *hmyPiPMass_vs_PiKMass_aV, *hmyPiPMass_vs_PiKMass_leftSb, *hmyPiPMass_vs_PiKMass_rightSb;
+   TH2F* hmyPiPMass_vs_PiPiMass, *hmyPiPMass_vs_PiPiMass_aV, *hmyPiPMass_vs_PiPiMass_leftSb, *hmyPiPMass_vs_PiPiMass_rightSb;
+   TH2F* hmyPiPMass_vs_KKMass, *hmyPiPMass_vs_KKMass_aV, *hmyPiPMass_vs_KKMass_leftSb, *hmyPiPMass_vs_KKMass_rightSb;  
+   // Bs
+   TH1F* hmyKKMass, *hmyKKMass_leftSb, *hmyKKMass_rightSb, *hmyPsiPKKMass, *hmyPsiPPhiMass, *hmyPsiPF0Mass, *hmyPsiPPiKMass_fromF0, *hmyPsiPPiPiMass_fromF0, *hmyPsiPPiKMass_fromBs, *hmyPsiPPiKMass_fromBs_zoom ;
+   TH2F* kaonP_vs_pionP_fromF0 ;
+   // Lambda_b
+   TH1F* hmyPKMass, *hmyPKMass_fromB0, *hmyPsiPPKMass, *hmyPsiPPKMass_fromB0; 
+   //
    TH1F* hB0VtxCL, *hB0Pt ;
    TH1F* hB0CTauPVSignif, *hB0CTauPVXSignif ;
    TH1F* hPsiPrimefromBMass, *hPsiPrime_fromB_Pt, *hmyPsiP_Pt ;
    TH1F* hPionfromB0pt, *hKaonfromB0pt, *hPionFromKstar_pT, *hKaonFromKstar_pT, *hPionFromKstar_ex_pT, *hKaonFromKstar_ex_pT, *hPionFromKstar_sb_pT, *hKaonFromKstar_sb_pT ;
    TH1F* myExclMuMuKPiMassSel, *hmyPsiPKPiMass_bothCombSel ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_ABaseC, *psi2SPiSqMass_vs_KPiSqMass_B0constr_ABaseC ;
+   TH2F* psi2SPiMassSq_vs_KPiMassSq_ABaseC, *psi2SPiMassSq_vs_KPiMassSq_B0constr_ABaseC ;
    TH1F* hmyPsiPKPiMass_fromKstar, *hmyPsiPKPiMass_fromKstar_ex_noRange, *hmyPsiPKPiMass_fromKstar_diff, *hmyPsiPKPiMass_fromKstar_ex, *hmyPsiPKPiMass_fromKstar_sb ;
    TH1F* hmyKPiMass, *hmyKPiMass_ex, *hmyKPiMass_KpTcut, *hmyKPiMass_ex_KpTcut, *hmyKPiMass_sb;
    TH1F* hmyKPiMass_KpTcut_tightTr, *hmyKPiMass_ex_KpTcut_tightTr, *hmyKPiMass_KpTcut_HP, *hmyKPiMass_ex_KpTcut_HP ;
@@ -534,9 +567,10 @@ public :
    //
    // selection varables
    // Z- variables
-   TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0AC_signalWin_h, *nB0AC_purityWin_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
-   TH1F* hB0Mass_1B0, *hB0Mass_1B0matched[2][2], *hB0Mass_noTwins_noSignalWinNotTwins ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_1B0[2], *psi2SPiSqMass_vs_KPiSqMass_B0constr_1B0[2] ;
+   TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0AHC_h, *nB0AC_signalWin_h, *nB0AC_purityWin_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
+   TH1F* hB0Mass_1B0, *hB0Mass_1B0_hardCuts, *hB0Mass_1B0matched[2][2], *hB0Mass_noTwins_noSignalWinNotTwins ;
+   TH2F* psi2SPiMassSq_vs_KPiMassSq_1B0[2], *psi2SPiMassSq_vs_KPiMassSq_B0constr_1B0[2] ;
+   TH2F* psi2SPiMass_vs_KPiMass_1B0[2], *psi2SPiMass_vs_KPiMass_B0constr_1B0[2] ;
    TH1F* cos_Kstar_helicityAngle;
    TH1F* psi2S_helicityAngle, *cos_psi2S_helicityAngle, *cos_psi2S_helicityAngleLabB0peak, *cos_psi2S_helicityAngleLabB0sb, *cos_psi2S_helicityAngle_rot, *planesAngle ;
    TH2F* cosKstar_vs_cosPsi2S_helicityAngles, *cosKstar_vs_cosPsi2S_helicityAngles_BT_gen, *planesAngle_vs_cos_psi2S_helicityAngle, *planesAngle_vs_cos_psi2S_helicityAngle_BT_gen;
@@ -545,9 +579,13 @@ public :
    TH1F* B0_gen_p_h, *B0_gen_pT_h, *psi2S_gen_p_h, *psi2S_gen_pT_h, *K_gen_p_h, *K_gen_pT_h, *pi_gen_p_h, *pi_gen_pT_h ;
    TH1F* hMCDeltaRPi_2B0, *hMCDeltaRK_2B0 ;
    TH1F* B0_gen_mass_h ;
-   TH2F* psi2SPiSqMass_vs_KPiSqMass_gen, *psi2SPiSqMass_vs_KPiSqMass_BT_gen, *KPiSqMass_vs_psi2SKSqMass_BT_gen, *piCh_vs_KCh_gen ;
+   TH2F* psi2SPiMassSq_vs_KPiMassSq_gen, *psi2SPiMassSq_vs_KPiMassSq_BT_gen, *psi2SPiMass_vs_KPiMass_BT_gen, *KPiMassSq_vs_psi2SKMassSq_BT_gen, *piCh_vs_KCh_gen ;
+   //RooDataSet* psi2SPiMassSq_vs_KPiMassSq_BT_gen_dataSet;
    TH2F* psi2S_vs_mu_pT;
    TH1F* cos_Kstar_helicityAngle_BT_gen, *cos_Kstar_helicityAngle_BT_gen_fromMasses;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_KPiMass_BT_gen, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMass;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq_BT_gen, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq;
+   TH2F* cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq_BT_gen_varBins, *cos_Kstar_helicityAngle_fromMasses_vs_KPiMassSq_varBins;
    TH1F* psi2S_helicityAngle_BT_gen, *cos_psi2S_helicityAngle_BT_gen, *cos_psi2S_helicityAngle_BT_gen_bias, *cos_psi2S_helicityAngle_BT_gen_rot, *planesAngle_BT_gen, *planesAngle_BT_gen_bias ;
    TH2F* cos_psi2S_helicityAngle_vs_psi2SPiMass_BT_gen, *cos_psi2S_helicityAngle_vs_KPiMass_BT_gen, *cos_psi2S_helicityAngle_BT_gen_rotVSnotRot, *cos_psi2S_helicityAngle_rotVSnotRot ;
    TH2F* B0CosAlpha_2Dvs3D[4] ;
@@ -608,6 +646,7 @@ public :
    TH1F* mu1_Dxy_h, *mu2_Dxy_h ;
    TH1F* mu1_y_h, *mu2_y_h ;
    TH1F* mu1_pT_h, *mu2_pT_h, *mu1_pT_test_h, *mu2_pT_test_h ;
+   TH2F* mu1_vs_mu2_pT_h;
    TH1F* mu1_eta_test_h, *mu2_eta_test_h ;
    TH1F* mu1_DeltaR_mu2_h ; //, *mu2_DeltaR_mu1_h ;
    //TH2F* mu1_vs_mu2_pT_h ;
@@ -627,13 +666,13 @@ public :
    
    //////// CUT THRESHOLDS & CONSTANTS /////////////
    Int_t B0_Id, psi2S_Id, Kaon_Id, pion_Id, muon_Id ;
-   Double_t beam_energy, muon_mass, phi_mass, jpsi_mass, psi2S_mass, pionCh_mass, kaonCh_mass, Kstar0_mass, B0_mass;
+   Double_t beam_energy, muon_mass, pionCh_mass, proton_mass, kaonCh_mass, Kstar0_mass, phi_mass, jpsi_mass, psi2S_mass, B0_mass;
    Double_t mumu_mass;
    Float_t B0_massFit, B0_sigmaFit ;
    Float_t B0_signal, innerSB, outerSB;
    //Double_t Bplus_mass;
    //
-   Float_t phi_left, phi_right, Bs_left, Bs_right;
+   Float_t f0_left, f0_right, phi_left, phi_right, Bs_left, Bs_right;
 
    Float_t rapid_min, rapid_max, rapid_binSize ;  Int_t rapid_bins;
    Float_t psiPrimeMass_min, psiPrimeMass_max ;  Int_t psiPrimeMass_bins ; 
@@ -689,7 +728,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
     oldNtuple = kTRUE ;
 
   priVtxsInfo = kFALSE ; //priVtxsInfo = kTRUE ;
-  B0massConstr = kFALSE ; //B0massConstr = kTRUE ;
+  B0massConstr = kFALSE ; B0massConstr = kTRUE ;
 
   B0_Id = 511 ; psi2S_Id = 100443 ; Kaon_Id = 321; pion_Id = 211; muon_Id = 13;
   
@@ -700,12 +739,14 @@ void psiPrimePiK_MC::Init(TTree *tree)
   psi2S_mass = 3.686109 ;
   pionCh_mass = 0.13957018;
   kaonCh_mass = 0.493677 ;
+  proton_mass = 0.93827208;
   Kstar0_mass = 0.8961 ; // from evt.pdl 
   // Bplus_mass = 5.27925;
   B0_mass = 5.27958;
   //B0_massFit = 5.27967; B0_sigmaFit = 0.01167;
   B0_massFit = 5.2797; B0_sigmaFit = 0.012;
   //
+  f0_left = 0.98; f0_right = 0.99;
   phi_left = 1.01; phi_right = 1.03;
   Bs_left = 5.3; Bs_right = 5.43;
   /*
@@ -851,6 +892,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
    kaon_nsigdedx = 0; kaon_dedx = 0; kaon_dedxMass = 0; kaon_theo = 0; kaon_sigma = 0;
    kaon_dedx_byHits = 0; kaon_dedxErr_byHits = 0; kaon_saturMeas_byHits = 0; kaon_Meas_byHits = 0;
    // B0 mass constraint
+   validB0MassConstr = 0;
    Muon1Px_MuMuPiK_B0Mass = 0; Muon1Py_MuMuPiK_B0Mass = 0; Muon1Pz_MuMuPiK_B0Mass = 0; Muon1E_MuMuPiK_B0Mass = 0;
    Muon2Px_MuMuPiK_B0Mass = 0; Muon2Py_MuMuPiK_B0Mass = 0; Muon2Pz_MuMuPiK_B0Mass = 0; Muon2E_MuMuPiK_B0Mass = 0;
    PionPx_MuMuPiK_B0Mass = 0; PionPy_MuMuPiK_B0Mass = 0; PionPz_MuMuPiK_B0Mass = 0; PionE_MuMuPiK_B0Mass = 0;
@@ -1210,8 +1252,8 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("kaon_saturMeas_byHits", &kaon_saturMeas_byHits, &b_kaon_saturMeas_byHits);
      fChain->SetBranchAddress("kaon_Meas_byHits", &kaon_Meas_byHits, &b_kaon_Meas_byHits);
    }
-   if (B0massConstr) {
-     // B0 mass constrint
+   if (B0massConstr) { // B0 mass constrint
+     fChain->SetBranchAddress("B0MassConstOK", &validB0MassConstr, &b_validB0MassConstr);
      fChain->SetBranchAddress("Muon1Px_MuMuPiK_B0Mass", &Muon1Px_MuMuPiK_B0Mass, &b_Muon1Px_MuMuPiK_B0Mass);
      fChain->SetBranchAddress("Muon1Py_MuMuPiK_B0Mass", &Muon1Py_MuMuPiK_B0Mass, &b_Muon1Py_MuMuPiK_B0Mass);
      fChain->SetBranchAddress("Muon1Pz_MuMuPiK_B0Mass", &Muon1Pz_MuMuPiK_B0Mass, &b_Muon1Pz_MuMuPiK_B0Mass);

@@ -40,9 +40,9 @@
     } else {
       Bool_t dsA = kFALSE, dsB = kFALSE, dsC = kFALSE, dsD = kFALSE ;
       //dsA = kTRUE ;
-      //dsB = kTRUE ;
+      dsB = kTRUE ;
       //dsC = kTRUE ;
-      dsD = kTRUE ;
+      //dsD = kTRUE ;
       //
       // dataset A (288886 events)
       if (dsA) {
@@ -66,12 +66,18 @@
 	  dataset->Add("/cmshome/pompili/MuOnia-2013/inclusive_search/PsiPrimePi/kai-rootuples-october2013/mynewntuple/reduced2012B_Job6.root");
 	*/
 	// on /lustre
-	dataset->Add("/lustre/cms/store/user/lecriste/merged-june2014/MuOniaRun2012B_13Jul_JPsiPiPiPAT-datasetB.root");    
+	//dataset->Add("/lustre/cms/store/user/lecriste/merged-june2014/MuOniaRun2012B_13Jul_JPsiPiPiPAT-datasetB.root");    
 	//
 	//dataset->Add("/lustre/cms/store/user/lecriste/full_datasetB/MuOniaRun2012B_13Jul_JPsiPiPiPAT_ntpl_1-499.root");
 	//dataset->Add("/lustre/cms/store/user/lecriste/full_datasetB_2/MuOniaRun2012B_13Jul_JPsiPiPiPAT-datasetB_2.root");
 	// on /cmshome
 	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/rootuples/june2014/MuOniaRun2012B_13Jul_JPsiPiPiPAT-datasetB.root");
+	//
+	//dataset->Add("/lustre/cms/store/user/lecriste/MuOniaParked/crab_B0toMuMuPP_datasetB/150731_090830/MuOniaRun2012B_25Apr_MuMuPiPiPAT_ntpl.root");
+	// on /cmshome
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/pentaQuark/MuOniaRun2012B_25Apr_MuMuPiPiPAT_ntpl.root");
+	dataset->SetDirectory("/mkcands");
+	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_B0toMuMuPP_datasetB_withJpsiInclTrigg_nB0/151022_072336/MuOniaRun2012B_25Apr_MuMuPPbarPAT_ntpl_0004.root");
       }
       //
       // dataset C
@@ -96,7 +102,13 @@
 	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/CMSSW_5_3_7_patch5/src/UserCode/PsiPrimePiKPAT/test/rootuples/june2014/MuOniaRun2012C_13Jul_JPsiPiPiPAT_ntpl_3074.root");
 	// with J/psi (no J/psi triggers) 
 	//dataset->Add("/lustre/cms/store/user/lecriste/april2015/MuOniaParked/crab_dataset_C/150414_092734/BdToPsiKpi_18Mar_MuMuPiKPAT.root");
-	dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/pentaQuark/BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/pentaQuark/BdToPsiKpi_18Mar_MuMuPiKPAT.root");
+	//
+	dataset->SetDirectory("/mkcands");
+	//dataset->Add("/lustre/cms/store/user/lecriste/MuOniaParked/crab_B0toMuMuPP_datasetC/150810_163405/MuOniaRun2012C_25Apr_MuMuPiPiPAT_ntpl.root");
+	//dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_B0toMuMuPP_datasetC_withJpsiInclTrigg_nB0/151014_074338/MuOniaRun2012C_25Apr_MuMuPPbarPAT.root");
+	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_B0toMuMuPP_datasetC_withJpsiInclTrigg_nB0/151014_074338/MuOniaRun2012C_25Apr_MuMuPPbarPAT_ntpl_0003.root");
+	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_B0toMuMuPP_datasetC_withJpsiInclTrigg_nB0/151014_074338/MuOniaRun2012C_25Apr_MuMuPPbarPAT_ntpl_0004.root");
       }
       //
       // dataset D
@@ -123,6 +135,7 @@
 	//dataset->SetDirectory("/mkcands");
 	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/pentaQuark/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_131.root");
 	//dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/sanjay/selector/pentaQuark/MuOniaRun2012D_25Apr_MuMuPiPiPAT_first10files.root");
+	/*
 	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_psi1SokAnd2S_dataset_D/150719_101027/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_0000.root");
 	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_psi1SokAnd2S_dataset_D/150719_101027/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_0001.root");
 	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_psi1SokAnd2S_dataset_D/150719_101027/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_0002.root");
@@ -141,6 +154,11 @@
 	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_psi1SokAnd2S_dataset_D/150719_101027/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_0006_1.root");
 	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_psi1SokAnd2S_dataset_D/150719_101027/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_0007_1.root");
 	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_psi1SokAnd2S_dataset_D/150719_101027/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_0008_1.root");
+	*/
+	dataset->SetDirectory("/mkcands");
+	//dataset->Add("/lustre/cms/store/user/lecriste/MuOniaParked/crab_B0toMuMuPP_datasetD/150810_164500/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl.root");
+	//dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_B0toMuMuPP_datasetD_withJpsiInclTrigg_nB0/151014_073456/MuOniaRun2012D_25Apr_MuMuPPbarPAT.root");
+	dataset->Add("/lustre/cms/store/user/lecriste/pentaQuark/MuOniaParked/crab_B0toMuMuPP_datasetD_withJpsiInclTrigg_nB0/151014_073456/MuOniaRun2012D_25Apr_MuMuPPbarPAT_ntpl_0006.root");
       }
       /////////////////////////////////////////////////////////////////////////
       // test

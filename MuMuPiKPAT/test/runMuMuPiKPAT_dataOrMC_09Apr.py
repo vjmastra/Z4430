@@ -15,19 +15,19 @@ process.MessageLogger.suppressWarning = cms.untracked.vstring( "mkcands" )
 
 MC = False
 MC = True
-noPtEtaCut = False
-#noPtEtaCut = True
+noPtEtaCut = False # this neds to be fixed
+noPtEtaCut = True
 #
 doReco = True
 #doReco = False
 doGen = True
-#doGen = False
+doGen = False
 
 if MC:
         #official = False
         official = True
-	#genericMC = False
-	genericMC = True
+	genericMC = False
+	#genericMC = True
 
 BdId    = 511 # B0 (=anti-B0)
 BsId    = 531

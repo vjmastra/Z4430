@@ -14,9 +14,9 @@
     // 2011
     //
     // 2012
-    Bool_t MC = kFALSE; MC = kTRUE;
+    Bool_t MC = kFALSE; //MC = kTRUE;
     Bool_t official = kFALSE; official = kTRUE;
-    Bool_t noPtEtaCuts = kFALSE; //noPtEtaCuts = kTRUE; 
+    Bool_t noPtEtaCuts = kFALSE; noPtEtaCuts = kTRUE; 
     Bool_t genericMC = kFALSE; //genericMC = kTRUE;
 
     TString psi_nS = "psi2S"; psi_nS = "JPsi";
@@ -38,8 +38,8 @@
 	  //dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BuSVSToJpsiK_18Mar_MuMuPiKPAT_ntpl.root");
 	  // K*
 	  //dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BdToJpsiKstar_1_892_18Mar_MuMuPiKPAT_ntpl_1M.root");
-	  //dataset->Add("/lustrehome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BdToJpsiKstar_1_892_18Mar_MuMuPiKPAT_ntpl_1M.root");
-	  dataset->Add("/lustrehome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BdToJpsiKstar_2_1430_18Mar_MuMuPiKPAT_ntpl.root");
+	  dataset->Add("/lustrehome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BdToJpsiKstar_1_892_18Mar_MuMuPiKPAT_ntpl_1M.root");
+	  //dataset->Add("/lustrehome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BdToJpsiKstar_2_1430_18Mar_MuMuPiKPAT_ntpl.root");
 	  // pentaQuark
 	  //dataset->Add("/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/test/BdToJpsiPPbar_18Mar_MuMuPPbarPAT_ntpl_10k.root");
 	  // B0 mass constraint
@@ -200,26 +200,36 @@
 	//dataset->Add("/cmshome/pompili/for-nairit-new/merged_MuOniaRun2012C_13Jul_JPsiPiPiPAT-datasetA_just9_random_files.root");
 	/////////////////////////////////////////////////////////////////////////
       } else if ( psi_nS.EqualTo("JPsi") ) {
-	TString path = "/lustre/cms/store/user/nsur/Jpsi_8TeV_data_small_ntuples" ;
+	//TString path = "/lustre/cms/store/user/nsur/Jpsi_8TeV_data_small_ntuples" ;
+        dataset->SetDirectory("/mkcands");
 	if (dsA) {
-	  dataset->Add(path+"/MuOniaRun2012A_29Dec_MuMuKPiPAT_ntpl_merged_0000_1-818.root");
+	  //dataset->Add(path+"/MuOniaRun2012A_29Dec_MuMuKPiPAT_ntpl_merged_0000_1-818.root");
+dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012A_AOD_B0MassConstraint/161219_165928/MuOniaRun2012A_25Apr_MuMuPiPiPAT_ntpl.root");
+
 	}
 	if (dsB) {
-	  dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_1-500.root");
-	  dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_501-999.root");
-	  dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_1000-1999.root");
-	  dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_2000-2546.root");
+	  //dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_1-500.root");
+	  //dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_501-999.root");
+	  //dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_1000-1999.root");
+	  //dataset->Add(path+"/MuOniaRun2012B_08Oct_MuMuKPiPAT_ntpl_merged_0000_2000-2546.root");
+  dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012B_AOD_B0MassConstraint/161225_185430/MuOniaRun2012B_25Apr_MuMuPiPiPAT_ntpl.root");
+  dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012B_AOD_B0MassConstraint_resub_failedjobs/170119_205512/MuOniaRun2012B_25Apr_MuMuPiPiPAT_ntpl_rec.root");
 	}
 	if (dsC) {
-	  dataset->Add(path+"/MuOniaRun2012C_31Dec_MuMuKPiPAT_ntpl_merged_0000_1-999.root");
-	  dataset->Add(path+"/MuOniaRun2012C_29Dec_MuMuKPiPAT_ntpl_merged_0001_1000-1999.root");
-	  dataset->Add(path+"/MuOniaRun2012C_31Dec_MuMuKPiPAT_ntpl_merged_0002_2000-2015.root");
+	  //dataset->Add(path+"/MuOniaRun2012C_31Dec_MuMuKPiPAT_ntpl_merged_0000_1-999.root");
+	  //dataset->Add(path+"/MuOniaRun2012C_29Dec_MuMuKPiPAT_ntpl_merged_0001_1000-1999.root");
+	  //dataset->Add(path+"/MuOniaRun2012C_31Dec_MuMuKPiPAT_ntpl_merged_0002_2000-2015.root");
+  dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012C_AOD_B0MassConstraint/161225_185640/MuOniaRun2012C_25Apr_MuMuPiPiPAT_ntpl.root");
+  dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012C_AOD_B0MassConstraint_resub_failedjobs/170119_211248/MuOniaRun2012C_25Apr_MuMuPiPiPAT_ntpl_rec.root");
 	}
 	if (dsD) {
-	  dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0000_1-999.root");
-	  dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0001_1000-1999.root");
-	  dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0002_2000-2999.root");
-	  dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0003_3000-3718.root");
+	  //dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0000_1-999.root");
+	  //dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0001_1000-1999.root");
+	  //dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0002_2000-2999.root");
+	  //dataset->Add(path+"/MuOniaRun2012D_31Dec_MuMuKPiPAT_ntpl_merged_0003_3000-3718.root");
+//
+dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012D_AOD_B0MassConstraint/161225_190304/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl.root");
+dataset->Add("/lustre/cms/store/user/nsur/MuOnia/crab_psi1S_MuOnia2012D_AOD_B0MassConstraint_resub_failedjobs/170119_212851/MuOniaRun2012D_25Apr_MuMuPiPiPAT_ntpl_rec.root");
 	}
       }
 
