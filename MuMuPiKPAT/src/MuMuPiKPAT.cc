@@ -46,6 +46,7 @@
 #include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
 #include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 #include "RecoVertex/KinematicFit/interface/TwoTrackMassKinematicConstraint.h"
+#include "RecoVertex/KinematicFit/interface/MultiTrackMassKinematicConstraint.h"
 
 #include "RecoVertex/VertexTools/interface/VertexDistanceXY.h"
 
@@ -103,6 +104,7 @@ typedef math::Error<3>::type CovarianceMatrix;
 
 ParticleMass Jpsi_mass = 3.096916;
 ParticleMass psi2S_mass = 3.686093;
+ParticleMass B0_mass = 5.27961000; //5.27961
 
 //Setting insignificant mass sigma to avoid singularities in the covariance matrix.
 float small_sigma = 1.e-6;				
@@ -121,13 +123,15 @@ MuMuPiKPAT::MuMuPiKPAT(const edm::ParameterSet& iConfig) :
   ///// 
   doData( iConfig.getUntrackedParameter<bool>("DoReconstruction", true) ),
   doGEN( iConfig.getUntrackedParameter<bool>("DoMonteCarloTree", true) ),
-  MCParticle( iConfig.getUntrackedParameter<int>("MonteCarloParticleId", 20443) ), // 20443 X, 100443 Psi(2S), 9120443 X from B
+  MCParticle( iConfig.getUntrackedParameter<int>("MonteCarloParticleId", 443) ), // 20443 X, 100443 Psi(2S), 9120443 X from B
   MCExclusiveDecay( iConfig.getUntrackedParameter<bool>("MonteCarloExclusiveDecay", true) ),
   MCMother( iConfig.getUntrackedParameter<int>("MonteCarloMotherId", 511) ), // 511 B0 (=anti-B0), 531 Bs0
   MCDaughtersN( iConfig.getUntrackedParameter<int>("MonteCarloDaughtersN", 3) ), // 3 for exclusive B0->psi'KPi
   MCDaughterID( iConfig.getUntrackedParameter<std::vector<unsigned int>>("MonteCarloDaughterID") ),
   ////////
   doMuMuMassConst( iConfig.getUntrackedParameter<bool>("DoMuMuMassConstraint", true) ),
+  doMuMuKPiMassConst( iConfig.getUntrackedParameter<bool>("DoMuMuKPiMassConstraint", true) ), 
+  noMassConstFit( iConfig.getUntrackedParameter<bool>("NoMassConstFit", true) ), 
 
   skipJPsi(iConfig.getUntrackedParameter<bool>("SkipJPsi", false)),
   skipPsi2S(iConfig.getUntrackedParameter<bool>("SkipPsi2S", false)),
@@ -173,7 +177,7 @@ MuMuPiKPAT::MuMuPiKPAT(const edm::ParameterSet& iConfig) :
   trigRes(0), trigNames(0), L1TT(0), MatchTriggerNames(0), 
 
   nMu(0), nMuMu(0), nB0(0), 
-  nB0_pre0(0), nB0_pre1(0), nB0_pre2(0), nB0_pre3(0), nB0_pre4(0), nB0_pre5(0), nB0_pre6(0), nB0_pre7(0), nB0_pre8(0), nB0_pre9(0), nB0_pre10(0), nB0_pre11(0), nB0_pre12(0), nB0_pre13(0), nB0_pre14(0),
+  nB0_pre0(0), nB0_pre1(0), nB0_pre2(0), nB0_pre3(0), nB0_pre4(0), nB0_pre5(0), nB0_pre6(0), nB0_pre7(0), nB0_pre8(0), nB0_pre9(0), nB0_pre10(0), nB0_pre11(0), nB0_pre12(0), nB0_pre13(0), nB0_pre14(0),  nB0massconst_notvalid(0), 
   priVtx_n(0), priVtx_X(0), priVtx_Y(0), priVtx_Z(0), priVtx_XE(0), priVtx_YE(0), priVtx_ZE(0), priVtx_NormChi2(0), priVtx_Chi2(0), priVtx_CL(0), priVtx_tracks(0), priVtx_tracksPtSq(0), 
 
   // indices
@@ -193,7 +197,7 @@ MuMuPiKPAT::MuMuPiKPAT(const edm::ParameterSet& iConfig) :
   MCpionPx(0), MCpionPy(0), MCpionPz(0), 
   MCkaonPx(0), MCkaonPy(0), MCkaonPz(0),
   MCkaonStarPx(0), MCkaonStarPy(0), MCkaonStarPz(0), MCkaonStarMass(0),
-  MCpionCh(0), MCkaonCh(0), MCkaonStarCh(0), MCkaonStarId(0),
+  MCpionCh(0), MCkaonCh(0), MCkaonStarCh(0), MCkaonStarId(0), 
   MCPx(0), MCPy(0), MCPz(0), 
 
   // generic muons
@@ -249,7 +253,32 @@ MuMuPiKPAT::MuMuPiKPAT(const edm::ParameterSet& iConfig) :
   pion_dedx_byHits(0), pion_dedxErr_byHits(0), pion_saturMeas_byHits(0), pion_Meas_byHits(0), 
   kPx_MuMuPiK(0), kPy_MuMuPiK(0), kPz_MuMuPiK(0), kE_MuMuPiK(0), 
   kaon_nsigdedx(0), kaon_dedx(0), kaon_dedxMass(0), kaon_theo(0), kaon_sigma(0), 
-  kaon_dedx_byHits(0), kaon_dedxErr_byHits(0), kaon_saturMeas_byHits(0), kaon_Meas_byHits(0), 
+  kaon_dedx_byHits(0), kaon_dedxErr_byHits(0), kaon_saturMeas_byHits(0), kaon_Meas_byHits(0),
+
+  
+  b0Mass_B0const_val(0), b0Mass_Jpsiconst_val(0) ,
+  B0MassConstOK_val(0),
+
+  mu1Px_MuMuPiK_B0Mass_val(0), mu1Py_MuMuPiK_B0Mass_val(0), mu1Pz_MuMuPiK_B0Mass_val(0), mu1E_MuMuPiK_B0Mass_val(0),
+  mu2Px_MuMuPiK_B0Mass_val(0), mu2Py_MuMuPiK_B0Mass_val(0), mu2Pz_MuMuPiK_B0Mass_val(0), mu2E_MuMuPiK_B0Mass_val(0),
+  piPx_MuMuPiK_B0Mass_val(0), piPy_MuMuPiK_B0Mass_val(0), piPz_MuMuPiK_B0Mass_val(0), piE_MuMuPiK_B0Mass_val(0),
+  kPx_MuMuPiK_B0Mass_val(0), kPy_MuMuPiK_B0Mass_val(0), kPz_MuMuPiK_B0Mass_val(0), kE_MuMuPiK_B0Mass_val(0),
+/*
+  mu1Px_MuMuPiK_JpsiMass_val(0), mu1Py_MuMuPiK_JpsiMass_val(0), mu1Pz_MuMuPiK_JpsiMass_val(0), mu1E_MuMuPiK_JpsiMass_val(0),
+  mu2Px_MuMuPiK_JpsiMass_val(0), mu2Py_MuMuPiK_JpsiMass_val(0), mu2Pz_MuMuPiK_JpsiMass_val(0), mu2E_MuMuPiK_JpsiMass_val(0),
+  piPx_MuMuPiK_JpsiMass_val(0), piPy_MuMuPiK_JpsiMass_val(0), piPz_MuMuPiK_JpsiMass_val(0), piE_MuMuPiK_JpsiMass_val(0),
+  kPx_MuMuPiK_JpsiMass_val(0), kPy_MuMuPiK_JpsiMass_val(0), kPz_MuMuPiK_JpsiMass_val(0), kE_MuMuPiK_JpsiMass_val(0),
+*/
+  b0Mass_B0const(0), b0Mass_Jpsiconst(0),
+
+  // Muons and pions/tracks after B0 Cand fit with B0 mass constraint  
+  B0MassConstOK(0),
+  mu1Px_MuMuPiK_B0Mass(0), mu1Py_MuMuPiK_B0Mass(0), mu1Pz_MuMuPiK_B0Mass(0), mu1E_MuMuPiK_B0Mass(0),
+  mu2Px_MuMuPiK_B0Mass(0), mu2Py_MuMuPiK_B0Mass(0), mu2Pz_MuMuPiK_B0Mass(0), mu2E_MuMuPiK_B0Mass(0),
+  piPx_MuMuPiK_B0Mass(0), piPy_MuMuPiK_B0Mass(0), piPz_MuMuPiK_B0Mass(0), piE_MuMuPiK_B0Mass(0),
+  kPx_MuMuPiK_B0Mass(0), kPy_MuMuPiK_B0Mass(0), kPz_MuMuPiK_B0Mass(0), kE_MuMuPiK_B0Mass(0), 
+
+
   // Primary Vertex with largest B0_cos(alpha)
   PriVtx_B0CosAlpha_n(0),
   PriVtx_B0CosAlpha_X(0), PriVtx_B0CosAlpha_Y(0), PriVtx_B0CosAlpha_Z(0), PriVtx_B0CosAlpha_EX(0), PriVtx_B0CosAlpha_EY(0), PriVtx_B0CosAlpha_EZ(0),
@@ -347,13 +376,13 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     genEvtVtx_particles->push_back( primaryGenVtx->particles_out_size() );
     */
 
-
     Handle<GenParticleCollection> genParticles;
-    iEvent.getByLabel(inputGEN_, genParticles);
-    
+   // iEvent.getByLabel("genParticles", genParticles);
+    iEvent.getByLabel(inputGEN_, genParticles);  
+   
     if (Debug_) cout << "############### GenParticles Analysis ###############" << endl;
     float psi2SPx=0., psi2SPy=0., psi2SPz=0., psi2SMass=0., mupPx=0., mupPy=0., mupPz=0., mumPx=0., mumPy=0., mumPz=0., pionPx=0., pionPy=0., pionPz=0., kaonPx=0., kaonPy=0., kaonPz=0., kaonStarPx=0., kaonStarPy=0., kaonStarPz=0., kaonStarMass=0.;
-    int pionCh=10, kaonCh=10, kaonStarCh=10, kaonStarId=0 ;
+    int pionCh=10, kaonCh=10, kaonStarCh=10, kaonStarId=0 ; 
 
     for (size_t i = 0; i < genParticles->size(); ++ i) {
       nMCAll++;
@@ -409,19 +438,22 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    } // end check if one of the MCMother daughters is a J/Psi or psi'
 	    
 	    //else if ( abs(dau->pdgId()) == 211 ) { // check if one of B0 daughters is a pion
-	    else if ( dauNum > 2  &&  abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of B0 daughters is a pion (check on array length done above)
-	      thirdDau = true;
+	    //else if ( abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of B0 daughters is a pion
+	    else if ( dauNum > 2  &&  abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of B0 daughters is a pion (check on array length done above) 
+              thirdDau = true;
 	      pionPx = dau->px(); pionPy = dau->py(); pionPz = dau->pz();
 	      pionCh = (dau->pdgId() > 0)? 1 : -1;
 	      dauOK[j] = true;
 	    //} else if ( abs(dau->pdgId()) == 321 ) { // check if one of B0 daughters is a kaon
 	    } else if ( abs(dau->pdgId()) == MCDaughterID[1] ) { // check if one of B0 daughters is a kaon of a K*
-	      if ( abs(dau->pdgId()) == 321) {
+	      //if ( abs(dau->pdgId()) != 313) {
+              if ( abs(dau->pdgId()) == 321) { 
 		kaonPx = dau->px(); kaonPy=dau->py(); kaonPz=dau->pz();
 		kaonCh = (dau->pdgId() > 0)? 1 : -1;
 		dauOK[j] = true;
-	      } else { // check if one of B0 daughters is a K which decayed to K+ pi-
-		kaonStarId = dau->pdgId();
+	     // } else { // check if one of B0 daughters is a K*0(892) which decayed to K+ pi-
+              } else { // check if one of B0 daughters is a K which decayed to K+ pi- 
+ 		kaonStarId = dau->pdgId();
 		kaonStarPx = dau->px(); kaonStarPy=dau->py(); kaonStarPz=dau->pz();
 		kaonStarMass = dau->mass() ; kaonStarCh = 0;
 		//
@@ -430,10 +462,10 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		for (int k=0; k<kstarDauNum; ++k) {
 		  const Candidate *grandDau = dau->daughter(k); 
 		  if (Debug_) cout << "grandDauPdgId = " << grandDau->pdgId() << endl;
-		  if ( abs(grandDau->pdgId()) == 211 ) { // check if one of the K* daughters is a pion
+		  if ( abs(grandDau->pdgId()) == 211 ) { // check if one of K* daughters is a pion
 		    pionPx = grandDau->px(); pionPy = grandDau->py(); pionPz = grandDau->pz();
 		    pionCh = (grandDau->pdgId() > 0)? 1 : -1;
-		  } else if ( abs(grandDau->pdgId()) == 321 ) { // check if one of the K* daughters is a kaon
+		  } else if ( abs(grandDau->pdgId()) == 321 ) { // check if one of K* daughters is a kaon
 		    kaonPx = grandDau->px(); kaonPy = grandDau->py(); kaonPz = grandDau->pz();
 		    kaonCh = (grandDau->pdgId() > 0)? 1 : -1;
 		  }
@@ -495,7 +527,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    MCmumPx->push_back(mumPx); MCmumPy->push_back(mumPy); MCmumPz->push_back(mumPz);
 	    MCpionPx->push_back(pionPx); MCpionPy->push_back(pionPy); MCpionPz->push_back(pionPz);
 	    MCkaonPx->push_back(kaonPx); MCkaonPy->push_back(kaonPy); MCkaonPz->push_back(kaonPz);
-	    MCkaonStarId->push_back(kaonStarId);
+            MCkaonStarId->push_back(kaonStarId); 
 	    MCkaonStarPx->push_back(kaonStarPx); MCkaonStarPy->push_back(kaonStarPy); MCkaonStarPz->push_back(kaonStarPz); MCkaonStarMass->push_back(kaonStarMass);
 	    MCpionCh->push_back(pionCh) ; MCkaonCh->push_back(kaonCh) ; MCkaonStarCh->push_back(kaonStarCh) ;
 	    decayChainOK = true;
@@ -516,15 +548,6 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       //return ;
       cout <<"\nafter" <<endl ;
     }*/
-
-    Handle< vector< PileupSummaryInfo > >  PupInfo;
-    iEvent.getByLabel("addPileupInfo", PupInfo);
-
-    vector<PileupSummaryInfo>::const_iterator PVI;
-    // (then, for example, you can do)
-    if (Debug_) cout <<"\nBunchXing multiplicity = " <<PupInfo->size() <<endl ;
-    for (PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI)
-      if (Debug_) cout <<"Pileup Information: bunchXing, nvtx: " <<PVI->getBunchCrossing() <<" " <<PVI->getPU_NumInteractions() <<endl;
 
 
     bool hasRequestedTrigger = false;
@@ -737,6 +760,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       if ((thePATMuonHandle->size()) * (thePATTrackHandle->size()) > 20000) {
 	cout << "Too many Muons: " << thePATMuonHandle->size() << ", and Tracks: " << thePATTrackHandle->size() << endl;
       } else //if (thePATMuonHandle->size() >= 2) { // check
+        if (Debug_) cout << "PAT muon size : " << thePATMuonHandle->size() << "  Trigger ? : "<< hasRequestedTrigger << endl; 
 	if (thePATMuonHandle->size() >= 2  && hasRequestedTrigger) {
 	  if (Debug_) cout <<"============================  evt: " <<evtNum <<" Accept event with 2 mu and TRIGGER ==============================================" <<endl;
 	
@@ -1204,16 +1228,16 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		    b0Daughters.push_back(pFactory.particle(pionTT, Track1->p4().M(), chi, ndf, small_sigma));
 		    b0Daughters.push_back(pFactory.particle(kaonTT, Track2->p4().M(), chi, ndf, small_sigma));
 		
-		    RefCountedKinematicTree B0VertexFitTree, B0VertexFitTree_noKrefit ;
-		    KinematicConstrainedVertexFitter B0Fitter ;
+		    RefCountedKinematicTree B0VertexFitTree, B0VertexFitTree_noKrefit, B0VertexB0massConstFitTree, B0VertexNomassConstFitTree ;
+		    KinematicConstrainedVertexFitter B0Fitter, B0FitterB0massConst, B0FitterNoMassConst ;
 		
 		    if (doMuMuMassConst) { // MassConst = 'MC' in the following
 		      //MultiTrackKinematicConstraint *MuMu = new  TwoTrackMassKinematicConstraint(psi2S_mass);
 		      MultiTrackKinematicConstraint *MuMu = 0;
 		      if (dimuonType == 1) { // constrain to JPsi mass
-			MuMu = new TwoTrackMassKinematicConstraint(Jpsi_mass);
+                MuMu = new TwoTrackMassKinematicConstraint(Jpsi_mass);
 		      } else if (dimuonType == 2) { // constrain to Psi(2S) mass
-			MuMu = new TwoTrackMassKinematicConstraint(psi2S_mass);
+                MuMu = new TwoTrackMassKinematicConstraint(psi2S_mass);
 		      } // already asked for: if (dimuonType == 0) continue ;
 		  
 		      B0VertexFitTree = B0Fitter.fit( b0Daughters, MuMu );
@@ -1222,33 +1246,129 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 			b0Daughters.push_back(pFactory.particle( kaonTT_notRefit, Track2->p4().M(), chi, ndf, small_sigma));
 			B0VertexFitTree_noKrefit = B0Fitter.fit( b0Daughters, MuMu );
 		      }
-		    } 
-		    else {
-		      B0VertexFitTree = B0Fitter.fit( b0Daughters );
-		      if (notRefittedPartner) { // use not refitted kaons
-			b0Daughters.pop_back() ;
-			b0Daughters.push_back(pFactory.particle( kaonTT_notRefit, Track2->p4().M(), chi, ndf, small_sigma));
-			B0VertexFitTree_noKrefit = B0Fitter.fit( b0Daughters );
-		      }
 		    }
-		    /*
-		      if ( !B0VertexFitTree->isValid() )
-		      if (Debug_) cout <<"B0VertexFitTree is NOT valid!" <<endl ;
-		      if ( notRefittedPartner  &&  !B0VertexFitTree_noKrefit->isValid() )
-		      if (Debug_) cout <<"B0VertexFitTree_noKrefit is NOT valid!" <<endl ;
-		    */
-		    if ( !B0VertexFitTree->isValid() )
-		      //if ( !B0VertexFitTree->isValid() || !B0VertexFitTree_noKrefit->isValid() )
-		      continue ; nB0_pre10++ ;      
+
+
+            if ( !B0VertexFitTree->isValid() )
+                continue; nB0_pre10++ ;
+                //B0VertexFitTree->movePointerToTheTop();
+                //RefCountedKinematicParticle B0Cand_fromMCFit = B0VertexFitTree->currentParticle();
+                //RefCountedKinematicVertex B0Cand_vertex_fromMCFit = B0VertexFitTree->currentDecayVertex();
+
+              
 		    B0VertexFitTree->movePointerToTheTop();
 		    RefCountedKinematicParticle B0Cand_fromMCFit = B0VertexFitTree->currentParticle();
 		    //B0VertexFitTree_noKrefit->movePointerToTheTop();
 		    //RefCountedKinematicParticle B0Cand_noKrefit_fromMCFit = B0VertexFitTree_noKrefit->currentParticle();
 
-		    RefCountedKinematicVertex B0Cand_vertex_fromMCFit = B0VertexFitTree->currentDecayVertex();	      
-		    //
+		    RefCountedKinematicVertex B0Cand_vertex_fromMCFit = B0VertexFitTree->currentDecayVertex();
+            
+
+            b0Mass_Jpsiconst->push_back( B0Cand_fromMCFit->currentState().mass()) ;
+            if (Debug_) cout << "jpsi vertex check " << B0Cand_fromMCFit->currentState().mass() << endl;
+                
+
+            	  
+		    if ( B0Cand_vertex_fromMCFit->chiSquared() < 0  ||  B0Cand_vertex_fromMCFit->chiSquared() > 10000 )
+		      continue ;
 		  
-		    if ( !B0Cand_vertex_fromMCFit->vertexIsValid() )
+		    if ( B0Cand_fromMCFit->currentState().mass() < 5.24 || B0Cand_fromMCFit->currentState().mass() > 5.32 )
+		      continue ; nB0_pre13++ ;
+
+
+            if (doMuMuKPiMassConst) { 
+              MultiTrackKinematicConstraint *MuMuKPi = 0;
+              MuMuKPi = new MultiTrackMassKinematicConstraint(B0_mass,4);
+              B0VertexB0massConstFitTree = B0FitterB0massConst.fit( b0Daughters, MuMuKPi );
+            }
+
+
+            if ( !B0VertexB0massConstFitTree->isValid() ) {
+                nB0massconst_notvalid++ ;
+                //B0VertexB0massConstFitTree->movePointerToTheTop();
+                //RefCountedKinematicParticle B0Cand_B0const = B0VertexB0massConstFitTree->currentParticle();
+                b0Mass_B0const_val = 99999 ;
+                if (Debug_) cout << "B0 no vertex check " << 99999 << endl;
+                B0MassConstOK_val = false;
+                // muon1 after B0 Cand fit with B0 mass constraint 
+                mu1Px_MuMuPiK_B0Mass_val = 99999 ; 
+                mu1Py_MuMuPiK_B0Mass_val = 99999 ; 
+                mu1Pz_MuMuPiK_B0Mass_val = 99999 ; 
+                mu1E_MuMuPiK_B0Mass_val = 99999 ; 
+                // muon2 after B0 Cand fit with B0 mass constraint 
+                mu2Px_MuMuPiK_B0Mass_val = 99999 ; 
+                mu2Py_MuMuPiK_B0Mass_val = 99999 ; 
+                mu2Pz_MuMuPiK_B0Mass_val = 99999 ; 
+                mu2E_MuMuPiK_B0Mass_val = 99999 ; 
+                // pion after B0 Cand fit with B0 mass constraint 
+                piPx_MuMuPiK_B0Mass_val = 99999 ; 
+                piPy_MuMuPiK_B0Mass_val = 99999 ; 
+                piPz_MuMuPiK_B0Mass_val = 99999 ; 
+                piE_MuMuPiK_B0Mass_val = 99999 ; 
+                // kaon after B0 Cand fit with B0 mass constraint 
+                kPx_MuMuPiK_B0Mass_val = 99999 ; 
+                kPy_MuMuPiK_B0Mass_val = 99999 ; 
+                kPz_MuMuPiK_B0Mass_val = 99999 ; 
+                kE_MuMuPiK_B0Mass_val = 99999 ; 
+
+            }
+            else { // B0 mass const valid
+
+            B0MassConstOK_val = true;
+            B0VertexB0massConstFitTree->movePointerToTheTop();
+            RefCountedKinematicParticle B0Cand_B0const = B0VertexB0massConstFitTree->currentParticle();
+            b0Mass_B0const->push_back( B0Cand_B0const->currentState().mass()) ;
+            if (Debug_) cout << "B0 vertex check " << B0Cand_B0const->currentState().mass() << endl;
+              
+            // after B0 Cand fit with B0 mass constraint 
+		    B0VertexB0massConstFitTree->movePointerToTheFirstChild();
+		    RefCountedKinematicParticle mu1_MuMuPiK_B0Mass = B0VertexB0massConstFitTree->currentParticle();
+		    B0VertexB0massConstFitTree->movePointerToTheNextChild();
+		    RefCountedKinematicParticle mu2_MuMuPiK_B0Mass = B0VertexB0massConstFitTree->currentParticle();
+		    B0VertexB0massConstFitTree->movePointerToTheNextChild();
+		    RefCountedKinematicParticle pi_MuMuPiK_B0Mass = B0VertexB0massConstFitTree->currentParticle();
+		    B0VertexB0massConstFitTree->movePointerToTheNextChild();
+		    RefCountedKinematicParticle k_MuMuPiK_B0Mass = B0VertexB0massConstFitTree->currentParticle();
+            
+            if (Debug_) cout << "B0 vertex check after " << endl;
+
+
+		    // muon1 after B0 Cand fit with B0 mass constraint 
+		    mu1Px_MuMuPiK_B0Mass_val = ( mu1_MuMuPiK_B0Mass->currentState().globalMomentum().x() );
+		    mu1Py_MuMuPiK_B0Mass_val = ( mu1_MuMuPiK_B0Mass->currentState().globalMomentum().y() );
+		    mu1Pz_MuMuPiK_B0Mass_val = ( mu1_MuMuPiK_B0Mass->currentState().globalMomentum().z() );
+		    mu1E_MuMuPiK_B0Mass_val = ( mu1_MuMuPiK_B0Mass->currentState().kinematicParameters().energy() );
+		    // muon2 after B0 Cand fit with B0 mass constraint 
+		    mu2Px_MuMuPiK_B0Mass_val = ( mu2_MuMuPiK_B0Mass->currentState().globalMomentum().x() );
+		    mu2Py_MuMuPiK_B0Mass_val = ( mu2_MuMuPiK_B0Mass->currentState().globalMomentum().y() );
+		    mu2Pz_MuMuPiK_B0Mass_val = ( mu2_MuMuPiK_B0Mass->currentState().globalMomentum().z() );
+		    mu2E_MuMuPiK_B0Mass_val = ( mu2_MuMuPiK_B0Mass->currentState().kinematicParameters().energy() );
+		    // pion after B0 Cand fit with B0 mass constraint 
+		    piPx_MuMuPiK_B0Mass_val = ( pi_MuMuPiK_B0Mass->currentState().globalMomentum().x() );
+		    piPy_MuMuPiK_B0Mass_val = ( pi_MuMuPiK_B0Mass->currentState().globalMomentum().y() );
+		    piPz_MuMuPiK_B0Mass_val = ( pi_MuMuPiK_B0Mass->currentState().globalMomentum().z() );
+		    piE_MuMuPiK_B0Mass_val = ( pi_MuMuPiK_B0Mass->currentState().kinematicParameters().energy() );
+		    // kaon after B0 Cand fit with B0 mass constraint 
+		    kPx_MuMuPiK_B0Mass_val = ( k_MuMuPiK_B0Mass->currentState().globalMomentum().x() );
+		    kPy_MuMuPiK_B0Mass_val = ( k_MuMuPiK_B0Mass->currentState().globalMomentum().y() );
+		    kPz_MuMuPiK_B0Mass_val = ( k_MuMuPiK_B0Mass->currentState().globalMomentum().z() );
+		    kE_MuMuPiK_B0Mass_val = ( k_MuMuPiK_B0Mass->currentState().kinematicParameters().energy() );
+
+
+
+            if (Debug_) cout << "after B0 vertex : mu1 px " << mu1_MuMuPiK_B0Mass->currentState().globalMomentum().x() << endl;
+
+
+            
+            if (Debug_) cout << "after B0 vertex and rel : mu1px_rel " << ( mu1_MuMuPiK_B0Mass->currentState().globalMomentum().x() - rmu1->px() )/ rmu1->px() << endl;
+
+        } //  B0 mass const valid 
+
+
+
+		    
+		  
+		    if ( !B0Cand_vertex_fromMCFit->vertexIsValid() ) 
 		      continue ; nB0_pre11++ ;
 		  		  
 		    if ( B0Cand_vertex_fromMCFit->chiSquared() < 0  ||  B0Cand_vertex_fromMCFit->chiSquared() > 10000 )
@@ -1256,12 +1376,15 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		  
 		    if ( B0Cand_fromMCFit->currentState().mass() > 100 )
 		      continue ; nB0_pre13++ ;
-		  
+
+
 		    double b0VtxProb = ChiSquaredProbability((double)(B0Cand_vertex_fromMCFit->chiSquared()), (double)(B0Cand_vertex_fromMCFit->degreesOfFreedom()));
 		    if ( b0VtxProb < 0.005 ) //0.0001 ) 
 		      continue ; nB0_pre14++ ;
-		
-		    ///////////////////////////////////						
+              
+              if (Debug_) cout << "B0 vtx prob " << b0VtxProb << endl;
+
+		    ///////////////////////////////////
 													
 		    //////////////////// Lifetimes calculations ////////////////////
 		    TVector3 B0_vtx((*B0Cand_vertex_fromMCFit).position().x(), (*B0Cand_vertex_fromMCFit).position().y(), 0) ;			
@@ -1314,14 +1437,15 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
 		    //////////////////// last cuts ////////////////////
-		    if ( !(B0_ctau/B0_ctauErr > 2.8) || !(B0_cosAlpha > 0.8) )
-		      continue ;
+		    if ( Track1->p4().M() > 0.9  &&  Track2->p4().M() > 0.9)
+		      if ( !(B0_ctau/B0_ctauErr > 2.8) || !(B0_cosAlpha > 0.8) )
+			continue ;
 
 
 		    // fill B0 candidate variables now
 		    //if (Debug_) cout <<"B0 mass with refitted Kaon = " <<B0Cand_fromMCFit->currentState().mass() <<endl ;
 		    //if (Debug_) cout <<"B0 mass with NOT refitted Kaon = " <<B0Cand_noKrefit_fromMCFit->currentState().mass() <<endl ;
-		    b0Mass->push_back( B0Cand_fromMCFit->currentState().mass()) ;
+		    b0Mass->push_back( B0Cand_fromMCFit->currentState().mass()) ; 
 		    b0Px->push_back( B0Cand_fromMCFit->currentState().globalMomentum().x()) ;
 		    b0Py->push_back( B0Cand_fromMCFit->currentState().globalMomentum().y()) ;
 		    b0Pz->push_back( B0Cand_fromMCFit->currentState().globalMomentum().z()) ;			
@@ -1380,17 +1504,48 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		    kPz_MuMuPiK->push_back( k_MuMuPiK->currentState().globalMomentum().z() );
 		    kE_MuMuPiK->push_back( k_MuMuPiK->currentState().kinematicParameters().energy() );
 		    // dE/dx
+
+
 		    /*theo = 0.; sigma = 0. ;
 		      kaon_nsigdedx->push_back(nsigmaofdedx(Track2->track(),theo,sigma));
 		      kaon_dedx->push_back(getEnergyLoss(Track2->track()));
 		      kaon_dedxMass->push_back(GetMass(Track2->track()));
 		      kaon_theo->push_back(theo);
-		      kaon_sigma->push_back(sigma);*/
+		      kaon_sigma->push_back(sigma); */
+
 		    // dE/dx hits
 		    kaon_dedx_byHits->push_back( (dEdxTrack_Kaon)[Track2->track()].dEdx() );
 		    kaon_dedxErr_byHits->push_back( (dEdxTrack_Kaon)[Track2->track()].dEdxError() );
 		    kaon_saturMeas_byHits->push_back( (dEdxTrack_Kaon)[Track2->track()].numberOfSaturatedMeasurements() );
 		    kaon_Meas_byHits->push_back( (dEdxTrack_Kaon)[Track2->track()].numberOfMeasurements() );
+            
+            
+            
+            b0Mass_B0const->push_back(b0Mass_B0const_val) ;
+            B0MassConstOK->push_back(B0MassConstOK_val);
+            // muon1 after B0 Cand fit with B0 mass constraint 
+            mu1Px_MuMuPiK_B0Mass->push_back(mu1Px_MuMuPiK_B0Mass_val) ;
+            mu1Py_MuMuPiK_B0Mass->push_back(mu1Py_MuMuPiK_B0Mass_val) ;
+            mu1Pz_MuMuPiK_B0Mass->push_back(mu1Pz_MuMuPiK_B0Mass_val) ;
+            mu1E_MuMuPiK_B0Mass->push_back(mu1E_MuMuPiK_B0Mass_val) ;
+            // muon2 after B0 Cand fit with B0 mass constraint 
+            mu2Px_MuMuPiK_B0Mass->push_back(mu2Px_MuMuPiK_B0Mass_val) ;
+            mu2Py_MuMuPiK_B0Mass->push_back(mu2Py_MuMuPiK_B0Mass_val) ;
+            mu2Pz_MuMuPiK_B0Mass->push_back(mu2Pz_MuMuPiK_B0Mass_val) ;
+            mu2E_MuMuPiK_B0Mass->push_back(mu2E_MuMuPiK_B0Mass_val) ;
+            // pion after B0 Cand fit with B0 mass constraint 
+            piPx_MuMuPiK_B0Mass->push_back(piPx_MuMuPiK_B0Mass_val) ;
+            piPy_MuMuPiK_B0Mass->push_back(piPy_MuMuPiK_B0Mass_val) ;
+            piPz_MuMuPiK_B0Mass->push_back(piPz_MuMuPiK_B0Mass_val) ;
+            piE_MuMuPiK_B0Mass->push_back(piE_MuMuPiK_B0Mass_val) ;
+            // kaon after B0 Cand fit with B0 mass constraint 
+            kPx_MuMuPiK_B0Mass->push_back(kPx_MuMuPiK_B0Mass_val) ;
+            kPy_MuMuPiK_B0Mass->push_back(kPy_MuMuPiK_B0Mass_val) ;
+            kPz_MuMuPiK_B0Mass->push_back(kPz_MuMuPiK_B0Mass_val) ;
+            kE_MuMuPiK_B0Mass->push_back(kE_MuMuPiK_B0Mass_val) ;
+
+            
+            
 
 		    // PV
 		    b0CosAlphaPV->push_back( B0_cosAlpha ); b0CosAlpha3DPV->push_back( B0_cosAlpha3D );
@@ -1429,6 +1584,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		    b0CTauBS->push_back( B0_ctau ); b0CTauBSE->push_back( B0_ctauErr );
 		    b0LxyBS->push_back( B0_lxy ); b0LxyBSE->push_back( B0_lxyErr );
 		    b0LxyzBS->push_back( B0_lxyz ); b0LxyzBSE->push_back( B0_lxyzErr );
+
 
 
 		    vector<TransientVertex> B0_pvs ;  
@@ -1899,9 +2055,13 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		    B0_piIdx->push_back(std::distance(thePATTrackHandle->begin(), Track1));
 		    //B0_kIdx->push_back(std::distance(thePATTrackHandle->begin(), Track2));
 		    B0_kIdx->push_back(std::distance(theKaonRefittedPATTrackHandle->begin(), Track2));
+            
+
+            
+
 		
 		    nB0++;
-		    if (Debug_) cout <<"\bnB0 = " <<nB0 <<endl;				
+		    if (Debug_) cout <<"\bnB0 = " <<nB0 <<endl;
 		    b0Daughters.clear();
 		  } // 2nd loop over track (look for k)
 	      } // 1st loop over track (look for pi)
@@ -1926,15 +2086,21 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   } else if ( nB0 > 0 )
       Z_One_Tree_->Fill() ;
   */
-  if ( MCExclusiveDecay ) { // MC
-    if ( nMCB0 > 0 )
+if (Debug_) cout << "check after doData loop" << endl;
+  //if ( doGEN ) { // MC
+  if ( MCExclusiveDecay ) { // MC  
+   if (Debug_) cout << "nMCB0 while filling : " << nMCB0 << endl;
+   if ( nMCB0 > 0 )
       Z_One_Tree_->Fill() ;
   } else         // DATA
     if ( skipJPsi ) { 
       if ( nMuMu > 0 )
 	Z_One_Tree_->Fill() ;
-    } else if ( nB0>0 ) // needed to reduce ntuple size when J/psi in final state
+    } else if ( nB0>0 ) { // needed to reduce ntuple size when J/psi in final state 
+      if (Debug_) cout << "nB0 while filling : " << nB0 << endl;
       Z_One_Tree_->Fill() ;
+      if (Debug_) cout << "Z_One_Tree filled" << endl; 
+      }
 
 
   // trigger stuff
@@ -1973,7 +2139,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     MCmumPx->clear(); MCmumPy->clear(); MCmumPz->clear(); 
     MCpionPx->clear(); MCpionPy->clear(); MCpionPz->clear(); 
     MCkaonPx->clear(); MCkaonPy->clear(); MCkaonPz->clear(); 
-    MCkaonStarId->clear();
+    MCkaonStarId->clear(); 
     MCkaonStarPx->clear(); MCkaonStarPy->clear(); MCkaonStarPz->clear(); MCkaonStarMass->clear(); 
     MCpionCh->clear(); MCkaonCh->clear(); MCkaonStarCh->clear();
     MCPx->clear(); MCPy->clear(); MCPz->clear();
@@ -2018,6 +2184,19 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   kPx_MuMuPiK->clear(); kPy_MuMuPiK->clear(); kPz_MuMuPiK->clear(); kE_MuMuPiK->clear();
   kaon_nsigdedx->clear(); kaon_dedx->clear(); kaon_dedxMass->clear(); kaon_theo->clear(); kaon_sigma->clear();
   kaon_dedx_byHits->clear(); kaon_dedxErr_byHits->clear(); kaon_saturMeas_byHits->clear(); kaon_Meas_byHits->clear();
+  
+  
+  b0Mass_B0const->clear(); b0Mass_Jpsiconst->clear();
+  
+  // muons and tracks after B0 Cand fit B0 mass const 
+  B0MassConstOK->clear();
+  mu1Px_MuMuPiK_B0Mass->clear(); mu1Py_MuMuPiK_B0Mass->clear(); mu1Pz_MuMuPiK_B0Mass->clear(); mu1E_MuMuPiK_B0Mass->clear();
+  mu2Px_MuMuPiK_B0Mass->clear(); mu2Py_MuMuPiK_B0Mass->clear(); mu2Pz_MuMuPiK_B0Mass->clear(); mu2E_MuMuPiK_B0Mass->clear();
+  piPx_MuMuPiK_B0Mass->clear(); piPy_MuMuPiK_B0Mass->clear(); piPz_MuMuPiK_B0Mass->clear(); piE_MuMuPiK_B0Mass->clear();
+  kPx_MuMuPiK_B0Mass->clear(); kPy_MuMuPiK_B0Mass->clear(); kPz_MuMuPiK_B0Mass->clear(); kE_MuMuPiK_B0Mass->clear();
+
+ 
+  
   // Primary Vertex with "B0 correction"
   PriVtxB0Less_n->clear();
   PriVtxB0Less_X->clear(); PriVtxB0Less_Y->clear(); PriVtxB0Less_Z->clear(); 
@@ -2145,7 +2324,7 @@ void MuMuPiKPAT::beginJob()
     Z_One_Tree_->Branch("MCmumPx",&MCmumPx); Z_One_Tree_->Branch("MCmumPy",&MCmumPy); Z_One_Tree_->Branch("MCmumPz",&MCmumPz);
     Z_One_Tree_->Branch("MCpionPx",&MCpionPx); Z_One_Tree_->Branch("MCpionPy",&MCpionPy); Z_One_Tree_->Branch("MCpionPz",&MCpionPz); Z_One_Tree_->Branch("MCpionCh",&MCpionCh);
     Z_One_Tree_->Branch("MCkaonPx",&MCkaonPx); Z_One_Tree_->Branch("MCkaonPy",&MCkaonPy); Z_One_Tree_->Branch("MCkaonPz",&MCkaonPz); Z_One_Tree_->Branch("MCkaonCh",&MCkaonCh);
-    Z_One_Tree_->Branch("MCkaonStarId",&MCkaonStarId);
+    Z_One_Tree_->Branch("MCkaonStarId",&MCkaonStarId); 
     Z_One_Tree_->Branch("MCkaonStarPx",&MCkaonStarPx); Z_One_Tree_->Branch("MCkaonStarPy",&MCkaonStarPy); Z_One_Tree_->Branch("MCkaonStarPz",&MCkaonStarPz); Z_One_Tree_->Branch("MCkaonStarCh",&MCkaonStarCh); Z_One_Tree_->Branch("MCkaonStarMass",&MCkaonStarMass);
     Z_One_Tree_->Branch("MCPx", &MCPx);
     Z_One_Tree_->Branch("MCPy", &MCPy);
@@ -2269,6 +2448,9 @@ void MuMuPiKPAT::beginJob()
   Z_One_Tree_->Branch("PriVtxMuMuCorr_CL", &PriVtxMuMuCorr_CL);
   Z_One_Tree_->Branch("PriVtxMuMuCorr_tracks", &PriVtxMuMuCorr_tracks);
   Z_One_Tree_->Branch("nTrk_afterMuMu", &nTrk);
+  
+
+  
   // B0 cand
   Z_One_Tree_->Branch("nB0",&nB0,"nB0/i");
   Z_One_Tree_->Branch("nB0_pre0",&nB0_pre0,"nB0_pre0/i");
@@ -2286,6 +2468,7 @@ void MuMuPiKPAT::beginJob()
   Z_One_Tree_->Branch("nB0_pre12",&nB0_pre12,"nB0_pre12/i");
   Z_One_Tree_->Branch("nB0_pre13",&nB0_pre13,"nB0_pre13/i");
   Z_One_Tree_->Branch("nB0_pre14",&nB0_pre14,"nB0_pre14/i");
+  Z_One_Tree_->Branch("nB0massconst_notvalid",&nB0massconst_notvalid,"nB0massconst_notvalid/i"); 
   Z_One_Tree_->Branch("B0Mass",&b0Mass);
   Z_One_Tree_->Branch("B0Px",&b0Px);
   Z_One_Tree_->Branch("B0Py",&b0Py);
@@ -2480,6 +2663,34 @@ void MuMuPiKPAT::beginJob()
   Z_One_Tree_->Branch("kaon_dedxErr_byHits", &kaon_dedxErr_byHits);
   Z_One_Tree_->Branch("kaon_saturMeas_byHits", &kaon_saturMeas_byHits);
   Z_One_Tree_->Branch("kaon_Meas_byHits", &kaon_Meas_byHits);
+  
+  
+    
+  Z_One_Tree_->Branch("B0Mass_B0const", &b0Mass_B0const);
+  Z_One_Tree_->Branch("B0Mass_Jpsiconst", &b0Mass_Jpsiconst);
+  
+  // muons and tracks after B0 Cand fit B0 mass const 
+  Z_One_Tree_->Branch("B0MassConstOK", &B0MassConstOK);
+  Z_One_Tree_->Branch("Muon1Px_MuMuPiK_B0Mass", &mu1Px_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("Muon1Py_MuMuPiK_B0Mass", &mu1Py_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("Muon1Pz_MuMuPiK_B0Mass", &mu1Pz_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("Muon1E_MuMuPiK_B0Mass", &mu1E_MuMuPiK_B0Mass);
+  //
+  Z_One_Tree_->Branch("Muon2Px_MuMuPiK_B0Mass", &mu2Px_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("Muon2Py_MuMuPiK_B0Mass", &mu2Py_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("Muon2Pz_MuMuPiK_B0Mass", &mu2Pz_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("Muon2E_MuMuPiK_B0Mass", &mu2E_MuMuPiK_B0Mass);
+  //
+  Z_One_Tree_->Branch("PionPx_MuMuPiK_B0Mass", &piPx_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("PionPy_MuMuPiK_B0Mass", &piPy_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("PionPz_MuMuPiK_B0Mass", &piPz_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("PionE_MuMuPiK_B0Mass", &piE_MuMuPiK_B0Mass);
+  //
+  Z_One_Tree_->Branch("KaonPx_MuMuPiK_B0Mass", &kPx_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("KaonPy_MuMuPiK_B0Mass", &kPy_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("KaonPz_MuMuPiK_B0Mass", &kPz_MuMuPiK_B0Mass);
+  Z_One_Tree_->Branch("KaonE_MuMuPiK_B0Mass", &kE_MuMuPiK_B0Mass);
+
 
 }// begin Job
 
@@ -2659,4 +2870,3 @@ bool MuMuPiKPAT::isSameMuon(const reco::Muon &mu1, const reco::Muon &mu2) const 
 DEFINE_FWK_MODULE(MuMuPiKPAT);
 
 // rsync -vut --existing src/MuMuPiKPAT.cc cristella@cmssusy.ba.infn.it:/cmshome/cristella/work/Z_analysis/exclusive/clean_14ott/original/CMSSW_5_3_22/src/UserCode/MuMuPiKPAT/src/MuMuPiKPAT.cc
-
