@@ -74,6 +74,7 @@
 
 #include "TFile.h"
 #include "TTree.h"
+#include "TH2D.h"
 
 #include <vector>
 #include <string>
@@ -136,6 +137,8 @@ private:
   int  MCMother, MCDaughtersN;
   vector<unsigned int> MCDaughterID;
   bool doMuMuMassConst;
+  bool doMuMuKPiMassConst;
+  bool noMassConstFit;
   bool skipJPsi, skipPsi2S;
 
   int MuMinPixHits, MuMinSiHits;
@@ -172,7 +175,7 @@ private:
   vector<std::string>*  MatchTriggerNames;
 
   unsigned int          nMu, nMuMu, nB0;
-  unsigned int          nB0_pre0, nB0_pre1, nB0_pre2, nB0_pre3, nB0_pre4, nB0_pre5, nB0_pre6, nB0_pre7, nB0_pre8, nB0_pre9, nB0_pre10, nB0_pre11, nB0_pre12, nB0_pre13, nB0_pre14;
+  unsigned int          nB0_pre0, nB0_pre1, nB0_pre2, nB0_pre3, nB0_pre4, nB0_pre5, nB0_pre6, nB0_pre7, nB0_pre8, nB0_pre9, nB0_pre10, nB0_pre11, nB0_pre12, nB0_pre13, nB0_pre14, nB0massconst_notvalid ; 
 
   int                   priVtx_n;
   float                 priVtx_X, priVtx_Y, priVtx_Z, priVtx_XE, priVtx_YE, priVtx_ZE, priVtx_NormChi2, priVtx_Chi2, priVtx_CL;
@@ -278,6 +281,23 @@ private:
   vector<float>         *kaon_dedx, *kaon_dedxMass, *kaon_theo, *kaon_sigma;
   vector<float>         *kaon_dedx_byHits, *kaon_dedxErr_byHits ;
   vector<int>           *kaon_saturMeas_byHits, *kaon_Meas_byHits ;
+  
+  
+  
+  float                 b0Mass_B0const_val, b0Mass_Jpsiconst_val ;
+  bool                  B0MassConstOK_val;
+  float                 mu1Px_MuMuPiK_B0Mass_val, mu1Py_MuMuPiK_B0Mass_val, mu1Pz_MuMuPiK_B0Mass_val, mu1E_MuMuPiK_B0Mass_val ;
+  float                 mu2Px_MuMuPiK_B0Mass_val, mu2Py_MuMuPiK_B0Mass_val, mu2Pz_MuMuPiK_B0Mass_val, mu2E_MuMuPiK_B0Mass_val ;
+  float                 piPx_MuMuPiK_B0Mass_val, piPy_MuMuPiK_B0Mass_val, piPz_MuMuPiK_B0Mass_val, piE_MuMuPiK_B0Mass_val ;
+  float                 kPx_MuMuPiK_B0Mass_val, kPy_MuMuPiK_B0Mass_val, kPz_MuMuPiK_B0Mass_val, kE_MuMuPiK_B0Mass_val ;
+
+  vector<float>         *b0Mass_B0const, *b0Mass_Jpsiconst ;
+  // Muons and tracks after B0 cand fit with B0 mass constraint  
+  vector<bool>          *B0MassConstOK;
+  vector<float>         *mu1Px_MuMuPiK_B0Mass, *mu1Py_MuMuPiK_B0Mass, *mu1Pz_MuMuPiK_B0Mass, *mu1E_MuMuPiK_B0Mass ;
+  vector<float>         *mu2Px_MuMuPiK_B0Mass, *mu2Py_MuMuPiK_B0Mass, *mu2Pz_MuMuPiK_B0Mass, *mu2E_MuMuPiK_B0Mass ;
+  vector<float>         *piPx_MuMuPiK_B0Mass, *piPy_MuMuPiK_B0Mass, *piPz_MuMuPiK_B0Mass, *piE_MuMuPiK_B0Mass ;
+  vector<float>         *kPx_MuMuPiK_B0Mass, *kPy_MuMuPiK_B0Mass, *kPz_MuMuPiK_B0Mass, *kE_MuMuPiK_B0Mass ;
 
   // Primary Vertex with largest B0_cos(alpha)
   vector<int>           *PriVtx_B0CosAlpha_n;
