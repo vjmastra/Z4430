@@ -191,13 +191,13 @@ public :
    vector<float>   *PriVtxB0Corr_Chi2, *PriVtxB0Corr_CL;
    vector<int>     *PriVtxB0Corr_tracks;
    // Lifetimes
-   vector<double>  *B0CosAlphaBS, *B0CosAlpha3DBS, *B0CTauBS, *B0CTauBSE, *B0LxyBS ;
-   vector<double>  *B0CosAlphaPV, *B0CosAlpha3DPV, *B0CTauPV, *B0CTauPVE, *B0LxyPV ;
-   vector<double>  *B0CosAlphaPVCosAlpha, *B0CTauPVCosAlpha, *B0CTauPVCosAlphaE, *B0LxyPVCosAlpha ;
-   vector<double>  *B0CosAlphaPVCosAlpha3D, *B0CTauPVCosAlpha3D, *B0CTauPVCosAlpha3DE, *B0LxyPVCosAlpha3D ;
-   vector<double>  *B0CosAlphaB0LessPV, *B0CosAlpha3DB0LessPV, *B0CTauB0LessPV, *B0CTauB0LessPVE, *B0LxyB0LessPV ;
-   vector<double>  *B0CosAlphaB0LessPVCosAlpha, *B0CTauB0LessPVCosAlpha, *B0CTauB0LessPVCosAlphaE, *B0LxyB0LessPVCosAlpha ;
-   vector<double>  *B0CosAlphaB0LessPVCosAlpha3D, *B0CTauB0LessPVCosAlpha3D, *B0CTauB0LessPVCosAlpha3DE, *B0LxyB0LessPVCosAlpha3D ;
+   vector<double>  *B0CosAlphaBS, *B0CosAlpha3DBS, *B0CTauBS, *B0CTauBSE, *B0LxyBS, *B0LxyBSE ;
+   vector<double>  *B0CosAlphaPV, *B0CosAlpha3DPV, *B0CTauPV, *B0CTauPVE, *B0LxyPV, *B0LxyPVE ;
+   vector<double>  *B0CosAlphaPVCosAlpha, *B0CTauPVCosAlpha, *B0CTauPVCosAlphaE, *B0LxyPVCosAlpha, *B0LxyPVCosAlphaE ;
+   vector<double>  *B0CosAlphaPVCosAlpha3D, *B0CTauPVCosAlpha3D, *B0CTauPVCosAlpha3DE, *B0LxyPVCosAlpha3D, *B0LxyPVCosAlpha3DE ;
+   vector<double>  *B0CosAlphaB0LessPV, *B0CosAlpha3DB0LessPV, *B0CTauB0LessPV, *B0CTauB0LessPVE, *B0LxyB0LessPV, *B0LxyB0LessPVE ;
+   vector<double>  *B0CosAlphaB0LessPVCosAlpha, *B0CTauB0LessPVCosAlpha, *B0CTauB0LessPVCosAlphaE, *B0LxyB0LessPVCosAlpha, *B0LxyB0LessPVCosAlphaE ;
+   vector<double>  *B0CosAlphaB0LessPVCosAlpha3D, *B0CTauB0LessPVCosAlpha3D, *B0CTauB0LessPVCosAlpha3DE, *B0LxyB0LessPVCosAlpha3D, *B0LxyB0LessPVCosAlpha3DE ;
    vector<double>  *B0CosAlphaPVX, *B0CTauPVX, *B0CTauPVXE, *B0LxyPVX ;
    vector<float>   *B0CTauPVX_3D, *B0CTauPVX_3D_err ;
    vector<int>     *B0MuMuIdx, *B0PionIdx, *B0KaonIdx ;
@@ -339,13 +339,13 @@ public :
    TBranch	  *b_PriVtxB0Corr_Chi2, *b_PriVtxB0Corr_CL;
    TBranch        *b_PriVtxB0Corr_tracks;
    // Lifetimes
-   TBranch        *b_B0CosAlphaBS, *b_B0CosAlpha3DBS, *b_B0CTauBS, *b_B0CTauBSE, *b_B0LxyBS ;
-   TBranch        *b_B0CosAlphaPV, *b_B0CosAlpha3DPV, *b_B0CTauPV, *b_B0CTauPVE, *b_B0LxyPV ;
-   TBranch        *b_B0CosAlphaPVCosAlpha, *b_B0CTauPVCosAlpha, *b_B0CTauPVCosAlphaE, *b_B0LxyPVCosAlpha ;
-   TBranch        *b_B0CosAlphaPVCosAlpha3D, *b_B0CTauPVCosAlpha3D, *b_B0CTauPVCosAlpha3DE, *b_B0LxyPVCosAlpha3D ;
-   TBranch        *b_B0CosAlphaB0LessPV, *b_B0CosAlpha3DB0LessPV, *b_B0CTauB0LessPV, *b_B0CTauB0LessPVE, *b_B0LxyB0LessPV ;
-   TBranch        *b_B0CosAlphaB0LessPVCosAlpha, *b_B0CTauB0LessPVCosAlpha, *b_B0CTauB0LessPVCosAlphaE, *b_B0LxyB0LessPVCosAlpha ;
-   TBranch        *b_B0CosAlphaB0LessPVCosAlpha3D, *b_B0CTauB0LessPVCosAlpha3D, *b_B0CTauB0LessPVCosAlpha3DE, *b_B0LxyB0LessPVCosAlpha3D ;
+   TBranch        *b_B0CosAlphaBS, *b_B0CosAlpha3DBS, *b_B0CTauBS, *b_B0CTauBSE, *b_B0LxyBS, *b_B0LxyBSE ;
+   TBranch        *b_B0CosAlphaPV, *b_B0CosAlpha3DPV, *b_B0CTauPV, *b_B0CTauPVE, *b_B0LxyPV, *b_B0LxyPVE ;
+   TBranch        *b_B0CosAlphaPVCosAlpha, *b_B0CTauPVCosAlpha, *b_B0CTauPVCosAlphaE, *b_B0LxyPVCosAlpha, *b_B0LxyPVCosAlphaE ;
+   TBranch        *b_B0CosAlphaPVCosAlpha3D, *b_B0CTauPVCosAlpha3D, *b_B0CTauPVCosAlpha3DE, *b_B0LxyPVCosAlpha3D, *b_B0LxyPVCosAlpha3DE ;
+   TBranch        *b_B0CosAlphaB0LessPV, *b_B0CosAlpha3DB0LessPV, *b_B0CTauB0LessPV, *b_B0CTauB0LessPVE, *b_B0LxyB0LessPV, *b_B0LxyB0LessPVE ;
+   TBranch        *b_B0CosAlphaB0LessPVCosAlpha, *b_B0CTauB0LessPVCosAlpha, *b_B0CTauB0LessPVCosAlphaE, *b_B0LxyB0LessPVCosAlpha, *b_B0LxyB0LessPVCosAlphaE ;
+   TBranch        *b_B0CosAlphaB0LessPVCosAlpha3D, *b_B0CTauB0LessPVCosAlpha3D, *b_B0CTauB0LessPVCosAlpha3DE, *b_B0LxyB0LessPVCosAlpha3D, *b_B0LxyB0LessPVCosAlpha3DE ;
    TBranch        *b_B0CosAlphaPVX, *b_B0CTauPVX, *b_B0CTauPVXE, *b_B0LxyPVX ;
    TBranch	  *b_B0CTauPVX_3D, *b_B0CTauPVX_3D_err;
    TBranch        *b_B0MuMuIdx, *b_B0PionIdx, *b_B0KaonIdx;   //!
@@ -407,7 +407,7 @@ public :
    ///////////// Output files //////////////////
    TProofOutputFile *OutFile, *SaraFile, *AlexisFile, *tightCutsFile ;
    TFile            *fOut, *SaraOut, *AlexisOut, *tightCutsOut ;
-   TNtupleD *_nt;
+   TNtupleD* _ntGen, *_ntReco;
    TTree *mva_variables_sig, *mva_variables_bkg, *mva_variables_all ;
    vector< Float_t > mva_vars_sig, mva_vars_bkg, mva_vars_all ;
    Bool_t newSoftMuonID, only1psiPrime;
@@ -510,6 +510,7 @@ public :
    TH1F* priVtx_deltaZ ;
    TH2F* B0_pointingAngle_PVvsB0LessPV[2], *z_PVvsB0LessPV[2] ;
    TH1F* B0_PVCTau_h, *B0_CosAlphaCTau_h, *B0_PVXCTau_h, *B0_PVX3DCTau_h ;
+   TH2F* B0_CTau_vs_Lxy_B0LessPV_h ;
    TH1I* priVtx_matched ;
    //
    TH2F* kaonP_vs_pionP, *kaonPt_vs_pionPt ;
@@ -528,6 +529,7 @@ public :
    TH2F* hmyKKMass_vs_PiKMass, *hmyKKMass_vs_PiKMass_aV, *hmyKKMass_vs_PiKMass_leftSb, *hmyKKMass_vs_PiKMass_rightSb;
    // pion -> proton
    TH2F* hmyPKMass_vs_PiKMass, *hmyPKMass_vs_PiKMass_aV, *hmyPKMass_vs_PiKMass_leftSb, *hmyPKMass_vs_PiKMass_rightSb;
+   TH2F* hmyPsiPPKMass_vs_PsiPPiKMass_aV;
    TH2F* hmyPKMass_vs_PiPiMass, *hmyPKMass_vs_PiPiMass_aV, *hmyPKMass_vs_PiPiMass_leftSb, *hmyPKMass_vs_PiPiMass_rightSb;
    TH2F* hmyPKMass_vs_KKMass, *hmyPKMass_vs_KKMass_aV, *hmyPKMass_vs_KKMass_leftSb, *hmyPKMass_vs_KKMass_rightSb;
    // kaon -> proton
@@ -535,7 +537,7 @@ public :
    TH2F* hmyPiPMass_vs_PiPiMass, *hmyPiPMass_vs_PiPiMass_aV, *hmyPiPMass_vs_PiPiMass_leftSb, *hmyPiPMass_vs_PiPiMass_rightSb;
    TH2F* hmyPiPMass_vs_KKMass, *hmyPiPMass_vs_KKMass_aV, *hmyPiPMass_vs_KKMass_leftSb, *hmyPiPMass_vs_KKMass_rightSb;  
    // Bs
-   TH1F* hmyKKMass, *hmyKKMass_leftSb, *hmyKKMass_rightSb, *hmyPsiPKKMass, *hmyPsiPPhiMass, *hmyPsiPF0Mass, *hmyPsiPPiKMass_fromF0, *hmyPsiPPiPiMass_fromF0, *hmyPsiPPiKMass_fromBs, *hmyPsiPPiKMass_fromBs_zoom ;
+   TH1F* hmyKKMass, *hmyKKMass_leftSb, *hmyKKMass_rightSb, *hmyPsiPKKMass, *hmyPsiPPhiMass, *hmyPsiPF0Mass, *hmyPsiPPiKMass_fromF0, *hmyPsiPPiPiMass_fromF0, *hmyPsiPPiPiMass_fromF0_600, *hmyPsiPPiPiMass_fromF0_600_zoom, *hmyPsiPPiKMass_fromBs, *hmyPsiPPiKMass_fromBs_zoom ;
    TH2F* kaonP_vs_pionP_fromF0 ;
    // Lambda_b
    TH1F* hmyPKMass, *hmyPKMass_fromB0, *hmyPsiPPKMass, *hmyPsiPPKMass_fromB0; 
@@ -569,6 +571,9 @@ public :
    // Z- variables
    TH1I* nZ_h, *nB0_h, *nB0AC_noMassWin_h, *nB0AC_h, *nB0AHC_h, *nB0AC_signalWin_h, *nB0AC_purityWin_h, *nB0ACInMC_h, *nMCB0_h, *nMCB0_BT_h, *nTwins_h[2] ;
    TH1F* hB0Mass_1B0, *hB0Mass_1B0_hardCuts, *hB0Mass_1B0matched[2][2], *hB0Mass_noTwins_noSignalWinNotTwins ;
+   TH2F* psi2SPiMass_vs_KPiMass_hardCutsSig, *psi2SPiMassSq_vs_KPiMassSq_hardCutsSig, *psi2SPiMassSq_vs_KPiMassSq_hardCutsSb, *psi2SPiMassSq_vs_KPiMassSq_hardCutsSig_B0massC, *psi2SPiMass_vs_KPiMass_hardCutsSb_B0massC, *psi2SPiMassSq_vs_KPiMassSq_hardCutsSb_B0massC ;
+   TH2F* planesAngle_vs_cos_psi2S_helicityAngle_hardCutsSig, *planesAngle_vs_cos_psi2S_helicityAngle_hardCutsSb, *planesAngle_vs_cos_psi2S_helicityAngle_hardCutsSig_B0massC, *planesAngle_vs_cos_psi2S_helicityAngle_hardCutsSb_B0massC;
+   TH1F* dPhi_muP_trkM_h, *dEta_muP_trkM_h;
    TH2F* psi2SPiMassSq_vs_KPiMassSq_1B0[2], *psi2SPiMassSq_vs_KPiMassSq_B0constr_1B0[2] ;
    TH2F* psi2SPiMass_vs_KPiMass_1B0[2], *psi2SPiMass_vs_KPiMass_B0constr_1B0[2] ;
    TH1F* cos_Kstar_helicityAngle;
@@ -672,7 +677,7 @@ public :
    Float_t B0_signal, innerSB, outerSB;
    //Double_t Bplus_mass;
    //
-   Float_t f0_left, f0_right, phi_left, phi_right, Bs_left, Bs_right;
+   Float_t f0_600_left, f0_600_right, f0_left, f0_right, phi_left, phi_right, Bs_left, Bs_right;
 
    Float_t rapid_min, rapid_max, rapid_binSize ;  Int_t rapid_bins;
    Float_t psiPrimeMass_min, psiPrimeMass_max ;  Int_t psiPrimeMass_bins ; 
@@ -727,8 +732,10 @@ void psiPrimePiK_MC::Init(TTree *tree)
   else 
     oldNtuple = kTRUE ;
 
-  priVtxsInfo = kFALSE ; //priVtxsInfo = kTRUE ;
-  B0massConstr = kFALSE ; B0massConstr = kTRUE ;
+  priVtxsInfo = kFALSE ; priVtxsInfo = kTRUE ;
+
+  B0massConstr = kFALSE ;
+  if (option.Contains("B0massC")) B0massConstr = kTRUE ;
 
   B0_Id = 511 ; psi2S_Id = 100443 ; Kaon_Id = 321; pion_Id = 211; muon_Id = 13;
   
@@ -746,6 +753,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
   //B0_massFit = 5.27967; B0_sigmaFit = 0.01167;
   B0_massFit = 5.2797; B0_sigmaFit = 0.012;
   //
+  f0_600_left = 0.5; f0_600_right = 0.65;
   f0_left = 0.98; f0_right = 0.99;
   phi_left = 1.01; phi_right = 1.03;
   Bs_left = 5.3; Bs_right = 5.43;
@@ -872,13 +880,13 @@ void psiPrimePiK_MC::Init(TTree *tree)
    PriVtxB0Corr_Chi2 = 0; PriVtxB0Corr_CL = 0;
    PriVtxB0Corr_tracks = 0;
    // Lifetime variables
-   B0CosAlphaBS = 0; B0CosAlpha3DBS = 0; B0CTauBS = 0; B0CTauBSE = 0; B0LxyBS = 0; 
-   B0CosAlphaPV = 0; B0CosAlpha3DPV = 0; B0CTauPV = 0; B0CTauPVE = 0; B0LxyPV = 0; 
-   B0CosAlphaPVCosAlpha = 0; B0CTauPVCosAlpha = 0; B0CTauPVCosAlphaE = 0; B0LxyPVCosAlpha = 0; 
-   B0CosAlphaPVCosAlpha3D = 0; B0CTauPVCosAlpha3D = 0; B0CTauPVCosAlpha3DE = 0; B0LxyPVCosAlpha3D = 0; 
-   B0CosAlphaB0LessPV = 0; B0CosAlpha3DB0LessPV = 0; B0CTauB0LessPV = 0; B0CTauB0LessPVE = 0; B0LxyB0LessPV = 0; 
-   B0CosAlphaB0LessPVCosAlpha = 0; B0CTauB0LessPVCosAlpha = 0; B0CTauB0LessPVCosAlphaE = 0; B0LxyB0LessPVCosAlpha = 0; 
-   B0CosAlphaB0LessPVCosAlpha3D = 0; B0CTauB0LessPVCosAlpha3D = 0; B0CTauB0LessPVCosAlpha3DE = 0; B0LxyB0LessPVCosAlpha3D = 0; 
+   B0CosAlphaBS = 0; B0CosAlpha3DBS = 0; B0CTauBS = 0; B0CTauBSE = 0; B0LxyBS = 0; B0LxyBSE = 0; 
+   B0CosAlphaPV = 0; B0CosAlpha3DPV = 0; B0CTauPV = 0; B0CTauPVE = 0; B0LxyPV = 0; B0LxyPVE = 0; 
+   B0CosAlphaPVCosAlpha = 0; B0CTauPVCosAlpha = 0; B0CTauPVCosAlphaE = 0; B0LxyPVCosAlpha = 0; B0LxyPVCosAlphaE = 0;
+   B0CosAlphaPVCosAlpha3D = 0; B0CTauPVCosAlpha3D = 0; B0CTauPVCosAlpha3DE = 0; B0LxyPVCosAlpha3D = 0; B0LxyPVCosAlpha3DE = 0; 
+   B0CosAlphaB0LessPV = 0; B0CosAlpha3DB0LessPV = 0; B0CTauB0LessPV = 0; B0CTauB0LessPVE = 0; B0LxyB0LessPV = 0; B0LxyB0LessPVE = 0; 
+   B0CosAlphaB0LessPVCosAlpha = 0; B0CTauB0LessPVCosAlpha = 0; B0CTauB0LessPVCosAlphaE = 0; B0LxyB0LessPVCosAlpha = 0; B0LxyB0LessPVCosAlphaE = 0; 
+   B0CosAlphaB0LessPVCosAlpha3D = 0; B0CTauB0LessPVCosAlpha3D = 0; B0CTauB0LessPVCosAlpha3DE = 0; B0LxyB0LessPVCosAlpha3D = 0; B0LxyB0LessPVCosAlpha3DE = 0; 
    B0CosAlphaPVX = 0; B0CTauPVX = 0; B0CTauPVXE = 0; B0LxyPVX = 0; 
    B0CTauPVX_3D = 0; B0CTauPVX_3D_err = 0;
    B0MuMuIdx = 0; B0PionIdx = 0; B0KaonIdx = 0;
@@ -901,6 +909,8 @@ void psiPrimePiK_MC::Init(TTree *tree)
    if (!tree) return;
    fChain = tree;
    fChain->SetMakeClass(1);
+
+   //cout <<"Starting to SetBranchAddresses" <<endl;
 
    fChain->SetBranchAddress("TrigRes", &TrigRes, &b_TrigRes);
    fChain->SetBranchAddress("TrigNames", &TrigNames, &b_TrigNames);
@@ -963,7 +973,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
    }
    // Generic Muons
    fChain->SetBranchAddress("nMu", &nMu, &b_nMu);
-   fChain->SetBranchAddress("muPx", &muPx, &b_muPx);
+   fChain->SetBranchAddress("muPx", &muPx, &b_muPx); // this line gives "Error in <TProtoClass::FillTClass>: TClass vector<bool> already initialized!"
    fChain->SetBranchAddress("muPy", &muPy, &b_muPy);
    fChain->SetBranchAddress("muPz", &muPz, &b_muPz);
    fChain->SetBranchAddress("muD0", &muD0, &b_muD0);
@@ -988,7 +998,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("muTrack", &muTrack, &b_muTrack);
    fChain->SetBranchAddress("muCharge", &muCharge, &b_muCharge);
    fChain->SetBranchAddress("mufHits", &mufHits, &b_mufHits);
-   fChain->SetBranchAddress("muFirstBarrel", &muFirstBarrel, &b_muFirstBarrel);
+   fChain->SetBranchAddress("muFirstBarrel", &muFirstBarrel, &b_muFirstBarrel); // this line gives "Error in <TProtoClass::FillTClass>: TClass vector<bool> already initialized!"
    fChain->SetBranchAddress("muFirstEndCap", &muFirstEndCap, &b_muFirstEndCap);
    fChain->SetBranchAddress("muDzVtx", &muDzVtx, &b_muDzVtx);
    fChain->SetBranchAddress("muDxyVtx", &muDxyVtx, &b_muDxyVtx);
@@ -1105,6 +1115,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0CTauBS", &B0CTauBS, &b_B0CTauBS);
    fChain->SetBranchAddress("B0CTauBSE", &B0CTauBSE, &b_B0CTauBSE);
    fChain->SetBranchAddress("B0LxyBS", &B0LxyBS, &b_B0LxyBS);
+   fChain->SetBranchAddress("B0LxyBSE", &B0LxyBSE, &b_B0LxyBSE);
    //
    fChain->SetBranchAddress("B0CosAlphaPV", &B0CosAlphaPV, &b_B0CosAlphaPV);
    if (!oldNtuple)
@@ -1112,6 +1123,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0CTauPV", &B0CTauPV, &b_B0CTauPV);
    fChain->SetBranchAddress("B0CTauPVE", &B0CTauPVE, &b_B0CTauPVE);
    fChain->SetBranchAddress("B0LxyPV", &B0LxyPV, &b_B0LxyPV);
+   fChain->SetBranchAddress("B0LxyPVE", &B0LxyPVE, &b_B0LxyPVE);
    //
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_X", &PriVtx_B0CosAlpha_X, &b_PriVtx_B0CosAlpha_X);
    fChain->SetBranchAddress("PriVtx_B0CosAlpha_Y", &PriVtx_B0CosAlpha_Y, &b_PriVtx_B0CosAlpha_Y);
@@ -1126,6 +1138,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
    fChain->SetBranchAddress("B0CTauPVCosAlpha", &B0CTauPVCosAlpha, &b_B0CTauPVCosAlpha);
    fChain->SetBranchAddress("B0CTauPVCosAlphaE", &B0CTauPVCosAlphaE, &b_B0CTauPVCosAlphaE);
    fChain->SetBranchAddress("B0LxyPVCosAlpha", &B0LxyPVCosAlpha, &b_B0LxyPVCosAlpha);
+   fChain->SetBranchAddress("B0LxyPVCosAlphaE", &B0LxyPVCosAlphaE, &b_B0LxyPVCosAlphaE);
    // 3D
    if (!oldNtuple) {
      fChain->SetBranchAddress("PriVtx_B0CosAlpha3D_X", &PriVtx_B0CosAlpha3D_X, &b_PriVtx_B0CosAlpha3D_X);
@@ -1141,6 +1154,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("B0CTauPVCosAlpha3D", &B0CTauPVCosAlpha3D, &b_B0CTauPVCosAlpha3D);
      fChain->SetBranchAddress("B0CTauPVCosAlpha3DE", &B0CTauPVCosAlpha3DE, &b_B0CTauPVCosAlpha3DE);
      fChain->SetBranchAddress("B0LxyPVCosAlpha3D", &B0LxyPVCosAlpha3D, &b_B0LxyPVCosAlpha3D);
+     fChain->SetBranchAddress("B0LxyPVCosAlpha3DE", &B0LxyPVCosAlpha3DE, &b_B0LxyPVCosAlpha3DE);
    }
    //
    if (priVtxsInfo) {
@@ -1160,6 +1174,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("B0CTauB0LessPV", &B0CTauB0LessPV, &b_B0CTauB0LessPV);
      fChain->SetBranchAddress("B0CTauB0LessPVE", &B0CTauB0LessPVE, &b_B0CTauB0LessPVE);
      fChain->SetBranchAddress("B0LxyB0LessPV", &B0LxyB0LessPV, &b_B0LxyB0LessPV);
+     fChain->SetBranchAddress("B0LxyB0LessPVE", &B0LxyB0LessPVE, &b_B0LxyB0LessPVE);
      //	
      fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_X", &PriVtxB0Less_B0CosAlpha_X, &b_PriVtxB0Less_B0CosAlpha_X);
      fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_Y", &PriVtxB0Less_B0CosAlpha_Y, &b_PriVtxB0Less_B0CosAlpha_Y);
@@ -1171,6 +1186,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_CL", &PriVtxB0Less_B0CosAlpha_CL, &b_PriVtxB0Less_B0CosAlpha_CL);
      fChain->SetBranchAddress("PriVtxB0Less_B0CosAlpha_tracks", &PriVtxB0Less_B0CosAlpha_tracks, &b_PriVtxB0Less_B0CosAlpha_tracks);
      fChain->SetBranchAddress("B0LxyB0LessPVCosAlpha", &B0LxyB0LessPVCosAlpha, &b_B0LxyB0LessPVCosAlpha);
+     fChain->SetBranchAddress("B0LxyB0LessPVCosAlphaE", &B0LxyB0LessPVCosAlphaE, &b_B0LxyB0LessPVCosAlphaE);
      fChain->SetBranchAddress("B0CosAlphaB0LessPVCosAlpha", &B0CosAlphaB0LessPVCosAlpha, &b_B0CosAlphaB0LessPVCosAlpha);
      fChain->SetBranchAddress("B0CTauB0LessPVCosAlpha", &B0CTauB0LessPVCosAlpha, &b_B0CTauB0LessPVCosAlpha);
      fChain->SetBranchAddress("B0CTauB0LessPVCosAlphaE", &B0CTauB0LessPVCosAlphaE, &b_B0CTauB0LessPVCosAlphaE);
@@ -1188,6 +1204,7 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("B0CTauB0LessPVCosAlpha3D", &B0CTauB0LessPVCosAlpha3D, &b_B0CTauB0LessPVCosAlpha3D);
      fChain->SetBranchAddress("B0CTauB0LessPVCosAlpha3DE", &B0CTauB0LessPVCosAlpha3DE, &b_B0CTauB0LessPVCosAlpha3DE);
      fChain->SetBranchAddress("B0LxyB0LessPVCosAlpha3D", &B0LxyB0LessPVCosAlpha3D, &b_B0LxyB0LessPVCosAlpha3D);
+     fChain->SetBranchAddress("B0LxyB0LessPVCosAlpha3DE", &B0LxyB0LessPVCosAlpha3DE, &b_B0LxyB0LessPVCosAlpha3DE);
    }
    //
    fChain->SetBranchAddress("PriVtxB0Corr_X", &PriVtxB0Corr_X, &b_PriVtxB0Corr_X);
@@ -1271,15 +1288,15 @@ void psiPrimePiK_MC::Init(TTree *tree)
      fChain->SetBranchAddress("KaonPz_MuMuPiK_B0Mass", &KaonPz_MuMuPiK_B0Mass, &b_KaonPz_MuMuPiK_B0Mass);
      fChain->SetBranchAddress("KaonE_MuMuPiK_B0Mass", &KaonE_MuMuPiK_B0Mass, &b_KaonE_MuMuPiK_B0Mass);
    }
+   //cout <<"\nEnd of SetBranchAddress" <<endl;
 }
 
 Bool_t psiPrimePiK_MC::Notify()
 {
-   // The Notify() function is called when a new file is opened. This
-   // can be either for a new TTree in a TChain or when when a new TTree
-   // is started when using PROOF. It is normally not necessary to make changes
-   // to the generated code, but the routine can be extended by the
-   // user if needed. The return value is currently not used.
+   // The Notify() function is called when a new file is opened.
+   // This can be either for a new TTree in a TChain or when when a new TTree is started when using PROOF.
+   // It is normally not necessary to make changes to the generated code, but the routine can be extended by the user if needed.
+   // The return value is currently not used.
 
    return kTRUE;
 }
