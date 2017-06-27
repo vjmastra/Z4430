@@ -16,12 +16,12 @@ process.MessageLogger.suppressWarning = cms.untracked.vstring( "mkcands" )
 MC = False
 MC = True
 noPtEtaCut = False # this neds to be fixed
-noPtEtaCut = True
+#noPtEtaCut = True
 #
 doReco = True
-#doReco = False
+doReco = False
 doGen = True
-doGen = False
+#doGen = False
 
 if MC:
         #official = False
@@ -33,12 +33,13 @@ BdId    = 511 # B0 (=anti-B0)
 BsId    = 531
 BuId    = 521
 Lambdab = 5122
-
+Y4140Id = 100443
+ 
 MCMotherId = BdId 
 #MCMotherId = BuId 
-#MCDaughtersN = 2
 #MCMotherId = BsId
 #MCMotherId = Lambdab
+MCMotherId = Y4140Id 
 #
 MCDaughterID = array.array('I', [443, 321, 211]) # J/psi K+ pi-
 #MCDaughterID = array.array('I', [100443, 321, 211]) # psi(2S) K+ pi-
@@ -47,6 +48,7 @@ MCDaughterID = array.array('I', [443, 321, 211]) # J/psi K+ pi-
 #MCDaughterID = array.array('I', [443, 315]) # J/psi K*_2(1430)
 #
 #MCDaughterID = array.array('I', [443, 2212, 2212]) # J/psi p+ p-
+MCDaughterID = array.array('I', [443, 333]) # J/psi phi
 #
 #MCDaughtersN = 3 # B0 -> psi(2S) K+ pi-  or  B0 -> J/psi p+ p-
 #MCDaughtersN = 2 # B0 -> J/psi K*0
@@ -68,6 +70,9 @@ elif (MCMotherId == BuId) :
         bMin = 0.0
         bMax = 100.8
 elif (MCMotherId == Lambdab) :
+        bMin = 0.0
+        bMax = 100.8
+elif (MCMotherId == Y4140Id) :
         bMin = 0.0
         bMax = 100.8
 
@@ -165,6 +170,9 @@ elif MC:
 							'/store/mc/Summer12_DR53X/LambdaBToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v2/0000/003E1158-0AE3-E111-9A35-00A0D1EE8EE0.root'
 							)
 				else:
+                        		if (MCMotherId == Y4140Id):
+                                		sourceFiles = cms.untracked.vstring(
+	                                	'root://cms-xrd-global.cern.ch//store/mc/PhaseISpring17DR/Y4140ToJpsiPhi_EtaPtFilter_TuneZ2star_13TeV-pythia8/AODSIM/FlatPU28to62HcalNZS_90X_upgrade2017_realistic_v20-v1/120000/02B91635-FA51-E711-A529-00259073E49A.root')
                         		if (MCMotherId == BsId):
                                 		sourceFiles = cms.untracked.vstring(
 	                                	'/store/mc/Summer12_DR53X/BsToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/AODSIM/PU_S10_START53_V7A-v1/0000/005DE3B0-FDDC-E111-9812-00266CFFC198.root',
@@ -680,6 +688,8 @@ else:
 	elif (MCMotherId == Lambdab) :
 		if genericMC:
 			process.TFileService.fileName = cms.string('officialLambdabToPsiMuMu_noPtEtaCut_MuMuPiKPAT_ntpl.root')
+	elif (MCMotherId == Y4140Id) :
+		process.TFileService.fileName = cms.string('officialYToJpsiPhi_PtEtaCut_MuMuMuMu_ntpl.root')
 
 	
 # turn off MC matching for the process
