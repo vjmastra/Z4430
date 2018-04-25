@@ -14,7 +14,7 @@
     // 2011
     //
     // 2012
-    Bool_t MC = kFALSE; //MC = kTRUE;
+    Bool_t MC = kFALSE; MC = kTRUE;
     Bool_t dsA = kFALSE, dsB = kFALSE, dsC = kFALSE, dsD = kFALSE ;
     dsA = kTRUE ;
     dsB = kTRUE ;
@@ -107,6 +107,7 @@
 	  // with B0 mass constrained kinematic fit
 	  TString path = "/lustre/cms/store/user/nsur/Jpsi_8TeV_OfficialMC_small_ntuples/merged_files_official_newconfig_newkinfit/"; TString filename = "officialBdToJpsiKpi_MuMuPiKPAT_newconfig_small_ntpls_newkinfit_merged";
 	  dataset->SetDirectory("");
+	  
 	  dataset->Add(path+filename+"_4M.root");
 	  dataset->SetDirectory("/mkcands");
 	  
@@ -114,10 +115,18 @@
 	  dataset->Add(path+filename+"_ext2_16M.root");
 	  dataset->Add(path+filename+"_ext3_10M.root");
 	  dataset->Add(path+filename+"_ext4_20M.root");
-	  
+	  dataset->Add(path+filename+"_ext5_45M.root");
+	   
+	  /*
+	  // test
+	  //dataset->Add(path+"officialBdToJpsiKpi_MuMuPiKPAT_ext5_newconfig_small_ntpls_newkinfit_test_merged.root"); 
+	  //dataset->Add("/lustre/cms/store/user/nsur/BdToJpsiKPi_BFilter_MSEL5_TuneZ2star_8TeV-Pythia6-evtgen/crab_BdToJpsiKPi_8TeV_OfficialMC_ext5_AODSIM_newconfig_bari_smallfiles_newkinfit/180301_124203/0000/officialBdToPsiKpi_noPtEtaCut_MuMuPiKPAT_ntpl_1.root");
+	  dataset->Add("/lustre/cms/store/user/nsur/Jpsi_8TeV_OfficialMC_small_ntuples/merged_files_official_newconfig_newkinfit/officialBdToJpsiKpi_MuMuPiKPAT_newconfig_small_ntpls_newkinfit_merged_ext5_test2.root");
+	  */
 	  if ( !noPtEtaCuts ) {
 	    // from B0 -> psi + X -> MuMu + ...
 	    dataset->Add("/lustre/cms/store/user/lecriste/june2016/B0ToPsiMuMu_2MuPtEtaFilter_8TeV-pythia6-evtgen/crab_official_MC_B0ToPsiMuMu_nMCB0/161003_174643/officialBdToPsiKpi_18Mar_MuMuPiKPAT_ntpl_.root");
+	    dataset->Add("/lustre/cms/store/user/nsur/BdToJpsiKPi_BFilter_MSEL5_TuneZ2star_8TeV-Pythia7-evtgen/crab_BdToJpsiKPi_8TeV_OfficialMC_ext5_AODSIM_newconfig_bari_smallfiles_newkinfit/180301_124203/0000/officialBdToPsiKpi_noPtEtaCut_MuMuPiKPAT_ntpl_1.root");
 	  }
 	}
       } // if (official)

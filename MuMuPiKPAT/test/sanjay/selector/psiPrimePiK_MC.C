@@ -1585,10 +1585,6 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
   }
 
   //cout <<"\nEnd of trigger block" <<endl;
-  //
-  /////////////////////////////////
-  for (UInt_t myJIdx=0; myJIdx < nMuMu; myJIdx++) 
-    myInclusiveMuMuMass_noTrigg->Fill( (*MuMuMass)[myJIdx] ) ;
 
   //if (!HLT_mainTrigger) return kTRUE ;
   
@@ -1623,6 +1619,8 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 
   for (UInt_t myJIdx = 0; myJIdx < nMuMu; myJIdx++) 
     {
+      myInclusiveMuMuMass_noTrigg->Fill( (*MuMuMass)[myJIdx] ) ;
+
       //int numGoodLooseMuon=(int) (*muIsGoodLooseMuon)[ (*mupIdx)[myJIdx] ] + (int) (*muIsGoodLooseMuon)[ (*mumIdx)[myJIdx] ];
       //int numGoodTightMuon=(int) (*muIsGoodTightMuon)[ (*mupIdx)[myJIdx] ] + (int) (*muIsGoodTightMuon)[ (*mumIdx)[myJIdx] ];   
 

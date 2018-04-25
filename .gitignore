@@ -4,3 +4,6 @@
 *.d
 *.so
 *.tgz
+*.pcm
+*~
+MuMuPiKPAT/test/crab

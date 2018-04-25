@@ -375,7 +375,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    const Candidate *dau = p.daughter(j);
 	    if (Debug_) cout << "dauPdgId = " << dau->pdgId() << endl;
 	  
-	    // check if one of B0 daughters is a psi(nS) whitch has 2 muons as daughters
+	    // check if one of the MCMother daughters is a psi(nS) whitch has 2 muons as daughters
 	    int mumuId = MCDaughterID[0] ;
 	    if (skipJPsi && skipPsi2S) 
 	      cout <<"Skipping both J/psi and psi(2S)!" <<endl ;
@@ -393,7 +393,7 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      int muNum = 0;	
 	      for (int k=0; k<jpsiDauNum; ++k) {
 		const Candidate *grandDau = dau->daughter(k); 
-		if (Debug_)  cout << "grandDauPdgId = " << grandDau->pdgId() << endl;
+		if (Debug_) cout << "grandDauPdgId = " << grandDau->pdgId() << endl;
 		if ( abs(grandDau->pdgId()) == 13 ) {
 		  muNum++;
 		  if (grandDau->pdgId() < 0) {
@@ -409,24 +409,24 @@ void MuMuPiKPAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    } // end check if one of the MCMother daughters is a J/Psi or psi'
 	    
 	    //else if ( abs(dau->pdgId()) == 211 ) { // check if one of B0 daughters is a pion
-	    else if ( dauNum > 2  &&  abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of B0 daughters is a pion (check on array length done above)
+	    else if ( dauNum > 2  &&  abs(dau->pdgId()) == MCDaughterID[2]  &&  !thirdDau ) { // check if one of the B0 daughters is a MCDaughterID[2] (check on array length done above)
 	      thirdDau = true;
 	      pionPx = dau->px(); pionPy = dau->py(); pionPz = dau->pz();
 	      pionCh = (dau->pdgId() > 0)? 1 : -1;
 	      dauOK[j] = true;
 	    //} else if ( abs(dau->pdgId()) == 321 ) { // check if one of B0 daughters is a kaon
-	    } else if ( abs(dau->pdgId()) == MCDaughterID[1] ) { // check if one of B0 daughters is a kaon of a K*
+	    } else if ( abs(dau->pdgId()) == MCDaughterID[1] ) { // check if one of B0 daughters is a MCDaughterID[1]
 	      if ( abs(dau->pdgId()) == 321) {
 		kaonPx = dau->px(); kaonPy=dau->py(); kaonPz=dau->pz();
 		kaonCh = (dau->pdgId() > 0)? 1 : -1;
 		dauOK[j] = true;
 	      } else { // check if one of B0 daughters is a K which decayed to K+ pi-
 		kaonStarId = dau->pdgId();
-		kaonStarPx = dau->px(); kaonStarPy=dau->py(); kaonStarPz=dau->pz();
+		kaonStarPx = dau->px(); kaonStarPy = dau->py(); kaonStarPz = dau->pz();
 		kaonStarMass = dau->mass() ; kaonStarCh = 0;
 		//
 		int kstarDauNum = dau->numberOfDaughters();
-		if (Debug_) cout << "kstarDauNum = " << kstarDauNum << endl;	
+                if (Debug_) cout << "Number of " << MCDaughterID[1] << " daughters = " << kstarDauNum << endl;
 		for (int k=0; k<kstarDauNum; ++k) {
 		  const Candidate *grandDau = dau->daughter(k); 
 		  if (Debug_) cout << "grandDauPdgId = " << grandDau->pdgId() << endl;
