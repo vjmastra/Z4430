@@ -309,8 +309,10 @@
     if (B0massC.EqualTo("B0massC"))
       option.Append("_"+B0massC);
 
-    cout <<"Running with option \"" <<option <<"\"" <<endl;
-    p->Process(dataset, selectorcplus, option);  
+    Long64_t nEntries = -1;
+    nEntries = 10;
+    cout << "Running with option \"" << option << "\" on " << nEntries << " events" << endl;
+    p->Process(dataset, selectorcplus, option, nEntries);  
     
     //  gSystem->Exec("/opt/exp_soft/cms/slc5_amd64_gcc434/lcg/root/5.27.06b-cms16/test/ProofBench/SavePerfInfo.C("")");
 
