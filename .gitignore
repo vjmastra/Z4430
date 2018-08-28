@@ -1,9 +1,12 @@
 *.root
 *.png
+*.eps
 *.pyc
 *.d
 *.so
 *.tgz
 *.pcm
 *~
+*.swp
+*.rootmap
 MuMuPiKPAT/test/crab
