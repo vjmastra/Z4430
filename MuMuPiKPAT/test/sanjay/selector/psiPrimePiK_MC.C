@@ -39,6 +39,8 @@
 #include <RooAddPdf.h>
 #include <RooAbsReal.h>
 #include <RooPlot.h>
+#include <RooNDKeysPdf.h>
+#include <RooDataSet.h>
 
 #include <TColor.h>
 #include <TLine.h>
@@ -230,6 +232,9 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
   mva_variables_sig = new TTree("mva_variables_sig","MVA signal variables");
   mva_variables_bkg = new TTree("mva_variables_bkg","MVA background variables");
   mva_variables_all = new TTree("mva_variables_all","MVA variables");
+  hardcuts_variables_sig = new TTree("hardcuts_variables_sig","hC signal variables");
+  hardcuts_variables_bkg = new TTree("hardcuts_variables_bkg","hC background variables"); 
+
   //////// HISTOGRAMS
   // put them here:
   //
@@ -692,6 +697,18 @@ void psiPrimePiK_MC::SlaveBegin(TTree * /*tree*/)
       mva_variables_all->Branch(mva_vars_name[i], &mva_vars_all[i], mva_vars_name[i]+"/I" );
     }
   }
+
+  vector< TString > hardcuts_vars_name;
+  hardcuts_vars_name.push_back("KPi_mass"); hardcuts_vars_name.push_back("PsiPi_mass"); hardcuts_vars_name.push_back("cosTheta_psi"); hardcuts_vars_name.push_back("phi");
+  hardcuts_vars_name.push_back("B0beauty");
+  Int_t hardcuts_vars_n = hardcuts_vars_name.size();
+  hardcuts_vars_sig.resize(hardcuts_vars_n, 0.); 
+  hardcuts_vars_bkg.resize(hardcuts_vars_n, 0.); 
+  for (Int_t i = 0; i < hardcuts_vars_n; ++i) {
+    hardcuts_variables_sig->Branch(hardcuts_vars_name[i], &hardcuts_vars_sig[i], hardcuts_vars_name[i]+"/F" );
+    hardcuts_variables_bkg->Branch(hardcuts_vars_name[i], &hardcuts_vars_bkg[i], hardcuts_vars_name[i]+"/F" );
+  }
+
   // tight cuts
   // single
   piPt_B0.push_back(0.5) ; piPt_B0.push_back(1.0) ; piPt_B0.push_back(1.5) ; piPt_B0.push_back(2.0) ; piPt_B0.push_back(2.5) ; piPt_B0.push_back(3.0) ; piPt_B0.push_back(3.5) ; piPt_B0.push_back(4.0) ; piPt_B0.push_back(4.5) ; piPt_B0.push_back(5.0) ;
@@ -3044,11 +3061,25 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		      hmyPsiPKPiMassCutsSelAlt->Fill( B0Mass_1B0_hardCuts );
 		      hmyPsiPPiPiMassCutsSelAlt->Fill( (PsiPp4_orig + PiPip4_orig).M() );
 
-		      if ( fabs(myB0MassAlt - B0_massFit) < B0_signal*B0_sigmaFit )
+		      iif ( fabs(myB0MassAlt - B0_massFit) < B0_signal*B0_sigmaFit ) {
 			psi2SPiMassSq_vs_KPiMassSq_CutsPeak->Fill( KPip4_orig.M2(), Zp4_orig.M2() ) ;
+                        hardcuts_vars_sig[0] = KPi_hC;
+                        hardcuts_vars_sig[1] = psiPi_hC;
+                        hardcuts_vars_sig[2] = cosTheta_psi_hC;
+                        hardcuts_vars_sig[3] = phi_hC;
+                        hardcuts_vars_sig[4] = B0beauty_hC;
+                        hardcuts_variables_sig->Fill();
+                      }
 		      else
-			if ( (fabs(myB0MassAlt - B0_massFit) > innerSB*B0_sigmaFit)  &&  (fabs(myB0MassAlt - B0_massFit) < outerSB*B0_sigmaFit) )
+			if ( (fabs(myB0MassAlt - B0_massFit) > innerSB*B0_sigmaFit)  &&  (fabs(myB0MassAlt - B0_massFit) < outerSB*B0_sigmaFit) ) {
 			  psi2SPiMassSq_vs_KPiMassSq_CutsSb->Fill( KPip4_orig.M2(), Zp4_orig.M2() ) ;
+                          hardcuts_vars_bkg[0] = KPi_hC;
+                          hardcuts_vars_bkg[1] = psiPi_hC;
+                          hardcuts_vars_bkg[2] = cosTheta_psi_hC;
+                          hardcuts_vars_bkg[3] = phi_hC;
+                          hardcuts_vars_bkg[4] = B0beauty_hC;
+                          hardcuts_variables_bkg->Fill();
+                        }
 
 		      // for Kai
 		      TLorentzVector trkM = (*trackCharge)[pi_orig_Index] < 0 ? Pip4_orig : Kp4_orig;
@@ -4370,6 +4401,7 @@ void psiPrimePiK_MC::SlaveTerminate()
       //
       _ntGen->Write(); _ntReco->Write();
       mva_variables_sig->Write(); mva_variables_bkg->Write(); mva_variables_all->Write(); // causes the same trees in an other output file to have all of the branches at 0
+      hardcuts_variables_sig->Write(); hardcuts_variables_bkg->Write();
       //// Write histograms in output file
       gStyle->SetOptStat(111111) ;
       //
@@ -4891,6 +4923,7 @@ void psiPrimePiK_MC::SlaveTerminate()
       //
       _ntGen->Write(); _ntReco->Write();
       mva_variables_sig->Write(); mva_variables_bkg->Write(); mva_variables_all->Write();
+      hardcuts_variables_sig->Write(); hardcuts_variables_bkg->Write();
       //
       psi2SPiMassSq_vs_KPiMassSq_BT_gen->Write() ; psi2SPiMass_vs_KPiMass_BT_gen->Write() ; KPiMassSq_vs_psi2SKMassSq_BT_gen->Write() ;
       psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen->Write() ; cos_psi2S_helicityAngle_BT_gen_bias->Write() ; cos_psi2S_helicityAngle_BT_gen_rot->Write() ; cos_psi2S_helicityAngle_BT_gen_rotVSnotRot->Write() ;
@@ -5872,7 +5905,225 @@ void psiPrimePiK_MC::Terminate()
 	}
       }
 
+    TNtupleD* dataNTuple;
+    TString dataTreeName;
+    rooKeysError = kFALSE;
 
+    if (MC) {
+      dataTreeName = "AA_recoVars";
+      dataNTuple = (TNtupleD*)AlexisOut->Get("AA_recoVars");
+    } else {
+        dataNTuple = (TNtupleD*)AlexisOut->Get("hardcuts_variables_bkg");
+        dataTreeName = "hardcuts_variables_bkg";
+      }
+    if ( (dataNTuple=(TNtupleD*)AlexisOut->Get(dataTreeName)) ) {
+      if (dataNTuple->GetEntries() < 1e5) {
+        rooKeysFlag = kTRUE;
+      } else {
+          rooKeysFlag = kFALSE;
+          rooKeysError = kTRUE;
+          cout << "Eff/Bkg fit with RooKeys: input dataset is too large" << endl;
+        }
+    } else {
+        rooKeysFlag = kFALSE;
+        cout << "Eff/Bkg fit with RooKeys: input dataset not found" << endl;
+    }
+
+    if (rooKeysFlag) {
+
+      RooRealVar massKPi("massKPi", "massKPi", 0.5, 2.5);
+      RooRealVar massPsiPi("massPsiPi", "massPsiPi", 3.0, 5.0);
+      RooRealVar cosMuMu("cosMuMu", "cosMuMu", -1., 1.);
+      RooRealVar phi("phi", "phi", -3.15, 3.15);
+
+      double nbins = 100;
+      Int_t nEntries;
+      int nReco = 1;
+      double xx, yy;
+
+      if (MC) {
+
+        RooDataSet data_reco("data_reco", "data_reco", RooArgSet(massKPi, massPsiPi, cosMuMu, phi));
+        RooDataSet data_gen("data_gen", "data_gen", RooArgSet(massKPi, massPsiPi, cosMuMu, phi));
+        dataTreeName = "AA_recoVars";
+        Double_t obs1, obs2, obs3, obs4, obs5;
+        if ( (dataNTuple=(TNtupleD*)AlexisOut->Get(dataTreeName)) ) {
+          dataNTuple->SetBranchAddress("massKPi", &obs1);
+          dataNTuple->SetBranchAddress("massMuMuPi", &obs2);
+          dataNTuple->SetBranchAddress("cosMuMu", &obs3);
+          dataNTuple->SetBranchAddress("phi", &obs4);
+          dataNTuple->SetBranchAddress("B0beauty", &obs5);
+          nEntries = dataNTuple->GetEntries();
+          nReco = nEntries;
+          for (Int_t i=0; i < nEntries; i++) {
+            dataNTuple->GetEntry(i);
+            massKPi = obs1;
+            massPsiPi = obs2;
+            cosMuMu = obs3;
+            phi = obs4;
+            if ( obs5 < 0.0) {
+              phi = -obs4;
+            }
+             if (Dalitz_contour_host(massKPi.getValV(), massPsiPi.getValV(), kFALSE, 1))
+              data_reco.add(RooArgSet(massKPi, massPsiPi, cosMuMu, phi));
+          }
+        } else {
+            cout << "ERROR in reading " << dataTreeName << "to compute efficiency with RooKeys" << endl;
+            rooKeysError = kTRUE;
+        }
+
+        dataTreeName = "AA_genVars";
+        if ( (dataNTuple=(TNtupleD*)AlexisOut->Get(dataTreeName)) ) {
+          dataNTuple->SetBranchAddress("massKPi", &obs1);
+          dataNTuple->SetBranchAddress("massMuMuPi", &obs2);
+          dataNTuple->SetBranchAddress("cosMuMu", &obs3);
+          dataNTuple->SetBranchAddress("phi", &obs4);
+          dataNTuple->SetBranchAddress("B0beauty", &obs5);
+          nEntries = dataNTuple->GetEntries();
+          for (Int_t i=0; i < nEntries; i++) {
+            dataNTuple->GetEntry(i);
+            massKPi = obs1;
+            massPsiPi = obs2;
+            cosMuMu = obs3;
+            phi = obs4;
+            if ( obs5 < 0.0) {
+              phi = -obs4;
+            }
+            if (Dalitz_contour_host(massKPi.getValV(), massPsiPi.getValV(), kFALSE, 1)) {
+              data_gen.add(RooArgSet(massKPi, massPsiPi, cosMuMu, phi));
+            }
+          }
+        } else {
+            cout << "ERROR in reading " << dataTreeName << "to compute efficiency with RooKeys" << endl;
+            rooKeysError = kTRUE;
+        }
+        if (rooKeysError) {
+          cout << "Efficiency fit with RooNDKeysPdf skipped" << endl;
+        } else {
+          cout << "Fitting masses efficiency with RooNDKeysPdf" << endl;
+          RooNDKeysPdf keysMassReco("keysMassReco","keysMassReco", RooArgList(RooArgSet(massKPi, massPsiPi)), data_reco, "a");
+          cout << "Fitting angles efficiency with RooNDKeysPdf" << endl;
+          RooNDKeysPdf keysAngReco("keysAngReco","keysAngReco", RooArgList(RooArgSet(cosMuMu, phi)), data_reco, "am");
+
+          TH1* hh_massRecoPdfFine = keysMassReco.createHistogram("RelEff_masses_hardCuts_rooKeys", massKPi, Binning(nbins), YVar(massPsiPi,Binning(nbins))) ;
+          TH1* hh_angRecoPdfFine = keysAngReco.createHistogram("RelEff_angles_hardCuts_rooKeys", cosMuMu, Binning(nbins), YVar(phi, Binning(nbins))) ;
+          for (int i = 0; i < hh_massRecoPdfFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_massRecoPdfFine->GetNbinsY(); j++) {
+              xx = hh_massRecoPdfFine->GetXaxis()->GetBinCenter(i+1);
+              yy = hh_massRecoPdfFine->GetYaxis()->GetBinCenter(j+1);
+              if (!Dalitz_contour_host(xx, yy, kFALSE, 1)) hh_massRecoPdfFine->SetBinContent(i+1, j+1, 0);
+            }
+          hh_massRecoPdfFine->Scale(nReco);
+          hh_angRecoPdfFine->Scale(nReco);
+          TH1* hh_massGenDataFine = data_gen.createHistogram("genDatasetMasses", massKPi, Binning(nbins), YVar(massPsiPi,Binning(nbins))) ;
+          for (int i = 0; i < hh_massGenDataFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_massGenDataFine->GetNbinsY(); j++) {
+              xx = hh_massGenDataFine->GetXaxis()->GetBinCenter(i+1);
+              yy = hh_massGenDataFine->GetYaxis()->GetBinCenter(j+1);
+              if (!Dalitz_contour_host(xx, yy, kFALSE, 1)) hh_massGenDataFine->SetBinContent(i+1, j+1, 0);
+            }
+          TH1* hh_angGenDataFine = data_gen.createHistogram("genDatasetAngles", cosMuMu, Binning(nbins), YVar(phi, Binning(nbins))) ;
+          hh_massRecoPdfFine->Divide(hh_massGenDataFine);
+          hh_angRecoPdfFine->Divide(hh_angGenDataFine);
+
+          double intpdf0 = 0; double intpdf1 = 0;
+          int count0 = 0; int count1 = 0;
+          for (int i = 0; i < hh_massRecoPdfFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_massRecoPdfFine->GetNbinsY(); j++) {
+              intpdf0 += hh_massRecoPdfFine->GetBinContent(i+1, j+1);
+              if (hh_massRecoPdfFine->GetBinContent(i+1, j+1) != 0) count0++;
+            }
+          for (int i = 0; i < hh_angRecoPdfFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_angRecoPdfFine->GetNbinsY(); j++) {
+              intpdf1 += hh_angRecoPdfFine->GetBinContent(i+1, j+1);
+              if (hh_angRecoPdfFine->GetBinContent(i+1, j+1) != 0) count1++;
+            }
+          intpdf0 /= count0;
+          intpdf1 /= count1;
+          hh_massRecoPdfFine->Scale(1/intpdf0);
+          hh_angRecoPdfFine->Scale(1/intpdf1);
+
+          //Add exceeding bins to angles (missing)
+          hh_massRecoPdfFine->SetNameTitle("RelEff_psi2SPi_vs_KPi_hardCuts_1B0_rooKeys", "RelEff_psi2SPi_vs_KPi_hardCuts_1B0_rooKeys");
+          hh_massRecoPdfFine->Write();
+          hh_angRecoPdfFine->SetNameTitle("RelEff_planesAngle_vs_cos_psi2S_helicityAngle_hardCuts_1B0_rooKeys", "RelEff_planesAngle_vs_cos_psi2S_helicityAngle_hardCuts_1B0_rooKeys");
+          hh_angRecoPdfFine->Write();
+        }
+      }//if(MC)
+      else {
+        RooDataSet data_bkg("data_bkg", "data_bkg", RooArgSet(massKPi, massPsiPi, cosMuMu, phi));
+        dataTreeName = "hardcuts_variables_bkg";
+        Float_t obs1, obs2, obs3, obs4, obs5;
+        if ( (dataNTuple =(TNtupleD*)AlexisOut->Get(dataTreeName)) ) {
+          dataNTuple->SetBranchAddress("KPi_mass", &obs1);
+          dataNTuple->SetBranchAddress("PsiPi_mass", &obs2);
+          dataNTuple->SetBranchAddress("cosTheta_psi", &obs3);
+          dataNTuple->SetBranchAddress("phi", &obs4);
+          dataNTuple->SetBranchAddress("B0beauty", &obs5);
+          nEntries = dataNTuple->GetEntries();
+          for (Int_t i=0; i < nEntries; i++) {
+            dataNTuple->GetEntry(i);
+            massKPi = obs1;
+            massPsiPi = obs2;
+            cosMuMu = obs3;
+            phi = obs4;
+            if ( obs5 < 0.0) {
+              phi = -obs4;
+            }
+            data_bkg.add(RooArgSet(massKPi, massPsiPi, cosMuMu, phi));
+          }
+        } else {
+            cout << "ERROR in reading " << dataTreeName << "to compute background with RooKeys" << endl;
+            rooKeysError = kTRUE;
+        }
+        if (rooKeysError) {
+          cout << "Background fitting with RooNDKeysPdf skipped" << endl;
+        } else {
+          cout << "Fitting masses background with RooNDKeysPdf" << endl;
+          RooNDKeysPdf keysMassReco("keysMassReco","keysMassReco", RooArgList(RooArgSet(massKPi, massPsiPi)), data_bkg, "a");
+          cout << "Fitting angles background with RooNDKeysPdf" << endl;
+          RooNDKeysPdf keysAngReco("keysAngReco","keysAngReco", RooArgList(RooArgSet(cosMuMu, phi)), data_bkg, "am");
+
+          TH1* hh_massRecoPdfFine = keysMassReco.createHistogram("hh_massRecoPdf", massKPi, Binning(nbins), YVar(massPsiPi,Binning(nbins))) ;
+          TH1* hh_angRecoPdfFine = keysAngReco.createHistogram("hh_angRecoPdf", cosMuMu, Binning(nbins), YVar(phi, Binning(nbins))) ;
+          hh_massRecoPdfFine->Scale(nEntries);
+          hh_angRecoPdfFine->Scale(nEntries);
+
+          double intpdf0 = 0; double intpdf1 = 0;
+          int count0 = 0; int count1 = 0;
+          for (int i = 0; i < hh_massRecoPdfFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_massRecoPdfFine->GetNbinsY(); j++) {
+              intpdf0 += hh_massRecoPdfFine->GetBinContent(i+1, j+1);
+              if (hh_massRecoPdfFine->GetBinContent(i+1, j+1) != 0) count0++;
+            }
+          for (int i = 0; i < hh_angRecoPdfFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_angRecoPdfFine->GetNbinsY(); j++) {
+              intpdf1 += hh_angRecoPdfFine->GetBinContent(i+1, j+1);
+              if (hh_angRecoPdfFine->GetBinContent(i+1, j+1) != 0) count1++;
+            }
+          intpdf0 /= count0;
+          intpdf1 /= count1;
+          hh_massRecoPdfFine->Scale(1/intpdf0);
+          hh_angRecoPdfFine->Scale(1/intpdf1);
+
+          hh_massRecoPdfFine->SetNameTitle("psi2SPi_vs_KPi_hardCuts_1B0_sidebands_B0massC_rooKeys", "psi2SPi_vs_KPi_hardCuts_1B0_sidebands_B0massC_rooKeys");
+          hh_massRecoPdfFine->Write();
+          hh_angRecoPdfFine->SetNameTitle("planesAngle_vs_cos_psi2S_helicityAngle_hardCuts_1B0_sidebands_B0massC_rooKeys", "planesAngle_vs_cos_psi2S_helicityAngle_hardCuts_1B0_sidebands_B0massC_rooKeys");
+          hh_angRecoPdfFine->Write();
+
+          //Background constrained in Dalitz
+          for (int i = 0; i < hh_massRecoPdfFine->GetNbinsX(); i++)
+            for (int j = 0; j < hh_massRecoPdfFine->GetNbinsY(); j++) {
+              xx = hh_massRecoPdfFine->GetXaxis()->GetBinCenter(i+1);
+              yy = hh_massRecoPdfFine->GetYaxis()->GetBinCenter(j+1);
+              if (!Dalitz_contour_host(xx, yy, kFALSE, 1)) hh_massRecoPdfFine->SetBinContent(i+1, j+1, 0);
+            }
+          hh_massRecoPdfFine->SetNameTitle("psi2SPi_vs_KPi_hardCuts_1B0_sidebands_B0massC_rooKeys_DalitzConstrained", "psi2SPi_vs_KPi_hardCuts_1B0_sidebands_B0massC_rooKeys_DalitzConstrained");
+          hh_massRecoPdfFine->Write();
+          }//end else(rooKeysError)
+       }//end else(MC) 
+     } //rooKeys
+                                                                                                
     } else Error("Terminate", "could not open file: %s", outputFile.Data()) ;
 
   } else Warning("Terminate", "file \"%s\" not found", fileName.Data());

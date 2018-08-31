@@ -409,9 +409,12 @@ public :
    TFile            *fOut, *SaraOut, *AlexisOut, *tightCutsOut ;
    TNtupleD* _ntGen, *_ntReco;
    TTree *mva_variables_sig, *mva_variables_bkg, *mva_variables_all ;
+   TTree *hardcuts_variables_sig, *hardcuts_variables_bkg;
    vector< Float_t > mva_vars_sig, mva_vars_bkg, mva_vars_all ;
+   TTree *hardcuts_variables_sig, *hardcuts_variables_bkg;
    Bool_t newSoftMuonID, only1psiPrime;
    Bool_t MC, officialMC, oldNtuple, priVtxsInfo, B0massConstr, Kai_cuts, HLT_Displaced, fixedMassWind, sideband ;
+   Bool_t rooKeysFlag, rooKeysError;
 
    //TProofOutputFile *myOutFile, *myOutFileA, *myOutFileB;
    //ofstream *myoutfile, *myoutfileA, *myoutfileB; // works!
