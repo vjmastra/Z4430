@@ -3061,7 +3061,7 @@ Bool_t psiPrimePiK_MC::Process(Long64_t entry)
 		      hmyPsiPKPiMassCutsSelAlt->Fill( B0Mass_1B0_hardCuts );
 		      hmyPsiPPiPiMassCutsSelAlt->Fill( (PsiPp4_orig + PiPip4_orig).M() );
 
-		      iif ( fabs(myB0MassAlt - B0_massFit) < B0_signal*B0_sigmaFit ) {
+		      if ( fabs(myB0MassAlt - B0_massFit) < B0_signal*B0_sigmaFit ) {
 			psi2SPiMassSq_vs_KPiMassSq_CutsPeak->Fill( KPip4_orig.M2(), Zp4_orig.M2() ) ;
                         hardcuts_vars_sig[0] = KPi_hC;
                         hardcuts_vars_sig[1] = psiPi_hC;
