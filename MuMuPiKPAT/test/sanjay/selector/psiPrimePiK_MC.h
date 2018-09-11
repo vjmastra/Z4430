@@ -52,6 +52,8 @@
 #include <RooAbsReal.h>
 #include <RooPlot.h>
 */
+#include <RooRealVar.h>
+#include <RooDataSet.h>
 // Header file for the classes stored in the TTree if any.
 
 
@@ -398,7 +400,7 @@ public :
    virtual float    GetThetaMuMu_rot(TLorentzVector BVec, TLorentzVector JPsiVec, TLorentzVector MuPlusVec, float BeamEnergy, float JPsiPDG , float muonPDG);
    virtual void     GetMomentumInMotherFrame_rot(TLorentzVector Mother, TLorentzVector Particle, double BeamEnergy , TVector3 &Particle_rotated);
    //virtual float    GetCosThetaMuMu_fromMasses(Float_t mother, Float_t charmonium, Float_t referenceTrK, Float_t otherTrK, Float_t sameSide, Float_t oppositeSide);
-
+   virtual int      readAndFill(TString treeName, TFile *file, vector<RooRealVar> varsVector, RooDataSet &dataset, bool bkg);
    ///////////////////////////////////////// adde here my stuff
 
    ///////////// Input file //////////////////
@@ -414,7 +416,7 @@ public :
    vector< Float_t > hardcuts_vars_sig, hardcuts_vars_bkg;
    Bool_t newSoftMuonID, only1psiPrime;
    Bool_t MC, officialMC, oldNtuple, priVtxsInfo, B0massConstr, Kai_cuts, HLT_Displaced, fixedMassWind, sideband ;
-   Bool_t rooKeysFlag, rooKeysError;
+   Bool_t rooKeysFlag;
 
    //TProofOutputFile *myOutFile, *myOutFileA, *myOutFileB;
    //ofstream *myoutfile, *myoutfileA, *myoutfileB; // works!
