@@ -5909,22 +5909,23 @@ void psiPrimePiK_MC::Terminate()
     TNtupleD* dataNTuple;
     TString dataTreeName;
     vector<RooRealVar> keysVars;
+    rooKeysFlag = kTRUE; //rooKeysFlag = kFALSE;
 
-    if (MC) {
-      dataTreeName = "AA_recoVars";
-    } else {
-      dataTreeName = "hardcuts_variables_bkg";
-      }
-    if ( (dataNTuple=(TNtupleD*)AlexisOut->Get(dataTreeName)) ) {
-      if (dataNTuple->GetEntries() < 1e5) {
-        rooKeysFlag = kTRUE;
+    if (rooKeysFlag) {
+      if (MC) {
+        dataTreeName = "AA_recoVars";
       } else {
+        dataTreeName = "hardcuts_variables_bkg";
+        }
+      if ( (dataNTuple=(TNtupleD*)AlexisOut->Get(dataTreeName)) ) {
+        if (dataNTuple->GetEntries() > 1e5) {
           rooKeysFlag = kFALSE;
           cout << "Eff/Bkg fit with RooKeys: input dataset is too large" << endl;
         }
-    } else {
-        rooKeysFlag = kFALSE;
-        cout << "Eff/Bkg fit with RooKeys: input dataset not found" << endl;
+      } else {
+          rooKeysFlag = kFALSE;
+          cout << "Eff/Bkg fit with RooKeys: input dataset not found" << endl;
+      }
     }
 
     if (rooKeysFlag) {
